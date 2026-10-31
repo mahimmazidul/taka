@@ -24,10 +24,12 @@ class AboutScreen extends StatelessWidget {
                   width: 62,
                   height: 62,
                   decoration: BoxDecoration(
+                    // The launcher icon's sage gradient, so the app and its
+                    // icon look like the same thing.
                     gradient: const LinearGradient(
-                      colors: <Color>[Color(0xFF14A98B), Color(0xFF0A6E58)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                      colors: <Color>[Color(0xFF96D6BC), Color(0xFF3A846A)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -176,8 +178,8 @@ class AboutScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Made for one hall student in Dhaka, and for anyone else '
-                      'keeping a khata in their pocket.',
+                      'Made for hall life, and for anyone else keeping a khata in '
+                      'their pocket.',
                       style: TextStyle(
                         fontSize: 11.5,
                         height: 1.5,
