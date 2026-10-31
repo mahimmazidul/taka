@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:taka/app.dart';
+import 'package:taka/core/clock.dart';
 import 'package:taka/db/database.dart';
 import 'package:taka/store/app_state.dart';
 
@@ -10,7 +11,11 @@ import 'support/seed.dart';
 /// Pumps the whole app at several phone sizes. Any RenderFlex overflow or
 /// layout assertion fails the test instead of showing up as yellow stripes.
 void main() {
-  setUpAll(sqfliteFfiInit);
+  setUpAll(() async {
+    sqfliteFfiInit();
+    // Pin "now" so Today/Yesterday labels and the week strip never drift.
+    AppClock.now = () => kTestNow;
+  });
 
   late AppDatabase database;
 

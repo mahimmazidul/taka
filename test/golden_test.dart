@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:taka/app.dart';
+import 'package:taka/core/clock.dart';
 import 'package:taka/db/database.dart';
 import 'package:taka/store/app_state.dart';
 import 'package:taka/store/settings_actions.dart';
@@ -13,6 +14,8 @@ import 'support/seed.dart';
 /// Refresh with: flutter test test/golden_test.dart --update-goldens
 void main() {
   setUpAll(() async {
+    // Pin "now" so date chips, week starts and Today/Yesterday labels are stable.
+    AppClock.now = () => kTestNow;
     sqfliteFfiInit();
     await loadTestFonts();
     // The note field blinks its caret while focused; freeze it so screenshots are
