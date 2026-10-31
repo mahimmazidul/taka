@@ -12,8 +12,8 @@ much of the month is left.
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-45%20passing-0E9F6E)
-[![Download APK](https://img.shields.io/badge/download-v1.2.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+![Tests](https://img.shields.io/badge/tests-58%20passing-0E9F6E)
+[![Download APK](https://img.shields.io/badge/download-v1.3.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -40,9 +40,17 @@ refreshed whenever the UI changes. No mockups.
 |---|---|
 | ![Categories](docs/screenshots/categories.png) | ![Settings](docs/screenshots/settings.png) |
 
-| About | Small phone (320 × 568) |
+| Add entry (after saving) | Landscape |
 |---|---|
-| ![About](docs/screenshots/about.png) | ![Small phone](docs/screenshots/home_small.png) |
+| ![Add entry, saved](docs/screenshots/add_entry_saved.png) | ![Add entry in landscape](docs/screenshots/add_entry_landscape.png) |
+
+| Home (landscape) | Small phone (320 × 568) |
+|---|---|
+| ![Home in landscape](docs/screenshots/home_landscape.png) | ![Small phone](docs/screenshots/home_small.png) |
+
+| About | |
+|---|---|
+| ![About](docs/screenshots/about.png) | |
 
 ---
 
@@ -97,11 +105,12 @@ Plus three that sit on the top row themselves — **বাইরের খাব
 **লন্ড্রি · Laundry**, **অন্যান্য · Other** — and six income sources (বাসা থেকে,
 টিউশন, বৃত্তি, ফ্রিল্যান্স, উপহার, অন্যান্য).
 
-**See where the month went.** A hero balance, today / week / month, a 7-day chart,
-today's meals, the budget bars closest to their limit, udhar and the last five
-entries.
+**See where the month went.** A hero balance, **spent today** / week / month, a
+one-line nudge (`৳ 990 this week · ৳ 250 a day left`), today's meals, a 7-day
+chart, udhar and the last five entries. No limit, no progress bar — opening the
+app should not feel like being told off.
 
-**Budgets that roll up.** Cap a whole group (food: ৳ 5,000) or a single item
+**Budgets that roll up — in Settings, not on the way in.** Cap a whole group (food: ৳ 5,000) or a single item
 (shampoo: ৳ 200). Amber at 80%, red and "over by ৳ x" past the limit.
 
 **History that answers questions.** Grouped by day with per-day totals, live note
@@ -160,7 +169,7 @@ Quality gates used in CI:
 
 ```bash
 flutter analyze                               # 0 issues
-flutter test --concurrency=1                  # 45 tests
+flutter test --concurrency=1                  # 58 tests
 dart format --output=none --set-exit-if-changed lib test
 ```
 
@@ -216,11 +225,11 @@ Five runtime dependencies, all of them boring: `sqflite` (local SQLite), `path`,
 Android's share sheet) and `file_picker` 13 (pick a JSON file to restore). No
 state-management package, no chart package, no HTTP client, no analytics.
 
-### Data model (SQLite `taka.db`, schema v3)
+### Data model (SQLite `taka.db`, schema v4)
 
 ```sql
 categories(id, name, name_bn, icon, color, kind, budget_minor,
-           sort_order, parent_id, is_group)
+           sort_order, parent_id, is_group, food)
 transactions(id, type, amount_minor, category_id, note,
              occurred_at, created_at, updated_at, meal)
 udhar_entries(id, type, person, amount_minor, note, occurred_at,
@@ -248,24 +257,29 @@ be unforgivable:
 1. **Category ids are never renamed.** When the flat list became groups, ভাত kept
    `id = 'rice'`; it only gained `parent_id = 'g_main'`. Every old transaction still
    points at the right category.
-2. **Seeding is additive and runs on every open.** Any seeded category missing from
+2. **Column additions run before seeding.** Every later step writes a full seed
+   row, so a v2 file that jumped straight to v4 tried to insert a column that did
+   not exist yet. The order is now column, then data.
+3. **Seeding is additive and runs on every open.** Any seeded category missing from
    the database is inserted; nothing that already exists is ever overwritten — your
    names, colours and limits win.
-3. **Migrations are idempotent.** Columns are added only if absent, so an
+4. **Migrations are idempotent.** Columns are added only if absent, so an
    interrupted upgrade cannot leave a database that refuses to open.
 
 `test/database_test.dart` builds a v2 database by hand, reopens it with the current
-code and asserts the old entry, its category and its budget all survived.
+code and asserts the old entry, its category and its budget all survived — now
+through two upgrades, v2 → v4.
 
 ### Tests
 
-45 tests, all offline (29 logic + database, 6 screen, 10 golden):
+58 tests, all offline (26 logic, 23 database and food rules, 8 screen, 13 golden):
 
 | File | Covers |
 |---|---|
 | `test/logic_test.dart` | money formatting, exact keypad→paisa conversion, date helpers, budget thresholds, labels |
 | `test/database_test.dart` | the real schema and SQL on SQLite: seeds and the category tree, CRUD, totals, per-day buckets, filters, category reassignment and group deletion, udhar settlement, settings, backup round-trip, CSV, and the v2 → v3 migration |
-| `test/screens_test.dart` | the whole app at 320 / 360 / 414 / 768 widths, 1.3× text scale, tab switching, adding an entry end-to-end, dark-mode toggle |
+| `test/food_logic_test.dart` | the meal rule: which categories may take a meal, that a non-food entry never lands in a meal total even if an old row stored one, why noodles and egg exist twice, and that `today` really resets at midnight |
+| `test/screens_test.dart` | the whole app at 320 / 360 / 414 / 768 widths **and in landscape**, 1.3× text scale, tab switching, adding an entry end-to-end, the meal row disappearing for a face wash, dark-mode toggle |
 | `test/golden_test.dart` | every screenshot in this README |
 
 ---
@@ -280,6 +294,20 @@ code and asserts the old entry, its category and its budget all survived.
 
 ## Changelog
 
+- **v1.3.0** — the correctness release. Meal tags are now a property of the
+  category (`food`), not a guess: a face wash can no longer be logged as
+  breakfast, and the meal strip only counts food money. Added noodles and egg to
+  snacks (noodles also to main course). The entry screen stays open after saving
+  with an inline `Added ভাত · ৳45` strip, so ভাত + মাছ + a drink is three taps
+  each and one Done; Save moved into the keypad's bottom row. Home lost the
+  budgets block and gained `Spent today` plus a one-line weekly nudge. Launch no
+  longer flashes black (the Android window and Flutter's first frame share the
+  same colour, and the database read happens after the first frame). Landscape
+  reflows: two columns on Home, form-and-pad side by side on the entry screen,
+  shorter tab bar, capped line lengths. Scrolling got lighter — the tab bar blur
+  is gone and History builds one list item per row instead of one per day.
+  Settings and About values sit flush right. Ten new logic tests, including a
+  v2 → v4 migration test.
 - **v1.2.0** — new launcher icon (rendered from `tool/make_icon.py`), animated tab
   changes and richer page transitions, credit corrected to Mazidul Islam Mahim.
 - **v1.1.0** — two-level categories (groups + items, 90+ seeded items), meal tags
