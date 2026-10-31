@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:taka/db/category_repository.dart';
 import 'package:taka/db/database.dart';
@@ -54,34 +55,168 @@ void main() {
     );
   }
 
-  test('seeds hall-life categories with Bangla labels', () async {
+  test('seeds the two-level category tree with Bangla labels', () async {
     final List<AppCategory> all = await categories.all();
-    expect(all.length, 22);
-    expect(
-      all.where((AppCategory c) => c.kind == CategoryKind.expense).length,
-      16,
-    );
-    expect(
-      all.where((AppCategory c) => c.kind == CategoryKind.income).length,
-      6,
-    );
+
+    // Structural checks rather than magic numbers: the point is that every
+    // group has items, every item knows its group, and nothing is orphaned.
+    final List<AppCategory> groups = all
+        .where((AppCategory c) => c.isGroup)
+        .toList(growable: false);
+    final List<AppCategory> items = all
+        .where((AppCategory c) => !c.isGroup && c.parentId != null)
+        .toList(growable: false);
+
+    expect(groups.length, greaterThanOrEqualTo(15));
+    expect(items.length, greaterThanOrEqualTo(80));
+    for (final AppCategory group in groups) {
+      expect(
+        items.where((AppCategory c) => c.parentId == group.id),
+        isNotEmpty,
+        reason: '${group.id} should hold at least one item',
+      );
+    }
+    for (final AppCategory item in items) {
+      expect(
+        groups.map((AppCategory g) => g.id),
+        contains(item.parentId),
+        reason: '${item.id} points at a missing group',
+      );
+    }
 
     final AppCategory rice = all.firstWhere((AppCategory c) => c.id == 'rice');
     expect(rice.nameBn, 'ভাত');
     expect(rice.label, 'ভাত');
     expect(rice.icon, 'rice');
+    expect(rice.parentId, 'g_main');
+
+    final AppCategory banana = all.firstWhere(
+      (AppCategory c) => c.id == 'banana',
+    );
+    expect(banana.parentId, 'g_fruits');
 
     expect(
       all.map((AppCategory c) => c.id),
-      containsAll(<String>[
-        'fish',
-        'cosmetics',
-        'laundry',
-        'snacks',
-        'medicine',
-        'other',
-      ]),
+      containsAll(<String>['drinko', 'mojo', 'shampoo', 'sheet', 'pen', 'doi']),
     );
+  });
+
+  test('a v2 database migrates to groups without losing anything', () async {
+    final String path = p.join(
+      await databaseFactoryFfi.getDatabasesPath(),
+      'migration-${DateTime.now().microsecondsSinceEpoch}.db',
+    );
+    addTearDown(() async {
+      await databaseFactoryFfi.deleteDatabase(path);
+    });
+
+    // ── build a v2 database by hand: flat categories, no meal column ─────────
+    final Database legacy = await databaseFactoryFfi.openDatabase(
+      path,
+      options: OpenDatabaseOptions(
+        version: 2,
+        onCreate: (Database db, int version) async {
+          await db.execute('''
+            CREATE TABLE categories (
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              name_bn TEXT NOT NULL DEFAULT '',
+              icon TEXT NOT NULL,
+              color TEXT NOT NULL,
+              kind TEXT NOT NULL,
+              budget_minor INTEGER,
+              sort_order INTEGER NOT NULL DEFAULT 0
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE transactions (
+              id TEXT PRIMARY KEY,
+              type TEXT NOT NULL,
+              amount_minor INTEGER NOT NULL,
+              category_id TEXT NOT NULL,
+              note TEXT NOT NULL DEFAULT '',
+              occurred_at INTEGER NOT NULL,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE udhar_entries (
+              id TEXT PRIMARY KEY,
+              type TEXT NOT NULL,
+              person TEXT NOT NULL,
+              amount_minor INTEGER NOT NULL,
+              note TEXT NOT NULL DEFAULT '',
+              occurred_at INTEGER NOT NULL,
+              returned INTEGER NOT NULL DEFAULT 0,
+              returned_at INTEGER,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)
+          ''');
+          await db.insert('categories', <String, Object?>{
+            'id': 'rice',
+            'name': 'Rice & meal',
+            'name_bn': 'ভাত',
+            'icon': 'rice',
+            'color': '#E9A23B',
+            'kind': 'expense',
+            'budget_minor': 20000,
+            'sort_order': 0,
+          });
+          await db.insert('categories', <String, Object?>{
+            'id': 'other',
+            'name': 'Other',
+            'name_bn': 'অন্যান্য',
+            'icon': 'other',
+            'color': '#6B7684',
+            'kind': 'expense',
+            'sort_order': 99,
+          });
+        },
+      ),
+    );
+    await legacy.insert('transactions', <String, Object?>{
+      'id': 'old-entry',
+      'type': 'expense',
+      'amount_minor': 4500,
+      'category_id': 'rice',
+      'note': 'from v2',
+      'occurred_at': DateTime(2026, 10, 30, 8).millisecondsSinceEpoch,
+      'created_at': DateTime(2026, 10, 30, 8).millisecondsSinceEpoch,
+      'updated_at': DateTime(2026, 10, 30, 8).millisecondsSinceEpoch,
+    });
+    await legacy.close();
+
+    // ── reopen with the current code: onUpgrade + additive seeding run ───────
+    final AppDatabase upgraded = AppDatabase.at(
+      factory: databaseFactoryFfi,
+      path: path,
+    );
+    addTearDown(upgraded.close);
+
+    final List<AppCategory> all = await CategoryRepository(database: upgraded)
+        .all();
+    final AppCategory rice = all.firstWhere((AppCategory c) => c.id == 'rice');
+
+    expect(rice.parentId, 'g_main', reason: 'old row gains its group');
+    expect(rice.nameBn, 'ভাত', reason: 'user-visible label untouched');
+    expect(rice.budgetMinor, 20000, reason: 'user budgets survive the upgrade');
+    expect(
+      await CategoryRepository(database: upgraded).usageCount('rice'),
+      1,
+      reason: 'the old entry still points at the same category',
+    );
+    expect(all.length, greaterThan(90), reason: 'new items were added');
+
+    final TransactionEntry kept = (await TransactionRepository(
+      database: upgraded,
+    ).query(const TransactionQuery())).single;
+    expect(kept.note, 'from v2');
+    expect(kept.meal, isNull, reason: 'old rows simply have no meal tag');
   });
 
   test('insert, update and delete a transaction', () async {

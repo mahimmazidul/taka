@@ -116,7 +116,7 @@ void main() {
     expect(find.text('New entry'), findsNothing);
     expect(
       AppState.instance.today.expenseMinor,
-      12500 + 4500 + 12000 + 32000 + 3000,
+      12500 + 4500 + 12000 + 32000 + 3000 + 6000,
     );
   });
 

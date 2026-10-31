@@ -3,6 +3,7 @@ import 'package:taka/db/database.dart';
 import 'package:taka/db/settings_repository.dart';
 import 'package:taka/db/transaction_repository.dart';
 import 'package:taka/db/udhar_repository.dart';
+import 'package:taka/models/meal_slot.dart';
 import 'package:taka/models/transaction_entry.dart';
 import 'package:taka/models/udhar_entry.dart';
 import 'package:taka/store/app_state.dart';
@@ -25,8 +26,9 @@ Future<AppState> buildSeededState({required AppDatabase database}) async {
     String categoryId,
     int amountMinor,
     DateTime at,
-    String note,
-  ) {
+    String note, {
+    MealSlot? meal,
+  }) {
     return transactions.insert(
       TransactionEntry(
         id: '${at.millisecondsSinceEpoch}-$categoryId',
@@ -37,6 +39,7 @@ Future<AppState> buildSeededState({required AppDatabase database}) async {
         occurredAt: at,
         createdAt: at,
         updatedAt: at,
+        meal: meal,
       ),
     );
   }
@@ -64,6 +67,7 @@ Future<AppState> buildSeededState({required AppDatabase database}) async {
     4500,
     DateTime(2026, 10, 31, 8, 10),
     'Hall canteen',
+    meal: MealSlot.breakfast,
   );
   await add(
     EntryType.expense,
@@ -71,20 +75,29 @@ Future<AppState> buildSeededState({required AppDatabase database}) async {
     12000,
     DateTime(2026, 10, 31, 13, 40),
     'Rupali 250g',
+    meal: MealSlot.lunch,
   );
   await add(
     EntryType.expense,
-    'cosmetics',
+    'shampoo',
     32000,
     DateTime(2026, 10, 31, 16, 5),
-    'Face wash',
+    'Body wash + shampoo',
   );
   await add(
     EntryType.expense,
-    'transport',
+    'rickshaw',
     3000,
     DateTime(2026, 10, 31, 18, 0),
-    'Rickshaw',
+    'Rickshaw to campus',
+  );
+  await add(
+    EntryType.expense,
+    'khichuri',
+    6000,
+    DateTime(2026, 10, 31, 18, 20),
+    'Hall dinner',
+    meal: MealSlot.dinner,
   );
   await add(
     EntryType.expense,
@@ -122,9 +135,9 @@ Future<AppState> buildSeededState({required AppDatabase database}) async {
     'Napa + ORS',
   );
 
-  // Budgets: one over, one warning, one healthy
-  await categories.setMonthlyBudget('rice', 20000);
-  await categories.setMonthlyBudget('cosmetics', 20000);
+  // Budgets: one group cap, one healthy item, one blown item
+  await categories.setMonthlyBudget('g_main', 50000);
+  await categories.setMonthlyBudget('shampoo', 20000);
   await categories.setMonthlyBudget('fish', 30000);
 
   // Udhar both ways
