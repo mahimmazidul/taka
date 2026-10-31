@@ -10,6 +10,7 @@ import '../components/week_bars.dart';
 import '../core/app_theme.dart';
 import '../core/motion.dart';
 import '../models/budget_progress.dart';
+import '../models/meal_slot.dart';
 import '../models/transaction_entry.dart';
 import '../store/app_state.dart';
 import '../store/settings_actions.dart';
@@ -78,6 +79,10 @@ class HomeScreen extends StatelessWidget {
                     symbol: symbol,
                   ),
                 ),
+                if (state.today.expenseMinor > 0) ...<Widget>[
+                  const SectionTitle(title: 'Today\'s meals'),
+                  _MealsStrip(spend: state.mealSpendToday, symbol: symbol),
+                ],
                 SectionTitle(
                   title: 'Last 7 days',
                   actionLabel: 'History',
@@ -192,6 +197,80 @@ class _Header extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+        ],
+      ),
+    );
+  }
+}
+
+/// Breakfast / lunch / dinner for today: a check and the amount, or a dash if
+/// nothing was logged. Tapping it opens a new entry for that meal's group.
+class _MealsStrip extends StatelessWidget {
+  const _MealsStrip({required this.spend, required this.symbol});
+
+  final Map<MealSlot, int> spend;
+  final String symbol;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 6),
+      child: Row(
+        children: <Widget>[
+          for (final MealSlot slot in MealSlot.values) ...<Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    slot.label.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      letterSpacing: 0.9,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.muted(context),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: <Widget>[
+                      Icon(
+                        (spend[slot] ?? 0) > 0
+                            ? Icons.check_circle_rounded
+                            : Icons.remove_circle_outline,
+                        size: 13,
+                        color: (spend[slot] ?? 0) > 0
+                            ? Palette.taka
+                            : AppColors.muted(context),
+                      ),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          (spend[slot] ?? 0) > 0
+                              ? formatMoney(spend[slot]!, symbol: symbol)
+                              : '—',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.ink(context),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (slot != MealSlot.values.last)
+              Container(
+                width: 1,
+                height: 26,
+                margin: const EdgeInsets.only(right: 14),
+                color: AppColors.line(context),
+              ),
+          ],
         ],
       ),
     );
