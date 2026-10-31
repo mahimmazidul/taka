@@ -9,6 +9,7 @@ class TransactionQuery {
   const TransactionQuery({
     this.type,
     this.categoryId,
+    this.categoryIds,
     this.search,
     this.from,
     this.toExclusive,
@@ -17,6 +18,10 @@ class TransactionQuery {
 
   final EntryType? type;
   final String? categoryId;
+
+  /// Filter to a whole group: the group is not loggable, but its items are, so
+  /// "show me all food" is a single tap.
+  final Set<String>? categoryIds;
   final String? search;
   final DateTime? from;
   final DateTime? toExclusive;
@@ -90,6 +95,12 @@ class TransactionRepository {
     if (q.categoryId != null) {
       where.add('category_id = ?');
       args.add(q.categoryId);
+    }
+    final Set<String>? ids = q.categoryIds;
+    if (ids != null && ids.isNotEmpty) {
+      final String marks = List<String>.filled(ids.length, '?').join(', ');
+      where.add('category_id IN ($marks)');
+      args.addAll(ids);
     }
     if (q.search != null && q.search!.trim().isNotEmpty) {
       where.add('note LIKE ?');
