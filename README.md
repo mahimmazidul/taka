@@ -1,14 +1,14 @@
 # Taka · টাকা
 
-> **Amar taka gelota koi?** — a personal, offline daily expense tracker for hall life.
-> No account. No cloud. No subscription. Your taka, your phone, your file.
+A daily khata for hall life — what you ate, what you spent, who owes you, and how
+much of the month is left. Built by **Mahim Mazidul** for one hall student in
+Dhaka, and for anyone else keeping a khata in their pocket.
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
-![Platform](https://img.shields.io/badge/Android-offline%20first-0E9F6E)
-![Tests](https://img.shields.io/badge/tests-43%20passing-0E9F6E)
-![Android](https://img.shields.io/badge/minSdk-21%2B-3DDC84?logo=android&logoColor=white)
-[![Download APK](https://img.shields.io/badge/download-v1.0.1%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-45%20passing-0E9F6E)
+[![Download APK](https://img.shields.io/badge/download-v1.1.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -35,49 +35,85 @@ refreshed whenever the UI changes. No mockups.
 |---|---|
 | ![Categories](docs/screenshots/categories.png) | ![Settings](docs/screenshots/settings.png) |
 
-Small phone (320 × 568) — same layout, same information, nothing clipped or
-scrolled off the side:
-
-![Small phone](docs/screenshots/home_small.png)
+| About | Small phone (320 × 568) |
+|---|---|
+| ![About](docs/screenshots/about.png) | ![Small phone](docs/screenshots/home_small.png) |
 
 ---
 
 ## What it does
 
-- **Log an entry in seconds** — big keypad, expense/income switch, one-tap category
-  chips, note, and a date that defaults to now but can be changed.
-- **Granular hall-life categories** — ভাত, মাছ, মাংস, সবজি, নাস্তা, বাইরের খাবার,
-  কসমেটিকস, কাপড়, লন্ড্রি, ওষুধ, হল খরচ, যাতায়াত, মোবাইল, বই-খাতা, বিনোদন, অন্যান্য.
-  Rice, fish and cosmetics are separate on purpose: the point is knowing *where*
-  the taka went without tagging anything by hand. Rename, recolour, re-icon,
-  add or delete categories freely — deleting one moves its entries to "Other".
-- **Home dashboard** — this month's balance, today / week / month spend, a 7-day
-  bar chart, budget bars, udhar summary, latest five entries.
-- **History** — grouped by day with per-day totals, live note search,
-  expense/income filter, category filter and date range. Tap to edit,
-  long-press to delete.
-- **Budgets** — a monthly cap plus a limit per category. Amber at 80%, red and
-  "over by ৳ x" past the limit.
-- **Udhar** — money you lent or borrowed, per person. Tap to settle, long-press
-  to delete.
-- **Backup** — JSON export/import (everything, restorable) and CSV export for
-  Excel/Sheets. One tap wipes the ledger.
-- **Bangla-first type** — Hind Siliguri for Latin, Bengali and ৳ alike, with a
-  light/dark theme.
+**Log an entry in one tap.** Open, tap ভাত, type the amount, save. The category
+picker opens on the group you used last, so the common case never scrolls. A meal
+tag (breakfast / lunch / dinner) is pre-picked from the clock and is one tap to
+change — or to remove.
 
-Deliberately **not** included: login, cloud sync, Firebase, multi-user
-workspaces, ads, paid APIs.
+**Two levels of categories, seeded for hall life.** A group holds items, and an
+item is what you log. Everything is renameable, recolourable and re-iconable, and
+you can add your own groups or park a new item at the top level.
+
+| Group | Items |
+|---|---|
+| মেইন কোর্স · Main course | ভাত, মাছ, মাংস, পোলাও, খিচুড়ি, সবজি, ডাল, ডিম |
+| ড্রিংকস · Drinks | ড্রিংকো, স্পিড, মোজো, কোক / পেপসি, জুস, পানি, কফি |
+| নাস্তা · Snacks | পরোটা, সমুচা, সিঙ্গারা, টোস্ট, বিস্কুট, চিপস, চা |
+| মিষ্টি · Sweets | মিষ্টি, দই, আইসক্রিম, চকলেট |
+| ফল · Fruits | কলা, আপেল, আম, পেয়ারা, পেঁপে, কমলা, তরমুজ |
+| কসমেটিকস · Cosmetics & grooming | বডি ওয়াশ, ফেস ওয়াশ, শ্যাম্পু, সাবান, শেভিং ক্রিম, রেজর, ডিওডোরেন্ট, হেয়ার অয়েল, টুথপেস্ট |
+| বই-খাতা · Books & stationery | শিট, নোটবুক, কলম, পেন্সিল, ইরেজার, ফটোকপি, খাতা, বই |
+| কাপড় · Clothes | জামা, প্যান্ট, টি-শার্ট, জুতা, মোজা, আন্ডারগার্মেন্ট |
+| স্বাস্থ্য · Health | ওষুধ, ডাক্তার, টেস্ট, জিম, সাপ্লিমেন্ট |
+| হল খরচ · Hall & room | রুম ভাড়া, বিদ্যুৎ, পানি বিল, ওয়াইফাই, হল চাঁদা, মেস বিল |
+| যাতায়াত · Transport | রিকশা, সিএনজি, বাস, ট্রেন, রাইড শেয়ার, পার্কিং |
+| মোবাইল · Mobile & internet | রিচার্জ, ডেটা প্যাক, এক্সেসরিজ |
+| বিনোদন · Entertainment | সিনেমা, গেম, সাবস্ক্রিপশন, ঘুরতে যাওয়া |
+| উপহার ও পরিবার · Gifts & family | উপহার দেওয়া, দান, পরিবার |
+| ফি ও জরিমানা · Fees & fines | পরীক্ষা ফি, লাইব্রেরি ফি, জরিমানা |
+
+Plus three that sit on the top row themselves — **বাইরের খাবার · Dining out**,
+**লন্ড্রি · Laundry**, **অন্যান্য · Other** — and six income sources (বাসা থেকে,
+টিউশন, বৃত্তি, ফ্রিল্যান্স, উপহার, অন্যান্য).
+
+**See where the month went.** A hero balance, today / week / month, a 7-day chart,
+today's meals, the budget bars closest to their limit, udhar and the last five
+entries.
+
+**Budgets that roll up.** Cap a whole group (food: ৳ 5,000) or a single item
+(shampoo: ৳ 200). Amber at 80%, red and "over by ৳ x" past the limit.
+
+**History that answers questions.** Grouped by day with per-day totals, live note
+search, expense/income filter, a group filter that covers everything inside it,
+and date ranges. Tap to edit, long-press to delete.
+
+**Udhar.** Money lent and borrowed per person, one tap to settle.
+
+**Backups you can pick up on another phone.** JSON export / import and CSV for
+Excel or Sheets.
 
 ---
 
 ## Install
 
-Grab the newest `taka-*.apk` from
-[Releases](https://github.com/mahimmazidul/taka/releases) (built by CI on every tag)
-or from the `taka-apk` artifact of any green
-[workflow run](https://github.com/mahimmazidul/taka/actions/workflows/release.yml).
-Android will ask you to allow installs from unknown sources — that's expected for
-an app that isn't on the Play Store.
+Grab the newest file from [Releases](https://github.com/mahimmazidul/taka/releases):
+
+| File | Use it for |
+|---|---|
+| `taka-<version>-arm64.apk` | **Almost every phone** made since ~2016 (64-bit ARM) |
+| `taka-<version>-arm32.apk` | Very old or very cheap 32-bit devices |
+| `taka-<version>-x86_64.apk` | Emulators only |
+| `taka-<version>.aab` | Publishing to a store — not something you install by hand |
+
+Same features, same UI, same code — the APKs only differ in which CPU build they
+carry. Android will ask you to allow installs from unknown sources; that is
+expected for an app that isn't on the Play Store.
+
+### About the download size
+
+One universal APK bundles three CPU builds and is roughly 50 MB. Split per ABI,
+the arm64 build is a fraction of that, because it carries only what your phone
+actually runs. Minifying the Dart code (`--obfuscate`) or trimming Android
+resources would shave a little more, at the cost of readable crash reports —
+not worth it for an app whose weight is the Flutter engine itself.
 
 ## Run it yourself
 
@@ -92,20 +128,21 @@ Quality gates used in CI:
 
 ```bash
 flutter analyze                               # 0 issues
-flutter test --concurrency=1                  # 43 tests
+flutter test --concurrency=1                  # 45 tests
 dart format --output=none --set-exit-if-changed lib test
 ```
 
 ## Release flow
 
-`git tag v1.0.0 && git push origin v1.0.0` →
-[`.github/workflows/release.yml`](.github/workflows/release.yml) runs analysis,
-tests, builds a release APK and attaches it to a GitHub Release.
-Pushes to `main` still build the APK and keep it as a workflow artifact.
+`git tag v1.1.0 && git push origin v1.1.0` →
+[`.github/workflows/release.yml`](.github/workflows/release.yml) runs formatting,
+analysis and the tests, builds one APK per CPU plus an app bundle, keeps them as
+workflow artifacts and attaches them to a GitHub Release. Pushes to `main` build
+the same artifacts without publishing a release.
 
-The APK is signed with Flutter's debug key so CI can always produce an
-installable file. For a store-ready build, add your keystore and
-`android/key.properties`, then point `signingConfigs.release` at it.
+The APK is signed with Flutter's debug key so CI can always produce an installable
+file. For a store-ready build, add your keystore and `android/key.properties`, then
+point `signingConfigs.release` at it.
 
 ---
 
@@ -118,40 +155,42 @@ lib/
 ├── core/
 │   ├── app_theme.dart         palette, Hind Siliguri text theme, light/dark
 │   ├── motion.dart            Pressable, Reveal, AnimatedMoney, page route
-│   └── clock.dart             the one place DateTime.now() lives
+│   ├── clock.dart             the one place DateTime.now() lives
+│   └── app_info.dart          name, version, author — read by About
 ├── constants/
-│   ├── default_categories.dart  the 22 seeded categories (Bangla + English)
-│   └── category_icons.dart      icon keys, icon picker list, colour swatches
-├── models/                    transaction_entry, app_category, udhar_entry,
-│                              app_settings, period_totals, budget_progress, day_group
-├── db/                        database.dart (schema v2 + migration) and
-│                              one repository per table
+│   ├── default_categories.dart    15 groups, 3 standalone items, 6 income sources
+│   ├── default_subcategories.dart the 90+ items inside those groups
+│   └── category_icons.dart        70 icon keys, the picker subset, colour swatches
+├── models/                    transaction_entry (+meal), app_category (+parent),
+│                              udhar_entry, app_settings, meal_slot,
+│                              period_totals, budget_progress, day_group
+├── db/                        database.dart (schema v3, migrations, additive
+│                              seeding) and one repository per table
 ├── store/                     app_state.dart (ChangeNotifier) plus extensions:
 │                              settings_actions, category_actions, udhar_actions,
 │                              data_actions
 ├── utils/                     format_currency, date_helpers, budget_calculator,
 │                              currency_catalog, export_data, color_hex, id
-├── components/                section_title, hero_balance, stat_strip, week_bars,
+├── components/                category_picker, hero_balance, stat_strip, week_bars,
 │                              budget_line, entry_row, category_tile, segmented,
 │                              amount_keypad, app_sheet, primary_button,
-│                              settings_row, empty_state
-└── screens/                   app_shell (floating tab bar), home, add_entry,
-                               history, udhar, budgets, settings, categories,
-                               category_editor_sheet
+│                              settings_row, section_title, empty_state
+└── screens/                   app_shell, home, add_entry, history, udhar, budgets,
+                               categories, category_editor_sheet, settings, about
 ```
 
 Five runtime dependencies, all of them boring: `sqflite` (local SQLite), `path`,
-`path_provider` (where to write the backup), `share_plus` 13 (hand the backup to
+`path_provider` (where the backup is written), `share_plus` 13 (hand a file to
 Android's share sheet) and `file_picker` 13 (pick a JSON file to restore). No
 state-management package, no chart package, no HTTP client, no analytics.
-The Android module compiles against API 36 (plugins require it) and runs on API 21+.
 
-### Data model (SQLite `taka.db`, schema v2)
+### Data model (SQLite `taka.db`, schema v3)
 
 ```sql
-categories(id, name, name_bn, icon, color, kind, budget_minor, sort_order)
+categories(id, name, name_bn, icon, color, kind, budget_minor,
+           sort_order, parent_id, is_group)
 transactions(id, type, amount_minor, category_id, note,
-             occurred_at, created_at, updated_at)
+             occurred_at, created_at, updated_at, meal)
 udhar_entries(id, type, person, amount_minor, note, occurred_at,
               returned, returned_at, created_at, updated_at)
 settings(key, value)
@@ -161,38 +200,59 @@ settings(key, value)
   `৳ 1,250.50` exists only at the UI edge (`utils/format_currency.dart`).
 - **Timestamps are epoch milliseconds**, so today/week/month are indexed range
   queries, and the whole ledger filters in memory for instant search.
-- **Income sources are categories** with `kind = 'income'`, which is what the
-  "source" field needs without a second table.
+- **A group is a row with `is_group = '1'`**; its items point at it through
+  `parent_id`, so a group budget and a group filter are a rollup, not a second
+  table.
+- **Income sources are categories** with `kind = 'income'`.
 - **Weeks start Sunday** (Bangladesh convention) — one constant in `date_helpers.dart`.
 - **"Now" comes from `AppClock`**, never from `DateTime.now()` directly. Tests point
-  it at a frozen instant, which is the only reason the screenshots are byte-stable.
-- Schema v1 → v2 migrates in place: adds `name_bn`, maps old emoji icons to icon
-  keys and inserts the new granular categories. No data loss.
+  it at a frozen instant, which is why the screenshots are byte-stable.
+
+### Upgrades never eat your ledger
+
+Three deliberate rules, because losing last month's khata over an app update would
+be unforgivable:
+
+1. **Category ids are never renamed.** When the flat list became groups, ভাত kept
+   `id = 'rice'`; it only gained `parent_id = 'g_main'`. Every old transaction still
+   points at the right category.
+2. **Seeding is additive and runs on every open.** Any seeded category missing from
+   the database is inserted; nothing that already exists is ever overwritten — your
+   names, colours and limits win.
+3. **Migrations are idempotent.** Columns are added only if absent, so an
+   interrupted upgrade cannot leave a database that refuses to open.
+
+`test/database_test.dart` builds a v2 database by hand, reopens it with the current
+code and asserts the old entry, its category and its budget all survived.
 
 ### Tests
 
-43 tests, all offline (28 logic + database, 6 screen, 9 golden):
+45 tests, all offline (29 logic + database, 6 screen, 10 golden):
 
 | File | Covers |
 |---|---|
 | `test/logic_test.dart` | money formatting, exact keypad→paisa conversion, date helpers, budget thresholds, labels |
-| `test/database_test.dart` | the real schema and SQL on an in-memory SQLite: seeds, CRUD, totals, per-day buckets, filters, category reassignment, udhar settlement, settings, backup round-trip, CSV |
-| `test/screens_test.dart` | whole app at 320 / 360 / 414 / 768 widths, 1.3× text scale, tab switching, adding an entry end-to-end, dark-mode toggle |
-| `test/golden_test.dart` | every screenshot in this README — home (light, dark, small phone), add entry, history, udhar, budgets, categories, settings |
+| `test/database_test.dart` | the real schema and SQL on SQLite: seeds and the category tree, CRUD, totals, per-day buckets, filters, category reassignment and group deletion, udhar settlement, settings, backup round-trip, CSV, and the v2 → v3 migration |
+| `test/screens_test.dart` | the whole app at 320 / 360 / 414 / 768 widths, 1.3× text scale, tab switching, adding an entry end-to-end, dark-mode toggle |
+| `test/golden_test.dart` | every screenshot in this README |
 
 ---
 
 ## Credits
 
+- **Mahim Mazidul** (মাহিম মাজিদুল) — idea, requirements, and the refusal to accept a
+  boxy app or an emoji.
 - **Hind Siliguri** (Indian Type Foundry / Google Fonts) — SIL Open Font License 1.1.
-  Bundled in `assets/fonts/` so Bangla, Latin and ৳ all render without network access.
+  Bundled in `assets/fonts/` so Bangla, Latin and ৳ all render in one family.
 - Icons: Material Symbols via `flutter/material`.
-- Built for one hall student in Dhaka, and for whoever else keeps a khata in their pocket.
 
 ## Changelog
 
-- **v1.0.1** — budget rows no longer printed the category twice; the budgets and
-  categories screens joined the screenshot suite; time is read through `AppClock` so
-  the goldens stopped drifting; release builds compile against API 36.
+- **v1.1.0** — two-level categories (groups + items, 90+ seeded items), meal tags
+  with a "today's meals" strip, group budgets and group filters, additive seeding
+  and a safe v2 → v3 migration, About screen with the author credit, and CI now
+  ships one APK per CPU plus an app bundle instead of one 50 MB universal APK.
+- **v1.0.1** — budget rows no longer printed the category twice; budgets and
+  categories joined the screenshot suite; time routed through `AppClock`.
 - **v1.0.0** — first full build: dashboard, add/edit, history with filters, udhar,
   budgets, category manager, JSON/CSV backup, dark mode, CI release pipeline.
