@@ -12,6 +12,7 @@ import '../store/app_state.dart';
 import '../utils/date_helpers.dart';
 import '../utils/format_currency.dart';
 import 'add_entry_screen.dart';
+import '../core/clock.dart';
 
 enum _Range { all, thisMonth, last7 }
 
@@ -105,7 +106,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       builder: (BuildContext context, Widget? _) {
         final AppState state = AppState.instance;
         final String symbol = state.currencySymbol;
-        final DateTime now = DateTime.now();
+        final DateTime now = AppClock.now();
 
         DateTime? from;
         if (_range == _Range.thisMonth) from = startOfMonth(now);

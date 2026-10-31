@@ -17,6 +17,7 @@ import '../utils/date_helpers.dart';
 import '../utils/format_currency.dart';
 import 'add_entry_screen.dart';
 import 'budgets_screen.dart';
+import '../core/clock.dart';
 
 /// Dashboard. One hero, then open sections separated by hairlines — no stacks
 /// of rounded boxes.
@@ -43,7 +44,7 @@ class HomeScreen extends StatelessWidget {
         }
 
         final String symbol = state.currencySymbol;
-        final DateTime now = DateTime.now();
+        final DateTime now = AppClock.now();
 
         return SafeArea(
           bottom: false,

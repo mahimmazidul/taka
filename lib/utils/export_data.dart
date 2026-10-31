@@ -9,6 +9,7 @@ import '../models/app_category.dart';
 import '../models/app_settings.dart';
 import '../models/transaction_entry.dart';
 import '../models/udhar_entry.dart';
+import '../core/clock.dart';
 
 const String kBackupFormat = 'taka-backup';
 const int kBackupVersion = 1;
@@ -23,7 +24,7 @@ String buildBackupJson({
   final Map<String, Object?> payload = <String, Object?>{
     'format': kBackupFormat,
     'version': kBackupVersion,
-    'exportedAt': DateTime.now().toIso8601String(),
+    'exportedAt': AppClock.now().toIso8601String(),
     'settings': settings.toMap(),
     'categories': categories.map((AppCategory c) => c.toMap()).toList(),
     'transactions': transactions

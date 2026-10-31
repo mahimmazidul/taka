@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 import '../models/period_totals.dart';
 import '../utils/date_helpers.dart';
+import '../core/clock.dart';
 
 /// Seven bare bars. Each grows into place once on mount — one tween per bar,
 /// no painting tricks, so it costs nothing on a low-end phone.
@@ -19,7 +20,7 @@ class WeekBars extends StatelessWidget {
       (int best, DailyTotal day) =>
           day.expenseMinor > best ? day.expenseMinor : best,
     );
-    final DateTime today = DateTime.now();
+    final DateTime today = AppClock.now();
 
     return SizedBox(
       height: height,

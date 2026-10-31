@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/udhar_entry.dart';
 import 'database.dart';
+import '../core/clock.dart';
 
 /// Lend/borrow records. Kept separate from `transactions`: udhar is not
 /// spending until it stays unreturned.
@@ -54,8 +55,8 @@ class UdharRepository {
       _table,
       <String, Object?>{
         'returned': returned ? 1 : 0,
-        'returned_at': returned ? DateTime.now().millisecondsSinceEpoch : null,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
+        'returned_at': returned ? AppClock.now().millisecondsSinceEpoch : null,
+        'updated_at': AppClock.now().millisecondsSinceEpoch,
       },
       where: 'id = ?',
       whereArgs: <Object?>[id],

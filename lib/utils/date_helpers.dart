@@ -2,6 +2,7 @@
 library;
 
 import '../models/day_group.dart';
+import '../core/clock.dart';
 
 const int kWeekStartsOnWeekday = DateTime.sunday;
 
@@ -76,7 +77,7 @@ String weekdayShort(DateTime moment) => _weekdayShort[moment.weekday - 1];
 
 /// "Today", "Yesterday", "12 Oct", or "12 Oct 2025" for older years.
 String formatDateLabel(DateTime moment) {
-  final DateTime today = startOfDay(DateTime.now());
+  final DateTime today = startOfDay(AppClock.now());
   final DateTime day = startOfDay(moment);
   final int delta = today.difference(day).inDays;
 
@@ -90,7 +91,7 @@ String formatDateLabel(DateTime moment) {
 /// Today/Yesterday get the weekday too ("Today · Sat, 31 Oct"); older days
 /// would just repeat the date, so they show "Thu, 29 Oct".
 String formatDayHeading(DateTime moment) {
-  final DateTime today = startOfDay(DateTime.now());
+  final DateTime today = startOfDay(AppClock.now());
   final int delta = today.difference(startOfDay(moment)).inDays;
   final String weekday =
       '${weekdayShort(moment)}, ${moment.day} ${monthShort(moment.month)}';
@@ -110,7 +111,7 @@ String formatTime(DateTime moment) {
 
 /// Keeps the current clock time when the user only picks a different day.
 DateTime withCurrentTime(DateTime day) {
-  final DateTime now = DateTime.now();
+  final DateTime now = AppClock.now();
   return DateTime(
     day.year,
     day.month,

@@ -9,6 +9,7 @@ import '../models/transaction_entry.dart';
 import '../store/app_state.dart';
 import '../utils/date_helpers.dart';
 import '../utils/format_currency.dart';
+import '../core/clock.dart';
 
 /// Add or edit one entry. Custom keypad, so the numbers stay big and the
 /// system keyboard never covers the form while you punch in an amount.
@@ -42,7 +43,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
     super.initState();
     final TransactionEntry? entry = widget.entry;
     _type = entry?.type ?? EntryType.expense;
-    _occurredAt = entry?.occurredAt ?? DateTime.now();
+    _occurredAt = entry?.occurredAt ?? AppClock.now();
     _amountText = entry == null ? '' : minorToKeypadText(entry.amountMinor);
     _note = TextEditingController(text: entry?.note ?? '');
     _categoryId = entry?.categoryId ?? '';
@@ -94,7 +95,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       context: context,
       initialDate: _occurredAt,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: AppClock.now().add(const Duration(days: 1)),
       builder: (BuildContext context, Widget? child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: Theme.of(context).colorScheme
@@ -301,7 +302,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                           onPickTime: _pickTime,
                           onQuickDay: (int daysAgo) => setState(
                             () => _occurredAt = withCurrentTime(
-                              DateTime.now().subtract(Duration(days: daysAgo)),
+                              AppClock.now().subtract(Duration(days: daysAgo)),
                             ),
                           ),
                         ),
@@ -408,10 +409,10 @@ class _DateRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isToday = isSameDay(occurredAt, DateTime.now());
+    final bool isToday = isSameDay(occurredAt, AppClock.now());
     final bool isYesterday = isSameDay(
       occurredAt,
-      DateTime.now().subtract(const Duration(days: 1)),
+      AppClock.now().subtract(const Duration(days: 1)),
     );
 
     return SingleChildScrollView(

@@ -12,6 +12,7 @@ import '../store/app_state.dart';
 import '../store/udhar_actions.dart';
 import '../utils/date_helpers.dart';
 import '../utils/format_currency.dart';
+import '../core/clock.dart';
 
 /// Lend / borrow tracker. Marking something returned is one tap; long-press
 /// deletes it.
@@ -106,7 +107,7 @@ class _UdharScreenState extends State<UdharScreen> {
                           person: person.text,
                           amountMinor: minor,
                           note: note.text,
-                          occurredAt: DateTime.now(),
+                          occurredAt: AppClock.now(),
                         );
                         if (context.mounted) Navigator.of(context).pop();
                       },

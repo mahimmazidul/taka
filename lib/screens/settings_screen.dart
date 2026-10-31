@@ -16,6 +16,7 @@ import '../utils/currency_catalog.dart';
 import '../utils/export_data.dart';
 import 'budgets_screen.dart';
 import 'categories_screen.dart';
+import '../core/clock.dart';
 
 /// Preferences, category management, backup and the destructive button.
 class SettingsScreen extends StatelessWidget {
@@ -65,7 +66,7 @@ class SettingsScreen extends StatelessWidget {
   Future<void> _exportJson(BuildContext context) async {
     final String json = await AppState.instance.buildFullBackup();
     await shareTextFile(
-      fileName: 'taka-backup-${DateTime.now().millisecondsSinceEpoch}.json',
+      fileName: 'taka-backup-${AppClock.now().millisecondsSinceEpoch}.json',
       content: json,
       subject: 'Taka backup',
     );
@@ -75,7 +76,7 @@ class SettingsScreen extends StatelessWidget {
   Future<void> _exportCsv(BuildContext context) async {
     final String csv = await AppState.instance.buildCsv();
     await shareTextFile(
-      fileName: 'taka-ledger-${DateTime.now().millisecondsSinceEpoch}.csv',
+      fileName: 'taka-ledger-${AppClock.now().millisecondsSinceEpoch}.csv',
       content: csv,
       subject: 'Taka ledger',
     );
