@@ -72,23 +72,45 @@ jobs:
 
       # Signed with the debug key so every push produces an installable APK.
       # Add a keystore + key.properties as secrets to ship a proper release key.
-      - name: Build release APK
+      #
+      # --split-per-abi matters for size: one universal APK carries three CPU
+      # builds (arm64 + arm32 + x86), which is most of the download. Split, each
+      # APK is a fraction of that and identical in features and UI.
+      - name: Build release APKs (one per CPU)
         run: |
-          flutter build apk --release \
+          flutter build apk --release --split-per-abi \
             --build-name ${{ steps.version.outputs.name }} \
             --build-number ${{ steps.version.outputs.code }}
 
-      - name: Rename artifact
+      - name: Build app bundle
+        run: |
+          flutter build appbundle --release \
+            --build-name ${{ steps.version.outputs.name }} \
+            --build-number ${{ steps.version.outputs.code }}
+
+      - name: Collect artifacts
         run: |
           mkdir -p artifacts
-          cp build/app/outputs/flutter-apk/app-release.apk \
-             artifacts/taka-${{ steps.version.outputs.name }}.apk
+          V=${{ steps.version.outputs.name }}
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk   artifacts/taka-$V-arm64.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk artifacts/taka-$V-arm32.apk
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk      artifacts/taka-$V-x86_64.apk
+          cp build/app/outputs/bundle/release/app-release.aab          artifacts/taka-$V.aab
+          ls -lh artifacts
 
-      - name: Upload APK artifact
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: taka-apk
           path: artifacts/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: taka-aab
+          path: artifacts/*.aab
           if-no-files-found: error
           retention-days: 30
 
@@ -99,9 +121,15 @@ jobs:
           name: Taka ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
-          files: artifacts/*.apk
+          files: |
+            artifacts/*.apk
+            artifacts/*.aab
           body: |
             **Taka · টাকা** — offline personal expense tracker for hall life.
 
-            Install `taka-*.apk` on an Android phone (allow "install from unknown sources").
+            **Which file do I want?** `taka-<version>-arm64.apk` for any phone made
+            since ~2016. `arm32` only for something very old. The `.aab` is for
+            publishing, not for installing by hand.
+
+            Install the APK on an Android phone (allow "install from unknown sources").
             Data stays on the device: no account, no cloud.
