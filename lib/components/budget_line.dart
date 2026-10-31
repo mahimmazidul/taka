@@ -12,11 +12,25 @@ class BudgetLine extends StatelessWidget {
     required this.progress,
     required this.symbol,
     this.onTap,
+    this.showHeader = true,
+    this.showDetail = true,
+    this.padding,
   });
 
   final BudgetProgress progress;
   final String symbol;
   final VoidCallback? onTap;
+
+  /// Icon + category label + percentage above the track. Off when the caller
+  /// already draws its own row — the budgets screen does, so it would otherwise
+  /// print every category name twice.
+  final bool showHeader;
+
+  /// The "৳ 95 of ৳ 200" line under the track.
+  final bool showDetail;
+
+  /// Overrides the default padding; used to align the bare track under a label.
+  final EdgeInsetsGeometry? padding;
 
   Color get _color => switch (progress.status) {
     BudgetStatus.ok => progress.category.color,
@@ -39,37 +53,43 @@ class BudgetLine extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+        padding:
+            padding ??
+            (showHeader
+                ? const EdgeInsets.fromLTRB(20, 10, 20, 12)
+                : const EdgeInsets.fromLTRB(20, 6, 20, 10)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Icon(progress.category.iconData, size: 15, color: color),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text(
-                    progress.category.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.ink(context),
+            if (showHeader) ...<Widget>[
+              Row(
+                children: <Widget>[
+                  Icon(progress.category.iconData, size: 15, color: color),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      progress.category.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.ink(context),
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  '$percent%',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: color,
+                  Text(
+                    '$percent%',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
             ClipRRect(
               borderRadius: BorderRadius.circular(99),
               child: TweenAnimationBuilder<double>(
@@ -86,21 +106,23 @@ class BudgetLine extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              detail,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11.5,
-                color: progress.status == BudgetStatus.ok
-                    ? AppColors.muted(context)
-                    : color,
-                fontWeight: progress.status == BudgetStatus.ok
-                    ? FontWeight.w400
-                    : FontWeight.w600,
+            if (showDetail) ...<Widget>[
+              const SizedBox(height: 6),
+              Text(
+                detail,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: progress.status == BudgetStatus.ok
+                      ? AppColors.muted(context)
+                      : color,
+                  fontWeight: progress.status == BudgetStatus.ok
+                      ? FontWeight.w400
+                      : FontWeight.w600,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

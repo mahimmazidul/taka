@@ -202,6 +202,12 @@ class BudgetsScreen extends StatelessWidget {
   }
 }
 
+Color _statusColor(BudgetProgress progress) => switch (progress.status) {
+  BudgetStatus.ok => progress.category.color,
+  BudgetStatus.warning => Palette.warning,
+  BudgetStatus.exceeded => Palette.expense,
+};
+
 class _CategoryLimitRow extends StatelessWidget {
   const _CategoryLimitRow({
     required this.category,
@@ -231,29 +237,69 @@ class _CategoryLimitRow extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 CategoryTile(category: category, size: 36),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    category.label,
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.ink(context),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        category.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.ink(context),
+                        ),
+                      ),
+                      if (derived.isNotEmpty)
+                        Text(
+                          '${formatMoney(spentMinor, symbol: symbol)} of '
+                          '${formatMoney(limit!, symbol: symbol)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: derived.first.status == BudgetStatus.ok
+                                ? AppColors.muted(context)
+                                : _statusColor(derived.first),
+                            fontWeight: derived.first.status == BudgetStatus.ok
+                                ? FontWeight.w400
+                                : FontWeight.w600,
+                          ),
+                        )
+                      else
+                        Text(
+                          '${formatMoney(spentMinor, symbol: symbol)} spent '
+                          'this month',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.muted(context),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
+                const SizedBox(width: 10),
                 Text(
-                  limit == null
+                  derived.isNotEmpty
+                      ? '${(derived.first.ratio * 100).round()}%'
+                      : limit == null
                       ? 'Set limit'
                       : formatMoney(limit, symbol: symbol),
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: limit == null
                         ? FontWeight.w500
-                        : FontWeight.w600,
-                    color: limit == null
+                        : FontWeight.w700,
+                    color: derived.isNotEmpty
+                        ? _statusColor(derived.first)
+                        : limit == null
                         ? AppColors.muted(context)
                         : AppColors.ink(context),
                   ),
@@ -263,17 +309,12 @@ class _CategoryLimitRow extends StatelessWidget {
           ),
         ),
         if (derived.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: BudgetLine(progress: derived.first, symbol: symbol),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.fromLTRB(68, 0, 20, 10),
-            child: Text(
-              '${formatMoney(spentMinor, symbol: symbol)} spent this month',
-              style: TextStyle(fontSize: 11.5, color: AppColors.muted(context)),
-            ),
+          BudgetLine(
+            progress: derived.first,
+            symbol: symbol,
+            showHeader: false,
+            showDetail: false,
+            padding: const EdgeInsets.fromLTRB(68, 6, 20, 4),
           ),
       ],
     );
