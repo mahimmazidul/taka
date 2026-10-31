@@ -71,7 +71,9 @@ class AppDatabase {
         updated_at INTEGER NOT NULL
       )
     ''');
-    batch.execute('CREATE INDEX idx_tx_occurred ON transactions(occurred_at DESC)');
+    batch.execute(
+      'CREATE INDEX idx_tx_occurred ON transactions(occurred_at DESC)',
+    );
     batch.execute('CREATE INDEX idx_tx_category ON transactions(category_id)');
 
     batch.execute('''
@@ -109,7 +111,9 @@ class AppDatabase {
   Future<void> _upgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       final Batch batch = db.batch();
-      batch.execute("ALTER TABLE categories ADD COLUMN name_bn TEXT NOT NULL DEFAULT ''");
+      batch.execute(
+        "ALTER TABLE categories ADD COLUMN name_bn TEXT NOT NULL DEFAULT ''",
+      );
 
       const Map<String, String> banglaByOldId = <String, String>{
         'food': 'খাবার',
@@ -126,9 +130,18 @@ class AppDatabase {
         'other_income': 'অন্যান্য',
       };
       const Map<String, String> iconByOldEmoji = <String, String>{
-        '🍚': 'rice', '🚌': 'bus', '🧾': 'wifi', '🛍️': 'shirt', '💊': 'medicine',
-        '🎬': 'movie', '📦': 'other', '💼': 'salary', '🏪': 'salary',
-        '💻': 'laptop', '🎁': 'gift', '➕': 'income_other',
+        '🍚': 'rice',
+        '🚌': 'bus',
+        '🧾': 'wifi',
+        '🛍️': 'shirt',
+        '💊': 'medicine',
+        '🎬': 'movie',
+        '📦': 'other',
+        '💼': 'salary',
+        '🏪': 'salary',
+        '💻': 'laptop',
+        '🎁': 'gift',
+        '➕': 'income_other',
       };
 
       banglaByOldId.forEach((String id, String bn) {

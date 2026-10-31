@@ -73,7 +73,11 @@ class _Key extends StatelessWidget {
         height: 58,
         child: Center(
           child: isBackspace
-              ? Icon(Icons.backspace_outlined, size: 19, color: AppColors.muted(context))
+              ? Icon(
+                  Icons.backspace_outlined,
+                  size: 19,
+                  color: AppColors.muted(context),
+                )
               : Text(
                   label,
                   style: TextStyle(

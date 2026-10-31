@@ -83,7 +83,10 @@ class Reveal extends StatelessWidget {
       builder: (BuildContext context, double value, Widget? child) {
         return Opacity(
           opacity: value,
-          child: Transform.translate(offset: Offset(0, offset * (1 - value)), child: child),
+          child: Transform.translate(
+            offset: Offset(0, offset * (1 - value)),
+            child: child,
+          ),
         );
       },
       child: child,
@@ -124,12 +127,19 @@ class _AnimatedMoneyState extends State<AnimatedMoney> {
   @override
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: _from.toDouble(), end: widget.minorUnits.toDouble()),
+      tween: Tween<double>(
+        begin: _from.toDouble(),
+        end: widget.minorUnits.toDouble(),
+      ),
       duration: widget.duration,
       curve: Curves.easeOutCubic,
       builder: (BuildContext context, double value, Widget? _) {
         return Text(
-          formatMoney(value.round(), symbol: widget.symbol, signed: widget.signed),
+          formatMoney(
+            value.round(),
+            symbol: widget.symbol,
+            signed: widget.signed,
+          ),
           style: widget.style,
           maxLines: 1,
         );
@@ -144,24 +154,27 @@ Route<T> slideFadeRoute<T>(Widget page) {
     transitionDuration: const Duration(milliseconds: 260),
     reverseTransitionDuration: const Duration(milliseconds: 200),
     pageBuilder: (_, _, _) => page,
-    transitionsBuilder: (
-      BuildContext context,
-      Animation<double> animation,
-      Animation<double> secondary,
-      Widget child,
-    ) {
-      final CurvedAnimation curved =
-          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.035),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
-      );
-    },
+    transitionsBuilder:
+        (
+          BuildContext context,
+          Animation<double> animation,
+          Animation<double> secondary,
+          Widget child,
+        ) {
+          final CurvedAnimation curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          return FadeTransition(
+            opacity: curved,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.035),
+                end: Offset.zero,
+              ).animate(curved),
+              child: child,
+            ),
+          );
+        },
   );
 }

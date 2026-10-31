@@ -6,7 +6,7 @@ import 'database.dart';
 /// Key/value settings store. Absent keys fall back to [AppSettings] defaults.
 class SettingsRepository {
   SettingsRepository({AppDatabase? database})
-      : _database = database ?? AppDatabase.instance;
+    : _database = database ?? AppDatabase.instance;
 
   final AppDatabase _database;
 
@@ -29,11 +29,10 @@ class SettingsRepository {
     final Map<String, String> values = settings.toMap();
     await db.transaction((Transaction txn) async {
       for (final MapEntry<String, String> entry in values.entries) {
-        await txn.insert(
-          _table,
-          <String, Object?>{'key': entry.key, 'value': entry.value},
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await txn.insert(_table, <String, Object?>{
+          'key': entry.key,
+          'value': entry.value,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
   }

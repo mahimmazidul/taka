@@ -28,7 +28,9 @@ class Segmented<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int index = options.indexWhere((SegmentOption<T> o) => o.value == value);
+    final int index = options.indexWhere(
+      (SegmentOption<T> o) => o.value == value,
+    );
     final int selected = index < 0 ? 0 : index;
     const Duration slide = Duration(milliseconds: 220);
 
@@ -123,11 +125,15 @@ class AppChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
         decoration: BoxDecoration(
           color: selected
-              ? accent.withValues(alpha: AppColors.isDark(context) ? 0.22 : 0.13)
+              ? accent.withValues(
+                  alpha: AppColors.isDark(context) ? 0.22 : 0.13,
+                )
               : AppColors.surface(context),
           borderRadius: BorderRadius.circular(13),
           border: Border.all(
-            color: selected ? accent.withValues(alpha: 0.55) : AppColors.line(context),
+            color: selected
+                ? accent.withValues(alpha: 0.55)
+                : AppColors.line(context),
             width: 1.1,
           ),
         ),
@@ -135,7 +141,11 @@ class AppChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             if (icon != null) ...<Widget>[
-              Icon(icon, size: 15, color: selected ? accent : AppColors.muted(context)),
+              Icon(
+                icon,
+                size: 15,
+                color: selected ? accent : AppColors.muted(context),
+              ),
               const SizedBox(width: 6),
             ],
             Text(

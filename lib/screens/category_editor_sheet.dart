@@ -19,7 +19,8 @@ Future<void> showCategoryEditor(
   await showAppSheet<void>(
     context: context,
     expand: true,
-    builder: (BuildContext context) => _CategoryEditor(category: category, kind: kind),
+    builder: (BuildContext context) =>
+        _CategoryEditor(category: category, kind: kind),
   );
 }
 
@@ -34,10 +35,12 @@ class _CategoryEditor extends StatefulWidget {
 }
 
 class _CategoryEditorState extends State<_CategoryEditor> {
-  late final TextEditingController _nameBn =
-      TextEditingController(text: widget.category?.nameBn ?? '');
-  late final TextEditingController _name =
-      TextEditingController(text: widget.category?.name ?? '');
+  late final TextEditingController _nameBn = TextEditingController(
+    text: widget.category?.nameBn ?? '',
+  );
+  late final TextEditingController _name = TextEditingController(
+    text: widget.category?.name ?? '',
+  );
   late String _icon = widget.category?.icon ?? kIconPickerKeys.first;
   late String _color = widget.category?.colorHex ?? kCategoryPalette.first;
 
@@ -72,7 +75,9 @@ class _CategoryEditorState extends State<_CategoryEditor> {
 
   Future<void> _delete() async {
     final AppCategory category = widget.category!;
-    final int used = await AppState.instance.categoryRepo.usageCount(category.id);
+    final int used = await AppState.instance.categoryRepo.usageCount(
+      category.id,
+    );
     if (!mounted) return;
 
     final bool? ok = await showDialog<bool>(
@@ -85,7 +90,10 @@ class _CategoryEditorState extends State<_CategoryEditor> {
               : '$used entries will move to "Other" so your ledger stays complete.',
         ),
         actions: <Widget>[
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Palette.expense),
@@ -110,7 +118,9 @@ class _CategoryEditorState extends State<_CategoryEditor> {
       children: <Widget>[
         SheetTitle(
           title: _isNew ? 'New category' : 'Edit category',
-          subtitle: widget.kind == CategoryKind.expense ? 'Expense category' : 'Income source',
+          subtitle: widget.kind == CategoryKind.expense
+              ? 'Expense category'
+              : 'Income source',
         ),
         Flexible(
           child: ListView(
@@ -162,13 +172,17 @@ class _CategoryEditorState extends State<_CategoryEditor> {
                               : AppColors.bg(context),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: key == _icon ? accent : AppColors.line(context),
+                            color: key == _icon
+                                ? accent
+                                : AppColors.line(context),
                           ),
                         ),
                         child: Icon(
                           categoryIcon(key),
                           size: 20,
-                          color: key == _icon ? accent : AppColors.muted(context),
+                          color: key == _icon
+                              ? accent
+                              : AppColors.muted(context),
                         ),
                       ),
                     ),
@@ -192,7 +206,9 @@ class _CategoryEditorState extends State<_CategoryEditor> {
                           color: colorFromHex(hex),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: hex == _color ? AppColors.ink(context) : Colors.transparent,
+                            color: hex == _color
+                                ? AppColors.ink(context)
+                                : Colors.transparent,
                             width: 2,
                           ),
                         ),
@@ -207,7 +223,8 @@ class _CategoryEditorState extends State<_CategoryEditor> {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
           child: Row(
             children: <Widget>[
-              if (!_isNew && !AppState.instance.isProtectedCategory(widget.category!.id))
+              if (!_isNew &&
+                  !AppState.instance.isProtectedCategory(widget.category!.id))
                 IconButton(
                   onPressed: _delete,
                   icon: const Icon(Icons.delete_outline_rounded),

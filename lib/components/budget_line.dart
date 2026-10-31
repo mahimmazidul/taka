@@ -19,10 +19,10 @@ class BudgetLine extends StatelessWidget {
   final VoidCallback? onTap;
 
   Color get _color => switch (progress.status) {
-        BudgetStatus.ok => progress.category.color,
-        BudgetStatus.warning => Palette.warning,
-        BudgetStatus.exceeded => Palette.expense,
-      };
+    BudgetStatus.ok => progress.category.color,
+    BudgetStatus.warning => Palette.warning,
+    BudgetStatus.exceeded => Palette.expense,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -30,10 +30,10 @@ class BudgetLine extends StatelessWidget {
     final int percent = (progress.ratio * 100).round();
     final String detail = progress.status == BudgetStatus.exceeded
         ? '${formatMoney(progress.spentMinor, symbol: symbol)} of '
-            '${formatMoney(progress.budgetMinor, symbol: symbol)} · '
-            'over by ${formatMoney(progress.spentMinor - progress.budgetMinor, symbol: symbol)}'
+              '${formatMoney(progress.budgetMinor, symbol: symbol)} · '
+              'over by ${formatMoney(progress.spentMinor - progress.budgetMinor, symbol: symbol)}'
         : '${formatMoney(progress.spentMinor, symbol: symbol)} of '
-            '${formatMoney(progress.budgetMinor, symbol: symbol)}';
+              '${formatMoney(progress.budgetMinor, symbol: symbol)}';
 
     return GestureDetector(
       onTap: onTap,
@@ -93,9 +93,12 @@ class BudgetLine extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 11.5,
-                color: progress.status == BudgetStatus.ok ? AppColors.muted(context) : color,
-                fontWeight:
-                    progress.status == BudgetStatus.ok ? FontWeight.w400 : FontWeight.w600,
+                color: progress.status == BudgetStatus.ok
+                    ? AppColors.muted(context)
+                    : color,
+                fontWeight: progress.status == BudgetStatus.ok
+                    ? FontWeight.w400
+                    : FontWeight.w600,
               ),
             ),
           ],

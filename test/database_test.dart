@@ -57,22 +57,40 @@ void main() {
   test('seeds hall-life categories with Bangla labels', () async {
     final List<AppCategory> all = await categories.all();
     expect(all.length, 22);
-    expect(all.where((AppCategory c) => c.kind == CategoryKind.expense).length, 16);
-    expect(all.where((AppCategory c) => c.kind == CategoryKind.income).length, 6);
+    expect(
+      all.where((AppCategory c) => c.kind == CategoryKind.expense).length,
+      16,
+    );
+    expect(
+      all.where((AppCategory c) => c.kind == CategoryKind.income).length,
+      6,
+    );
 
     final AppCategory rice = all.firstWhere((AppCategory c) => c.id == 'rice');
     expect(rice.nameBn, 'ভাত');
     expect(rice.label, 'ভাত');
     expect(rice.icon, 'rice');
 
-    expect(all.map((AppCategory c) => c.id), containsAll(<String>[
-      'fish', 'cosmetics', 'laundry', 'snacks', 'medicine', 'other',
-    ]));
+    expect(
+      all.map((AppCategory c) => c.id),
+      containsAll(<String>[
+        'fish',
+        'cosmetics',
+        'laundry',
+        'snacks',
+        'medicine',
+        'other',
+      ]),
+    );
   });
 
   test('insert, update and delete a transaction', () async {
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 4500, at: DateTime(2026, 10, 31, 9)),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 4500,
+        at: DateTime(2026, 10, 31, 9),
+      ),
     );
     expect((await transactions.recent()).length, 1);
 
@@ -87,16 +105,32 @@ void main() {
   test('totals group by type inside the window', () async {
     final DateTime day = DateTime(2026, 10, 31);
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 4500, at: day.add(const Duration(hours: 9))),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 4500,
+        at: day.add(const Duration(hours: 9)),
+      ),
     );
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 3000, at: day.add(const Duration(hours: 14))),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 3000,
+        at: day.add(const Duration(hours: 14)),
+      ),
     );
     await transactions.insert(
-      entry(type: EntryType.income, amountMinor: 50000, at: day.add(const Duration(hours: 10))),
+      entry(
+        type: EntryType.income,
+        amountMinor: 50000,
+        at: day.add(const Duration(hours: 10)),
+      ),
     );
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 99900, at: day.subtract(const Duration(days: 2))),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 99900,
+        at: day.subtract(const Duration(days: 2)),
+      ),
     );
 
     final PeriodTotals totals = await transactions.totals(
@@ -111,16 +145,31 @@ void main() {
 
   test('dailySeries buckets entries per day, oldest first', () async {
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 4500, at: DateTime(2026, 10, 25, 8)),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 4500,
+        at: DateTime(2026, 10, 25, 8),
+      ),
     );
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 12000, at: DateTime(2026, 10, 31, 20)),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 12000,
+        at: DateTime(2026, 10, 31, 20),
+      ),
     );
     await transactions.insert(
-      entry(type: EntryType.income, amountMinor: 50000, at: DateTime(2026, 10, 31, 21)),
+      entry(
+        type: EntryType.income,
+        amountMinor: 50000,
+        at: DateTime(2026, 10, 31, 21),
+      ),
     );
 
-    final List<DailyTotal> series = await transactions.dailySeries(DateTime(2026, 10, 25), 7);
+    final List<DailyTotal> series = await transactions.dailySeries(
+      DateTime(2026, 10, 25),
+      7,
+    );
 
     expect(series.length, 7);
     expect(series.first.expenseMinor, 4500);
@@ -130,7 +179,12 @@ void main() {
 
   test('history filters: type, category, note search and date range', () async {
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 4500, at: DateTime(2026, 10, 31, 8), note: 'canteen rice'),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 4500,
+        at: DateTime(2026, 10, 31, 8),
+        note: 'canteen rice',
+      ),
     );
     await transactions.insert(
       entry(
@@ -153,35 +207,53 @@ void main() {
 
     expect((await transactions.query(const TransactionQuery())).length, 3);
     expect(
-      (await transactions.query(const TransactionQuery(type: EntryType.income))).length,
-      1,
-    );
-    expect(
-      (await transactions.query(const TransactionQuery(categoryId: 'cosmetics'))).length,
-      1,
-    );
-    expect(
-      (await transactions.query(const TransactionQuery(search: 'canteen'))).length,
+      (await transactions.query(const TransactionQuery(type: EntryType.income)))
+          .length,
       1,
     );
     expect(
       (await transactions.query(
-        TransactionQuery(from: DateTime(2026, 10, 29), toExclusive: DateTime(2026, 11, 1)),
-      ))
+        const TransactionQuery(categoryId: 'cosmetics'),
+      )).length,
+      1,
+    );
+    expect(
+      (await transactions.query(const TransactionQuery(search: 'canteen')))
           .length,
+      1,
+    );
+    expect(
+      (await transactions.query(
+        TransactionQuery(
+          from: DateTime(2026, 10, 29),
+          toExclusive: DateTime(2026, 11, 1),
+        ),
+      )).length,
       2,
     );
     // newest first
-    final List<TransactionEntry> all = await transactions.query(const TransactionQuery());
+    final List<TransactionEntry> all = await transactions.query(
+      const TransactionQuery(),
+    );
     expect(all.first.note, 'canteen rice');
   });
 
   test('monthly spend per category feeds the budget bars', () async {
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 4500, at: DateTime(2026, 10, 3), categoryId: 'rice'),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 4500,
+        at: DateTime(2026, 10, 3),
+        categoryId: 'rice',
+      ),
     );
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 5000, at: DateTime(2026, 10, 4), categoryId: 'rice'),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 5000,
+        at: DateTime(2026, 10, 4),
+        categoryId: 'rice',
+      ),
     );
     await transactions.insert(
       entry(
@@ -213,16 +285,27 @@ void main() {
   test('category budgets persist', () async {
     await categories.setMonthlyBudget('rice', 2000000);
     final List<AppCategory> all = await categories.all();
-    expect(all.firstWhere((AppCategory c) => c.id == 'rice').budgetMinor, 2000000);
+    expect(
+      all.firstWhere((AppCategory c) => c.id == 'rice').budgetMinor,
+      2000000,
+    );
   });
 
   test('deleting a category moves entries to Other', () async {
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 4500, at: DateTime(2026, 10, 31), categoryId: 'rice'),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 4500,
+        at: DateTime(2026, 10, 31),
+        categoryId: 'rice',
+      ),
     );
     expect(await categories.usageCount('rice'), 1);
 
-    await categories.reassignAndDelete(fromCategoryId: 'rice', toCategoryId: 'other');
+    await categories.reassignAndDelete(
+      fromCategoryId: 'rice',
+      toCategoryId: 'other',
+    );
 
     expect(await categories.usageCount('rice'), 0);
     expect((await transactions.recent()).single.categoryId, 'other');
@@ -230,7 +313,8 @@ void main() {
 
   test('udhar outstanding totals ignore settled records', () async {
     final DateTime now = DateTime(2026, 10, 31, 12);
-    UdharEntry record(UdharType type, int amount, bool returned, String id) => UdharEntry(
+    UdharEntry record(UdharType type, int amount, bool returned, String id) =>
+        UdharEntry(
           id: id,
           type: type,
           person: 'Rahim',
@@ -259,7 +343,9 @@ void main() {
   test('settings default when empty and persist when written', () async {
     expect((await settings.read()).currencySymbol, '৳');
 
-    await settings.write(const AppSettings(darkMode: true, monthlyBudgetMinor: 3000000));
+    await settings.write(
+      const AppSettings(darkMode: true, monthlyBudgetMinor: 3000000),
+    );
     final AppSettings stored = await settings.read();
     expect(stored.darkMode, isTrue);
     expect(stored.monthlyBudgetMinor, 3000000);
@@ -267,7 +353,12 @@ void main() {
 
   test('backup JSON round-trips through the parser', () async {
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 4500, at: DateTime(2026, 10, 31, 8), note: 'canteen'),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 4500,
+        at: DateTime(2026, 10, 31, 8),
+        note: 'canteen',
+      ),
     );
     final List<AppCategory> cats = await categories.all();
     final String json = buildBackupJson(
@@ -286,7 +377,12 @@ void main() {
 
   test('CSV export has a header and one row per entry', () async {
     await transactions.insert(
-      entry(type: EntryType.expense, amountMinor: 4500, at: DateTime(2026, 10, 31, 8), note: 'rice, dal'),
+      entry(
+        type: EntryType.expense,
+        amountMinor: 4500,
+        at: DateTime(2026, 10, 31, 8),
+        note: 'rice, dal',
+      ),
     );
     final String csv = buildLedgerCsv(
       transactions: await transactions.query(const TransactionQuery()),

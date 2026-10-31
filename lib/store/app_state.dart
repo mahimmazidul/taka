@@ -28,11 +28,11 @@ class AppState extends ChangeNotifier {
     UdharRepository? udhar,
     SettingsRepository? settings,
     DateTime Function()? clock,
-  })  : transactions = transactions ?? TransactionRepository(),
-        categoryRepo = categories ?? CategoryRepository(),
-        udharRepo = udhar ?? UdharRepository(),
-        settingsRepo = settings ?? SettingsRepository(),
-        _clock = clock ?? DateTime.now;
+  }) : transactions = transactions ?? TransactionRepository(),
+       categoryRepo = categories ?? CategoryRepository(),
+       udharRepo = udhar ?? UdharRepository(),
+       settingsRepo = settings ?? SettingsRepository(),
+       _clock = clock ?? DateTime.now;
 
   /// Swappable so widget tests can point the UI at a throwaway database.
   static AppState instance = AppState();
@@ -100,10 +100,8 @@ class AppState extends ChangeNotifier {
     // then filter instantly instead of waiting on a query per keystroke.
     allEntries = await transactions.query(const TransactionQuery());
 
-    final Map<String, int> spentThisMonth = await transactions.expenseByCategory(
-      startOfMonth(now),
-      startOfNextMonth(now),
-    );
+    final Map<String, int> spentThisMonth = await transactions
+        .expenseByCategory(startOfMonth(now), startOfNextMonth(now));
     monthSpend = spentThisMonth;
     budgets = buildBudgetProgress(
       categories: categories,
@@ -179,14 +177,26 @@ class AppState extends ChangeNotifier {
     DateTime? toExclusive,
   }) {
     final String needle = search.trim().toLowerCase();
-    return allEntries.where((TransactionEntry entry) {
-      if (type != null && entry.type != type) return false;
-      if (categoryId != null && entry.categoryId != categoryId) return false;
-      if (needle.isNotEmpty && !entry.note.toLowerCase().contains(needle)) return false;
-      if (from != null && entry.occurredAt.isBefore(from)) return false;
-      if (toExclusive != null && !entry.occurredAt.isBefore(toExclusive)) return false;
-      return true;
-    }).toList(growable: false);
+    return allEntries
+        .where((TransactionEntry entry) {
+          if (type != null && entry.type != type) {
+            return false;
+          }
+          if (categoryId != null && entry.categoryId != categoryId) {
+            return false;
+          }
+          if (needle.isNotEmpty && !entry.note.toLowerCase().contains(needle)) {
+            return false;
+          }
+          if (from != null && entry.occurredAt.isBefore(from)) {
+            return false;
+          }
+          if (toExclusive != null && !entry.occurredAt.isBefore(toExclusive)) {
+            return false;
+          }
+          return true;
+        })
+        .toList(growable: false);
   }
 
   /// Everything the history screen needs, already filtered by SQL.

@@ -13,7 +13,8 @@ Future<T?> showAppSheet<T>({
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.42),
-    builder: (BuildContext ctx) => AppSheet(expand: expand, child: builder(ctx)),
+    builder: (BuildContext ctx) =>
+        AppSheet(expand: expand, child: builder(ctx)),
   );
 }
 
@@ -64,7 +65,12 @@ class AppSheet extends StatelessWidget {
 
 /// Title row used inside sheets.
 class SheetTitle extends StatelessWidget {
-  const SheetTitle({super.key, required this.title, this.subtitle, this.trailing});
+  const SheetTitle({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+  });
 
   final String title;
   final String? subtitle;
@@ -93,7 +99,10 @@ class SheetTitle extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       subtitle!,
-                      style: TextStyle(fontSize: 12, color: AppColors.muted(context)),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.muted(context),
+                      ),
                     ),
                   ),
               ],

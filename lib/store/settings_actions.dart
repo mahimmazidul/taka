@@ -6,13 +6,16 @@ import 'app_state.dart';
 extension SettingsActions on AppState {
   Future<void> _save(AppSettings next) => applySettings(next);
 
-  Future<void> setDarkMode(bool value) => _save(settings.copyWith(darkMode: value));
+  Future<void> setDarkMode(bool value) =>
+      _save(settings.copyWith(darkMode: value));
 
   Future<void> toggleDarkMode() => setDarkMode(!settings.darkMode);
 
   Future<void> setCurrency(String code) {
     final CurrencyOption option = currencyOption(code);
-    return _save(settings.copyWith(currencyCode: code, currencySymbol: option.symbol));
+    return _save(
+      settings.copyWith(currencyCode: code, currencySymbol: option.symbol),
+    );
   }
 
   Future<void> setUdharEnabled(bool value) async {

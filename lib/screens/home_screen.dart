@@ -37,7 +37,9 @@ class HomeScreen extends StatelessWidget {
       builder: (BuildContext context, Widget? _) {
         final AppState state = AppState.instance;
         if (state.isLoading) {
-          return const Center(child: CircularProgressIndicator(strokeWidth: 2.4));
+          return const Center(
+            child: CircularProgressIndicator(strokeWidth: 2.4),
+          );
         }
 
         final String symbol = state.currencySymbol;
@@ -75,27 +77,40 @@ class HomeScreen extends StatelessWidget {
                     symbol: symbol,
                   ),
                 ),
-                SectionTitle(title: 'Last 7 days', actionLabel: 'History', onAction: onOpenHistory),
+                SectionTitle(
+                  title: 'Last 7 days',
+                  actionLabel: 'History',
+                  onAction: onOpenHistory,
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Reveal(index: 2, child: WeekBars(days: state.lastSevenDays)),
+                  child: Reveal(
+                    index: 2,
+                    child: WeekBars(days: state.lastSevenDays),
+                  ),
                 ),
                 if (state.settings.budgetsEnabled) ...<Widget>[
                   SectionTitle(
                     title: 'Budgets',
                     actionLabel: 'Manage',
-                    onAction: () => Navigator.of(context)
-                        .push(slideFadeRoute<void>(const BudgetsScreen())),
+                    onAction: () =>
+                        Navigator.of(context)
+                            .push(slideFadeRoute<void>(const BudgetsScreen())),
                   ),
                   _BudgetsBlock(
                     budgets: state.budgets,
                     symbol: symbol,
-                    onManage: () => Navigator.of(context)
-                        .push(slideFadeRoute<void>(const BudgetsScreen())),
+                    onManage: () =>
+                        Navigator.of(context)
+                            .push(slideFadeRoute<void>(const BudgetsScreen())),
                   ),
                 ],
                 if (state.settings.udharEnabled) ...<Widget>[
-                  SectionTitle(title: 'Udhar', actionLabel: 'Open', onAction: onOpenUdhar),
+                  SectionTitle(
+                    title: 'Udhar',
+                    actionLabel: 'Open',
+                    onAction: onOpenUdhar,
+                  ),
                   _UdharRow(
                     lentMinor: state.udharTotals.lentMinor,
                     borrowedMinor: state.udharTotals.borrowedMinor,
@@ -149,7 +164,10 @@ class _Header extends StatelessWidget {
                 ),
                 Text(
                   monthLabel,
-                  style: TextStyle(fontSize: 12, color: AppColors.muted(context)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.muted(context),
+                  ),
                 ),
               ],
             ),
@@ -196,15 +214,17 @@ class _BudgetsBlock extends StatelessWidget {
       return EmptyState(
         icon: Icons.flag_outlined,
         title: 'No budget set',
-        message: 'Set a monthly limit per category and Taka will warn you at 80%.',
+        message:
+            'Set a monthly limit per category and Taka will warn you at 80%.',
         actionLabel: 'Set a budget',
         onAction: onManage,
         compact: true,
       );
     }
 
-    final List<BudgetProgress> visible =
-        budgets.length > 3 ? budgets.sublist(0, 3) : budgets;
+    final List<BudgetProgress> visible = budgets.length > 3
+        ? budgets.sublist(0, 3)
+        : budgets;
 
     return Column(
       children: <Widget>[
@@ -217,7 +237,10 @@ class _BudgetsBlock extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Text(
                 '+${budgets.length - visible.length} more',
-                style: TextStyle(fontSize: 11.5, color: AppColors.muted(context)),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: AppColors.muted(context),
+                ),
               ),
             ),
           ),
@@ -271,7 +294,11 @@ class _UdharRow extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.muted(context)),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.muted(context),
+            ),
           ],
         ),
       ),
@@ -300,8 +327,9 @@ class _RecentBlock extends StatelessWidget {
         title: 'Nothing recorded yet',
         message: 'Your first entry takes about five seconds.',
         actionLabel: 'Add an entry',
-        onAction: () => Navigator.of(context)
-            .push(slideFadeRoute<void>(const AddEntryScreen())),
+        onAction: () =>
+            Navigator.of(context)
+                .push(slideFadeRoute<void>(const AddEntryScreen())),
       );
     }
 

@@ -57,13 +57,14 @@ ThemeData buildAppTheme(Brightness brightness) {
   final Color ink = isDark ? Palette.darkInk : Palette.lightInk;
   final Color muted = isDark ? Palette.darkMuted : Palette.lightMuted;
 
-  final ColorScheme scheme = ColorScheme.fromSeed(
-    seedColor: Palette.taka,
-    brightness: brightness,
-  ).copyWith(
-    surface: isDark ? Palette.darkBg : Palette.lightBg,
-    error: Palette.expense,
-  );
+  final ColorScheme scheme =
+      ColorScheme.fromSeed(
+        seedColor: Palette.taka,
+        brightness: brightness,
+      ).copyWith(
+        surface: isDark ? Palette.darkBg : Palette.lightBg,
+        error: Palette.expense,
+      );
 
   final TextTheme text = Typography.blackMountainView
       .apply(fontFamily: kFontFamily, bodyColor: ink, displayColor: ink)
@@ -96,9 +97,17 @@ ThemeData buildAppTheme(Brightness brightness) {
           letterSpacing: 0.2,
           color: muted,
         ),
-        bodyMedium: TextStyle(fontFamily: kFontFamily, fontSize: 15, color: ink),
+        bodyMedium: TextStyle(
+          fontFamily: kFontFamily,
+          fontSize: 15,
+          color: ink,
+        ),
         bodySmall: TextStyle(fontFamily: kFontFamily, fontSize: 13, color: ink),
-        labelSmall: TextStyle(fontFamily: kFontFamily, fontSize: 11.5, color: muted),
+        labelSmall: TextStyle(
+          fontFamily: kFontFamily,
+          fontSize: 11.5,
+          color: muted,
+        ),
       );
 
   return ThemeData(
@@ -134,7 +143,9 @@ ThemeData buildAppTheme(Brightness brightness) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: isDark ? Palette.darkLine.withValues(alpha: 0.45) : Colors.white,
+      fillColor: isDark
+          ? Palette.darkLine.withValues(alpha: 0.45)
+          : Colors.white,
       hintStyle: TextStyle(fontFamily: kFontFamily, color: muted, fontSize: 15),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
@@ -153,7 +164,10 @@ ThemeData buildAppTheme(Brightness brightness) {
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: isDark ? Palette.darkInk : Palette.lightInk,
-      contentTextStyle: TextStyle(fontFamily: kFontFamily, color: isDark ? Palette.darkBg : Colors.white),
+      contentTextStyle: TextStyle(
+        fontFamily: kFontFamily,
+        color: isDark ? Palette.darkBg : Colors.white,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       insetPadding: const EdgeInsets.all(16),
     ),
@@ -170,13 +184,15 @@ void applySystemUiFor(Brightness brightness) {
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness:
-          brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+      statusBarIconBrightness: brightness == Brightness.dark
+          ? Brightness.light
+          : Brightness.dark,
       systemNavigationBarColor: brightness == Brightness.dark
           ? Palette.darkBg
           : Palette.lightBg,
-      systemNavigationBarIconBrightness:
-          brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+      systemNavigationBarIconBrightness: brightness == Brightness.dark
+          ? Brightness.light
+          : Brightness.dark,
     ),
   );
 }

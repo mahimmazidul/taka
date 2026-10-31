@@ -7,7 +7,7 @@ import 'database.dart';
 /// spending until it stays unreturned.
 class UdharRepository {
   UdharRepository({AppDatabase? database})
-      : _database = database ?? AppDatabase.instance;
+    : _database = database ?? AppDatabase.instance;
 
   final AppDatabase _database;
 
@@ -30,7 +30,12 @@ class UdharRepository {
 
   Future<void> update(UdharEntry entry) async {
     final Database db = await _database.database;
-    await db.update(_table, entry.toMap(), where: 'id = ?', whereArgs: <Object?>[entry.id]);
+    await db.update(
+      _table,
+      entry.toMap(),
+      where: 'id = ?',
+      whereArgs: <Object?>[entry.id],
+    );
   }
 
   Future<void> delete(String id) async {

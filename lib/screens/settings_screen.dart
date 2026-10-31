@@ -36,7 +36,10 @@ class SettingsScreen extends StatelessWidget {
           shrinkWrap: true,
           padding: const EdgeInsets.only(bottom: 12),
           children: <Widget>[
-            const SheetTitle(title: 'Currency', subtitle: 'Used for every amount'),
+            const SheetTitle(
+              title: 'Currency',
+              subtitle: 'Used for every amount',
+            ),
             for (final CurrencyOption option in kCurrencies)
               SettingsRow(
                 icon: Icons.payments_outlined,
@@ -46,7 +49,11 @@ class SettingsScreen extends StatelessWidget {
                   if (context.mounted) Navigator.of(context).pop();
                 },
                 trailing: state.settings.currencyCode == option.code
-                    ? const Icon(Icons.check_rounded, size: 18, color: Palette.taka)
+                    ? const Icon(
+                        Icons.check_rounded,
+                        size: 18,
+                        color: Palette.taka,
+                      )
                     : null,
               ),
           ],
@@ -102,8 +109,14 @@ class SettingsScreen extends StatelessWidget {
           'Importing a backup overwrites the entries and udhar records you have now.',
         ),
         actions: <Widget>[
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Import')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Import'),
+          ),
         ],
       ),
     );
@@ -127,7 +140,10 @@ class SettingsScreen extends StatelessWidget {
           'Categories and settings stay. This cannot be undone.',
         ),
         actions: <Widget>[
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Palette.expense),
@@ -154,11 +170,16 @@ class SettingsScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.only(bottom: 110),
             children: <Widget>[
-              const SectionTitle(title: 'Appearance', padding: EdgeInsets.fromLTRB(20, 6, 20, 4)),
+              const SectionTitle(
+                title: 'Appearance',
+                padding: EdgeInsets.fromLTRB(20, 6, 20, 4),
+              ),
               SettingsGroup(
                 children: <Widget>[
                   SettingsRow(
-                    icon: dark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                    icon: dark
+                        ? Icons.dark_mode_outlined
+                        : Icons.light_mode_outlined,
                     title: 'Dark mode',
                     subtitle: dark ? 'On' : 'Off',
                     onTap: () => state.toggleDarkMode(),
@@ -176,21 +197,27 @@ class SettingsScreen extends StatelessWidget {
                   SettingsRow(
                     icon: Icons.payments_outlined,
                     title: 'Currency',
-                    value: '${state.settings.currencySymbol} '
+                    value:
+                        '${state.settings.currencySymbol} '
                         '${state.settings.currencyCode}',
                     onTap: () => _pickCurrency(context),
                   ),
                   SettingsRow(
                     icon: Icons.flag_outlined,
                     title: 'Monthly budgets',
-                    subtitle: state.settings.budgetsEnabled ? 'Warnings at 80%' : 'Hidden',
-                    onTap: () => Navigator.of(context)
-                        .push(slideFadeRoute<void>(const BudgetsScreen())),
+                    subtitle: state.settings.budgetsEnabled
+                        ? 'Warnings at 80%'
+                        : 'Hidden',
+                    onTap: () =>
+                        Navigator.of(context)
+                            .push(slideFadeRoute<void>(const BudgetsScreen())),
                   ),
                   SettingsRow(
                     icon: Icons.handshake_outlined,
                     title: 'Udhar tracker',
-                    subtitle: state.settings.udharEnabled ? 'Shown on Home' : 'Hidden',
+                    subtitle: state.settings.udharEnabled
+                        ? 'Shown on Home'
+                        : 'Hidden',
                     trailing: Switch.adaptive(
                       value: state.settings.udharEnabled,
                       activeThumbColor: Palette.taka,
@@ -205,7 +232,8 @@ class SettingsScreen extends StatelessWidget {
                   SettingsRow(
                     icon: Icons.category_outlined,
                     title: 'Manage categories',
-                    subtitle: '${state.categories.length} total · rename, recolour, delete',
+                    subtitle:
+                        '${state.categories.length} total · rename, recolour, delete',
                     onTap: () => Navigator.of(context)
                         .push(slideFadeRoute<void>(const CategoriesScreen())),
                   ),

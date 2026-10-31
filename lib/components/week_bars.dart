@@ -16,7 +16,8 @@ class WeekBars extends StatelessWidget {
   Widget build(BuildContext context) {
     final int maxMinor = days.fold<int>(
       0,
-      (int best, DailyTotal day) => day.expenseMinor > best ? day.expenseMinor : best,
+      (int best, DailyTotal day) =>
+          day.expenseMinor > best ? day.expenseMinor : best,
     );
     final DateTime today = DateTime.now();
 
@@ -85,8 +86,10 @@ class _Bar extends StatelessWidget {
                                   Palette.taka.withValues(alpha: 0.62),
                                 ]
                               : <Color>[
-                                  AppColors.muted(context).withValues(alpha: 0.30),
-                                  AppColors.muted(context).withValues(alpha: 0.14),
+                                  AppColors.muted(context)
+                                      .withValues(alpha: 0.30),
+                                  AppColors.muted(context)
+                                      .withValues(alpha: 0.14),
                                 ],
                         ),
                       ),

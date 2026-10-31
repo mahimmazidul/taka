@@ -26,7 +26,7 @@ class TransactionQuery {
 /// All reads/writes for `transactions`. Widgets never touch SQL directly.
 class TransactionRepository {
   TransactionRepository({AppDatabase? database})
-      : _database = database ?? AppDatabase.instance;
+    : _database = database ?? AppDatabase.instance;
 
   final AppDatabase _database;
 
@@ -39,7 +39,12 @@ class TransactionRepository {
 
   Future<void> update(TransactionEntry entry) async {
     final Database db = await _database.database;
-    await db.update(_table, entry.toMap(), where: 'id = ?', whereArgs: <Object?>[entry.id]);
+    await db.update(
+      _table,
+      entry.toMap(),
+      where: 'id = ?',
+      whereArgs: <Object?>[entry.id],
+    );
   }
 
   Future<void> delete(String id) async {
@@ -62,8 +67,14 @@ class TransactionRepository {
     return rows.map(TransactionEntry.fromMap).toList(growable: false);
   }
 
-  Future<List<TransactionEntry>> inRange(DateTime from, DateTime toExclusive, {int? limit}) async {
-    return query(TransactionQuery(from: from, toExclusive: toExclusive, limit: limit));
+  Future<List<TransactionEntry>> inRange(
+    DateTime from,
+    DateTime toExclusive, {
+    int? limit,
+  }) async {
+    return query(
+      TransactionQuery(from: from, toExclusive: toExclusive, limit: limit),
+    );
   }
 
   /// Filtered, newest-first query used by History.
@@ -108,7 +119,10 @@ class TransactionRepository {
     final List<Map<String, Object?>> rows = await db.rawQuery(
       'SELECT type, SUM(amount_minor) AS total FROM $_table '
       'WHERE occurred_at >= ? AND occurred_at < ? GROUP BY type',
-      <Object?>[from.millisecondsSinceEpoch, toExclusive.millisecondsSinceEpoch],
+      <Object?>[
+        from.millisecondsSinceEpoch,
+        toExclusive.millisecondsSinceEpoch,
+      ],
     );
 
     int expense = 0;
@@ -125,13 +139,19 @@ class TransactionRepository {
   }
 
   /// Month-to-date expense per category — the input of budget progress.
-  Future<Map<String, int>> expenseByCategory(DateTime from, DateTime toExclusive) async {
+  Future<Map<String, int>> expenseByCategory(
+    DateTime from,
+    DateTime toExclusive,
+  ) async {
     final Database db = await _database.database;
     final List<Map<String, Object?>> rows = await db.rawQuery(
       'SELECT category_id, SUM(amount_minor) AS total FROM $_table '
       "WHERE type = 'expense' AND occurred_at >= ? AND occurred_at < ? "
       'GROUP BY category_id',
-      <Object?>[from.millisecondsSinceEpoch, toExclusive.millisecondsSinceEpoch],
+      <Object?>[
+        from.millisecondsSinceEpoch,
+        toExclusive.millisecondsSinceEpoch,
+      ],
     );
 
     final Map<String, int> result = <String, int>{};
@@ -151,17 +171,24 @@ class TransactionRepository {
       _table,
       columns: <String>['type', 'amount_minor', 'occurred_at'],
       where: 'occurred_at >= ? AND occurred_at < ?',
-      whereArgs: <Object?>[from.millisecondsSinceEpoch, to.millisecondsSinceEpoch],
+      whereArgs: <Object?>[
+        from.millisecondsSinceEpoch,
+        to.millisecondsSinceEpoch,
+      ],
     );
 
     final List<int> expense = List<int>.filled(dayCount, 0);
     final List<int> income = List<int>.filled(dayCount, 0);
 
     for (final Map<String, Object?> row in rows) {
-      final DateTime moment =
-          DateTime.fromMillisecondsSinceEpoch(row['occurred_at']! as int);
-      final int index =
-          DateTime(moment.year, moment.month, moment.day).difference(from).inDays;
+      final DateTime moment = DateTime.fromMillisecondsSinceEpoch(
+        row['occurred_at']! as int,
+      );
+      final int index = DateTime(
+        moment.year,
+        moment.month,
+        moment.day,
+      ).difference(from).inDays;
       if (index < 0 || index >= dayCount) continue;
       final int amount = (row['amount_minor'] as int?) ?? 0;
       if (row['type'] == 'income') {

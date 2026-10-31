@@ -18,7 +18,9 @@ String formatMoney(
   final int cents = magnitude % 100;
 
   final String wholeText = _groupThousands(whole.toString());
-  final String decimals = showDecimals ? '.${cents.toString().padLeft(2, '0')}' : '';
+  final String decimals = showDecimals
+      ? '.${cents.toString().padLeft(2, '0')}'
+      : '';
 
   final String sign;
   if (negative) {
@@ -33,7 +35,10 @@ String formatMoney(
 }
 
 /// "৳ 12.5k" style, for tight spots.
-String formatCompactMoney(int minorUnits, {String symbol = kDefaultCurrencySymbol}) {
+String formatCompactMoney(
+  int minorUnits, {
+  String symbol = kDefaultCurrencySymbol,
+}) {
   final bool negative = minorUnits < 0;
   final double major = minorUnits.abs() / 100;
   final String sign = negative ? '−' : '';

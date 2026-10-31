@@ -6,7 +6,7 @@ import 'database.dart';
 /// Reads and edits the `categories` table (expense categories + income sources).
 class CategoryRepository {
   CategoryRepository({AppDatabase? database})
-      : _database = database ?? AppDatabase.instance;
+    : _database = database ?? AppDatabase.instance;
 
   final AppDatabase _database;
 
@@ -69,13 +69,19 @@ class CategoryRepository {
         where: 'category_id = ?',
         whereArgs: <Object?>[fromCategoryId],
       );
-      await txn.delete(_table, where: 'id = ?', whereArgs: <Object?>[fromCategoryId]);
+      await txn.delete(
+        _table,
+        where: 'id = ?',
+        whereArgs: <Object?>[fromCategoryId],
+      );
     });
   }
 
   Future<int> nextSortOrder(CategoryKind kind) async {
     final List<AppCategory> rows = await all();
-    final Iterable<AppCategory> same = rows.where((AppCategory c) => c.kind == kind);
+    final Iterable<AppCategory> same = rows.where(
+      (AppCategory c) => c.kind == kind,
+    );
     if (same.isEmpty) return 0;
     return same
             .map((AppCategory c) => c.sortOrder)

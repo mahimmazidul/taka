@@ -1,7 +1,11 @@
 /// Currencies offered in Settings. BDT is the default; the symbol drives every
 /// formatted amount in the app.
 class CurrencyOption {
-  const CurrencyOption({required this.code, required this.name, required this.symbol});
+  const CurrencyOption({
+    required this.code,
+    required this.name,
+    required this.symbol,
+  });
 
   final String code;
   final String name;

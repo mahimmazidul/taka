@@ -43,8 +43,9 @@ extension CategoryActions on AppState {
     final AppCategory? category = categoryById(categoryId);
     if (category == null) return false;
 
-    final String fallback =
-        category.kind == CategoryKind.income ? _fallbackIncomeId : _fallbackExpenseId;
+    final String fallback = category.kind == CategoryKind.income
+        ? _fallbackIncomeId
+        : _fallbackExpenseId;
     if (categoryId == fallback) return false;
 
     await categoryRepo.reassignAndDelete(

@@ -72,7 +72,9 @@ class UdharEntry {
       person: map['person']! as String,
       amountMinor: map['amount_minor']! as int,
       note: (map['note'] as String?) ?? '',
-      occurredAt: DateTime.fromMillisecondsSinceEpoch(map['occurred_at']! as int),
+      occurredAt: DateTime.fromMillisecondsSinceEpoch(
+        map['occurred_at']! as int,
+      ),
       returned: (map['returned'] as int? ?? 0) == 1,
       returnedAt: returnedAtMs == null
           ? null

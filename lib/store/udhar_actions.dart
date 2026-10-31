@@ -38,6 +38,7 @@ extension UdharActions on AppState {
     await refresh();
   }
 
-  List<UdharEntry> udharFor(UdharType type) =>
-      udharEntries.where((UdharEntry entry) => entry.type == type).toList(growable: false);
+  List<UdharEntry> udharFor(UdharType type) => udharEntries
+      .where((UdharEntry entry) => entry.type == type)
+      .toList(growable: false);
 }

@@ -6,22 +6,50 @@ import '../models/day_group.dart';
 const int kWeekStartsOnWeekday = DateTime.sunday;
 
 const List<String> _monthNames = <String>[
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 const List<String> _monthShort = <String>[
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
 const List<String> _weekdayShort = <String>[
-  'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun',
+  'Mon',
+  'Tue',
+  'Wed',
+  'Thu',
+  'Fri',
+  'Sat',
+  'Sun',
 ];
 
-DateTime startOfDay(DateTime moment) => DateTime(moment.year, moment.month, moment.day);
+DateTime startOfDay(DateTime moment) =>
+    DateTime(moment.year, moment.month, moment.day);
 
-DateTime startOfNextDay(DateTime moment) => startOfDay(moment).add(const Duration(days: 1));
+DateTime startOfNextDay(DateTime moment) =>
+    startOfDay(moment).add(const Duration(days: 1));
 
 DateTime startOfWeek(DateTime moment) {
   final DateTime day = startOfDay(moment);
@@ -31,7 +59,8 @@ DateTime startOfWeek(DateTime moment) {
 
 DateTime startOfMonth(DateTime moment) => DateTime(moment.year, moment.month);
 
-DateTime startOfNextMonth(DateTime moment) => DateTime(moment.year, moment.month + 1);
+DateTime startOfNextMonth(DateTime moment) =>
+    DateTime(moment.year, moment.month + 1);
 
 bool isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
@@ -40,7 +69,8 @@ String monthName(int month) => _monthNames[(month - 1).clamp(0, 11)];
 
 String monthShort(int month) => _monthShort[(month - 1).clamp(0, 11)];
 
-String formatMonthYear(DateTime moment) => '${monthName(moment.month)} ${moment.year}';
+String formatMonthYear(DateTime moment) =>
+    '${monthName(moment.month)} ${moment.year}';
 
 String weekdayShort(DateTime moment) => _weekdayShort[moment.weekday - 1];
 
@@ -62,7 +92,8 @@ String formatDateLabel(DateTime moment) {
 String formatDayHeading(DateTime moment) {
   final DateTime today = startOfDay(DateTime.now());
   final int delta = today.difference(startOfDay(moment)).inDays;
-  final String weekday = '${weekdayShort(moment)}, ${moment.day} ${monthShort(moment.month)}';
+  final String weekday =
+      '${weekdayShort(moment)}, ${moment.day} ${monthShort(moment.month)}';
 
   if (delta == 0) return 'Today · $weekday';
   if (delta == 1) return 'Yesterday · $weekday';
@@ -80,7 +111,14 @@ String formatTime(DateTime moment) {
 /// Keeps the current clock time when the user only picks a different day.
 DateTime withCurrentTime(DateTime day) {
   final DateTime now = DateTime.now();
-  return DateTime(day.year, day.month, day.day, now.hour, now.minute, now.second);
+  return DateTime(
+    day.year,
+    day.month,
+    day.day,
+    now.hour,
+    now.minute,
+    now.second,
+  );
 }
 
 /// Groups a newest-first list of dated items by calendar day, preserving order.

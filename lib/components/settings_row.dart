@@ -35,7 +35,11 @@ class SettingsRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
         child: Row(
           children: <Widget>[
-            Icon(icon, size: 19, color: danger ? Palette.expense : AppColors.muted(context)),
+            Icon(
+              icon,
+              size: 19,
+              color: danger ? Palette.expense : AppColors.muted(context),
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -54,7 +58,10 @@ class SettingsRow extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 1),
                       child: Text(
                         subtitle!,
-                        style: TextStyle(fontSize: 11.5, color: AppColors.muted(context)),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: AppColors.muted(context),
+                        ),
                       ),
                     ),
                 ],
@@ -67,15 +74,21 @@ class SettingsRow extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.right,
-                  style: TextStyle(fontSize: 13, color: AppColors.muted(context)),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.muted(context),
+                  ),
                 ),
               ),
             ?trailing,
             if (onTap != null && trailing == null)
               Padding(
                 padding: const EdgeInsets.only(left: 6),
-                child: Icon(Icons.chevron_right_rounded,
-                    size: 19, color: AppColors.muted(context)),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 19,
+                  color: AppColors.muted(context),
+                ),
               ),
           ],
         ),

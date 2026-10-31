@@ -31,7 +31,10 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> tabs = <Widget>[
-      HomeScreen(onOpenUdhar: () => _select(2), onOpenHistory: () => _select(1)),
+      HomeScreen(
+        onOpenUdhar: () => _select(2),
+        onOpenHistory: () => _select(1),
+      ),
       const HistoryScreen(),
       const UdharScreen(),
       const SettingsScreen(),
@@ -75,8 +78,9 @@ class _FloatingBar extends StatelessWidget {
             height: 66,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
-              color: (dark ? Palette.darkSurface : Colors.white)
-                  .withValues(alpha: dark ? 0.86 : 0.92),
+              color: (dark ? Palette.darkSurface : Colors.white).withValues(
+                alpha: dark ? 0.86 : 0.92,
+              ),
               borderRadius: BorderRadius.circular(26),
               border: Border.all(color: AppColors.line(context)),
               boxShadow: <BoxShadow>[

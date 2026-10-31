@@ -25,7 +25,10 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: compact ? 18 : 34, horizontal: 32),
+      padding: EdgeInsets.symmetric(
+        vertical: compact ? 18 : 34,
+        horizontal: 32,
+      ),
       child: Column(
         children: <Widget>[
           Container(

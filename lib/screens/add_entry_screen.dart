@@ -33,8 +33,9 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 
   int get _amountMinor => keypadTextToMinor(_amountText);
 
-  List<AppCategory> get _categories => AppState.instance
-      .categoriesForKind(_type == EntryType.expense ? CategoryKind.expense : CategoryKind.income);
+  List<AppCategory> get _categories => AppState.instance.categoriesForKind(
+    _type == EntryType.expense ? CategoryKind.expense : CategoryKind.income,
+  );
 
   @override
   void initState() {
@@ -83,7 +84,9 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 
   void _onBackspace() {
     if (_amountText.isEmpty) return;
-    setState(() => _amountText = _amountText.substring(0, _amountText.length - 1));
+    setState(
+      () => _amountText = _amountText.substring(0, _amountText.length - 1),
+    );
   }
 
   Future<void> _pickDate() async {
@@ -94,7 +97,8 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       lastDate: DateTime.now().add(const Duration(days: 1)),
       builder: (BuildContext context, Widget? child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: Theme.of(context).colorScheme.copyWith(primary: Palette.taka),
+          colorScheme: Theme.of(context).colorScheme
+              .copyWith(primary: Palette.taka),
         ),
         child: child!,
       ),
@@ -125,7 +129,9 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   Future<void> _save() async {
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     if (_amountMinor <= 0) {
-      messenger.showSnackBar(const SnackBar(content: Text('Enter an amount first')));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Enter an amount first')),
+      );
       return;
     }
     if (_categoryId.isEmpty) {
@@ -161,7 +167,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           _isEditing
               ? 'Entry updated'
               : '${_type == EntryType.expense ? 'Expense' : 'Income'} saved · '
-                  '${formatMoney(_amountMinor, symbol: state.currencySymbol)}',
+                    '${formatMoney(_amountMinor, symbol: state.currencySymbol)}',
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -230,8 +236,14 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                       _ensureCategory();
                     }),
                     options: const <SegmentOption<EntryType>>[
-                      SegmentOption<EntryType>(value: EntryType.expense, label: 'Expense'),
-                      SegmentOption<EntryType>(value: EntryType.income, label: 'Income'),
+                      SegmentOption<EntryType>(
+                        value: EntryType.expense,
+                        label: 'Expense',
+                      ),
+                      SegmentOption<EntryType>(
+                        value: EntryType.income,
+                        label: 'Income',
+                      ),
                     ],
                   ),
                 ),
@@ -265,7 +277,8 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                                 icon: category.iconData,
                                 tint: category.color,
                                 selected: category.id == _categoryId,
-                                onTap: () => setState(() => _categoryId = category.id),
+                                onTap: () =>
+                                    setState(() => _categoryId = category.id),
                               );
                             },
                           ),
@@ -366,7 +379,9 @@ class _AmountDisplay extends StatelessWidget {
                   fontSize: 46,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -1.4,
-                  color: isExpense ? AppColors.ink(context) : AppColors.income(context),
+                  color: isExpense
+                      ? AppColors.ink(context)
+                      : AppColors.income(context),
                 ),
                 child: Text(shown),
               ),
@@ -394,8 +409,10 @@ class _DateRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isToday = isSameDay(occurredAt, DateTime.now());
-    final bool isYesterday =
-        isSameDay(occurredAt, DateTime.now().subtract(const Duration(days: 1)));
+    final bool isYesterday = isSameDay(
+      occurredAt,
+      DateTime.now().subtract(const Duration(days: 1)),
+    );
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,

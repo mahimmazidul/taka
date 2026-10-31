@@ -80,7 +80,10 @@ void main() {
     test('friendly labels', () {
       final DateTime now = DateTime.now();
       expect(formatDateLabel(now), 'Today');
-      expect(formatDateLabel(now.subtract(const Duration(days: 1))), 'Yesterday');
+      expect(
+        formatDateLabel(now.subtract(const Duration(days: 1))),
+        'Yesterday',
+      );
     });
 
     test('groups items by day, preserving order', () {
@@ -89,8 +92,10 @@ void main() {
         DateTime(2026, 10, 31, 9),
         DateTime(2026, 10, 30, 12),
       ];
-      final List<DayGroup<DateTime>> groups =
-          groupByDay<DateTime>(dates, (DateTime d) => d);
+      final List<DayGroup<DateTime>> groups = groupByDay<DateTime>(
+        dates,
+        (DateTime d) => d,
+      );
 
       expect(groups.length, 2);
       expect(groups.first.day, DateTime(2026, 10, 31));
@@ -111,17 +116,26 @@ void main() {
 
     test('80% warns, 100% exceeds', () {
       expect(
-        const BudgetProgress(category: rice, spentMinor: 100000, budgetMinor: 2000000)
-            .status,
+        const BudgetProgress(
+          category: rice,
+          spentMinor: 100000,
+          budgetMinor: 2000000,
+        ).status,
         BudgetStatus.ok,
       );
       expect(
-        const BudgetProgress(category: rice, spentMinor: 1600000, budgetMinor: 2000000)
-            .status,
+        const BudgetProgress(
+          category: rice,
+          spentMinor: 1600000,
+          budgetMinor: 2000000,
+        ).status,
         BudgetStatus.warning,
       );
-      final BudgetProgress over =
-          const BudgetProgress(category: rice, spentMinor: 2400000, budgetMinor: 2000000);
+      final BudgetProgress over = const BudgetProgress(
+        category: rice,
+        spentMinor: 2400000,
+        budgetMinor: 2000000,
+      );
       expect(over.status, BudgetStatus.exceeded);
       expect(over.clampedRatio, 1.0);
       expect(over.remainingMinor, -400000);
@@ -156,8 +170,10 @@ void main() {
 
   group('settings round-trip', () {
     test('survives toMap/fromMap', () {
-      const AppSettings original =
-          AppSettings(darkMode: true, monthlyBudgetMinor: 5000000);
+      const AppSettings original = AppSettings(
+        darkMode: true,
+        monthlyBudgetMinor: 5000000,
+      );
       final AppSettings restored = AppSettings.fromMap(original.toMap());
 
       expect(restored.darkMode, isTrue);

@@ -26,7 +26,9 @@ String buildBackupJson({
     'exportedAt': DateTime.now().toIso8601String(),
     'settings': settings.toMap(),
     'categories': categories.map((AppCategory c) => c.toMap()).toList(),
-    'transactions': transactions.map((TransactionEntry t) => t.toMap()).toList(),
+    'transactions': transactions
+        .map((TransactionEntry t) => t.toMap())
+        .toList(),
     'udhar': udhar.map((UdharEntry u) => u.toMap()).toList(),
   };
   return const JsonEncoder.withIndent('  ').convert(payload);
@@ -88,14 +90,22 @@ ImportBundle parseBackupJson(String raw) {
 
   return ImportBundle(
     settings: AppSettings.fromMap(
-      (decoded['settings'] as Map<String, Object?>? ?? const <String, Object?>{})
-          .map((String key, Object? value) => MapEntry<String, String>(key, '$value')),
+      (decoded['settings'] as Map<String, Object?>? ??
+              const <String, Object?>{})
+          .map(
+            (String key, Object? value) =>
+                MapEntry<String, String>(key, '$value'),
+          ),
     ),
-    categories: rows(decoded['categories']).map(AppCategory.fromMap).toList(growable: false),
+    categories: rows(decoded['categories'])
+        .map(AppCategory.fromMap)
+        .toList(growable: false),
     transactions: rows(decoded['transactions'])
         .map(TransactionEntry.fromMap)
         .toList(growable: false),
-    udhar: rows(decoded['udhar']).map(UdharEntry.fromMap).toList(growable: false),
+    udhar: rows(decoded['udhar'])
+        .map(UdharEntry.fromMap)
+        .toList(growable: false),
   );
 }
 
@@ -108,8 +118,7 @@ Future<void> shareTextFile({
   final Directory dir = await getTemporaryDirectory();
   final File file = File(p.join(dir.path, fileName));
   await file.writeAsString(content);
-  await Share.shareXFiles(
-    <XFile>[XFile(file.path, mimeType: 'text/plain')],
-    subject: subject,
-  );
+  await Share.shareXFiles(<XFile>[
+    XFile(file.path, mimeType: 'text/plain'),
+  ], subject: subject);
 }

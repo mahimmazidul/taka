@@ -23,13 +23,14 @@ class CategoriesScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: Pressable(
-              onTap: () => showCategoryEditor(
-                context,
-                kind: CategoryKind.expense,
-              ),
+              onTap: () =>
+                  showCategoryEditor(context, kind: CategoryKind.expense),
               scale: 0.9,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: Palette.taka.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(11),
@@ -66,7 +67,9 @@ class CategoriesScreen extends StatelessWidget {
                 title: 'Expense categories',
                 padding: EdgeInsets.fromLTRB(20, 8, 20, 4),
               ),
-              for (final AppCategory category in state.categoriesForKind(CategoryKind.expense))
+              for (final AppCategory category in state.categoriesForKind(
+                CategoryKind.expense,
+              ))
                 _CategoryRow(
                   category: category,
                   subtitle: <String>[
@@ -86,7 +89,9 @@ class CategoriesScreen extends StatelessWidget {
                 title: 'Income sources',
                 padding: EdgeInsets.fromLTRB(20, 24, 20, 4),
               ),
-              for (final AppCategory category in state.categoriesForKind(CategoryKind.income))
+              for (final AppCategory category in state.categoriesForKind(
+                CategoryKind.income,
+              ))
                 _CategoryRow(
                   category: category,
                   subtitle: category.name,
@@ -111,9 +116,9 @@ class CategoriesScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
                 child: OutlinedButton.icon(
-                  onPressed: () => Navigator.of(context).push(
-                    slideFadeRoute<void>(const BudgetsScreen()),
-                  ),
+                  onPressed: () =>
+                      Navigator.of(context)
+                          .push(slideFadeRoute<void>(const BudgetsScreen())),
                   icon: const Icon(Icons.flag_outlined, size: 17),
                   label: const Text('Set monthly limits'),
                 ),
@@ -164,12 +169,19 @@ class _CategoryRow extends StatelessWidget {
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 11.5, color: AppColors.muted(context)),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.muted(context),
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, size: 19, color: AppColors.muted(context)),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 19,
+              color: AppColors.muted(context),
+            ),
           ],
         ),
       ),

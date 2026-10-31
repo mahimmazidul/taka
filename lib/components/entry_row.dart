@@ -30,8 +30,9 @@ class EntryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color amountColor =
-        entry.isExpense ? AppColors.expense(context) : AppColors.income(context);
+    final Color amountColor = entry.isExpense
+        ? AppColors.expense(context)
+        : AppColors.income(context);
 
     final String subtitle = <String>[
       if (entry.note.isNotEmpty) entry.note,
@@ -56,8 +57,11 @@ class EntryRow extends StatelessWidget {
                   color: AppColors.line(context),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(Icons.help_outline_rounded,
-                    size: 20, color: AppColors.muted(context)),
+                child: Icon(
+                  Icons.help_outline_rounded,
+                  size: 20,
+                  color: AppColors.muted(context),
+                ),
               ),
             const SizedBox(width: 14),
             Expanded(
@@ -80,7 +84,10 @@ class EntryRow extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: AppColors.muted(context)),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.muted(context),
+                      ),
                     ),
                   ],
                 ],

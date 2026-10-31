@@ -64,7 +64,9 @@ class TransactionEntry {
       amountMinor: map['amount_minor']! as int,
       categoryId: map['category_id']! as String,
       note: (map['note'] as String?) ?? '',
-      occurredAt: DateTime.fromMillisecondsSinceEpoch(map['occurred_at']! as int),
+      occurredAt: DateTime.fromMillisecondsSinceEpoch(
+        map['occurred_at']! as int,
+      ),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']! as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at']! as int),
     );

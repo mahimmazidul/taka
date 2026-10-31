@@ -25,8 +25,9 @@ class BudgetsScreen extends StatelessWidget {
     required int? currentMinor,
     required Future<void> Function(int? minor) onSave,
   }) async {
-    final TextEditingController controller =
-        TextEditingController(text: currentMinor == null ? '' : minorToInputText(currentMinor));
+    final TextEditingController controller = TextEditingController(
+      text: currentMinor == null ? '' : minorToInputText(currentMinor),
+    );
 
     await showAppSheet<void>(
       context: context,
@@ -36,12 +37,17 @@ class BudgetsScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SheetTitle(title: title, subtitle: 'Leave empty to clear the limit'),
+            SheetTitle(
+              title: title,
+              subtitle: 'Leave empty to clear the limit',
+            ),
             const SizedBox(height: 10),
             TextField(
               controller: controller,
               autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(hintText: 'Monthly limit'),
             ),
             const SizedBox(height: 16),
@@ -50,7 +56,9 @@ class BudgetsScreen extends StatelessWidget {
               icon: Icons.check_rounded,
               onPressed: () async {
                 final String text = controller.text.trim();
-                final int? minor = text.isEmpty ? null : parseAmountToMinor(text);
+                final int? minor = text.isEmpty
+                    ? null
+                    : parseAmountToMinor(text);
                 await onSave(minor);
                 if (context.mounted) Navigator.of(context).pop();
               },
@@ -71,15 +79,19 @@ class BudgetsScreen extends StatelessWidget {
           final AppState state = AppState.instance;
           final String symbol = state.currencySymbol;
           final Map<String, int> spend = state.monthSpend;
-          final List<AppCategory> expenseCategories =
-              state.categoriesForKind(CategoryKind.expense);
+          final List<AppCategory> expenseCategories = state.categoriesForKind(
+            CategoryKind.expense,
+          );
           final int monthSpend = state.month.expenseMinor;
           final int? overall = state.settings.monthlyBudgetMinor;
 
           return ListView(
             padding: const EdgeInsets.only(bottom: 32),
             children: <Widget>[
-              const SectionTitle(title: 'Overall', padding: EdgeInsets.fromLTRB(20, 8, 20, 8)),
+              const SectionTitle(
+                title: 'Overall',
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+              ),
               Pressable(
                 onTap: () => _editLimit(
                   context,
@@ -109,7 +121,7 @@ class BudgetsScreen extends StatelessWidget {
                               overall == null
                                   ? 'No cap set — tap to add one'
                                   : '${formatMoney(monthSpend, symbol: symbol)} of '
-                                      '${formatMoney(overall, symbol: symbol)}',
+                                        '${formatMoney(overall, symbol: symbol)}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.muted(context),
@@ -118,8 +130,11 @@ class BudgetsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded,
-                          size: 20, color: AppColors.muted(context)),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: AppColors.muted(context),
+                      ),
                     ],
                   ),
                 ),
@@ -150,7 +165,8 @@ class BudgetsScreen extends StatelessWidget {
                     context,
                     title: '${category.label} budget',
                     currentMinor: category.budgetMinor,
-                    onSave: (int? minor) => state.setCategoryBudget(category.id, minor),
+                    onSave: (int? minor) =>
+                        state.setCategoryBudget(category.id, minor),
                   ),
                 ),
                 const PreferenceDivider(),
@@ -159,8 +175,11 @@ class BudgetsScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
                 child: Row(
                   children: <Widget>[
-                    Icon(Icons.info_outline_rounded,
-                        size: 15, color: AppColors.muted(context)),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 15,
+                      color: AppColors.muted(context),
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -231,8 +250,12 @@ class _CategoryLimitRow extends StatelessWidget {
                       : formatMoney(limit, symbol: symbol),
                   style: TextStyle(
                     fontSize: 12.5,
-                    fontWeight: limit == null ? FontWeight.w500 : FontWeight.w600,
-                    color: limit == null ? AppColors.muted(context) : AppColors.ink(context),
+                    fontWeight: limit == null
+                        ? FontWeight.w500
+                        : FontWeight.w600,
+                    color: limit == null
+                        ? AppColors.muted(context)
+                        : AppColors.ink(context),
                   ),
                 ),
               ],

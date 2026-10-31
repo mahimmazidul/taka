@@ -23,7 +23,11 @@ void main() {
     await database.close();
   });
 
-  Future<void> pumpAt(WidgetTester tester, Size size, {double textScale = 1}) async {
+  Future<void> pumpAt(
+    WidgetTester tester,
+    Size size, {
+    double textScale = 1,
+  }) async {
     tester.view.physicalSize = size * 3;
     tester.view.devicePixelRatio = 3;
     tester.platformDispatcher.textScaleFactorTestValue = textScale;
@@ -45,7 +49,9 @@ void main() {
     expect(find.text('Today'), findsOneWidget);
   });
 
-  testWidgets('layouts hold on small, large and tablet widths', (WidgetTester tester) async {
+  testWidgets('layouts hold on small, large and tablet widths', (
+    WidgetTester tester,
+  ) async {
     for (final Size size in <Size>[
       const Size(320, 568),
       const Size(360, 800),
@@ -57,12 +63,16 @@ void main() {
     }
   });
 
-  testWidgets('survives a large accessibility text scale', (WidgetTester tester) async {
+  testWidgets('survives a large accessibility text scale', (
+    WidgetTester tester,
+  ) async {
     await pumpAt(tester, const Size(360, 800), textScale: 1.3);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('bottom bar switches between the four tabs', (WidgetTester tester) async {
+  testWidgets('bottom bar switches between the four tabs', (
+    WidgetTester tester,
+  ) async {
     await pumpAt(tester, const Size(390, 844));
 
     await tester.tap(find.byIcon(Icons.receipt_long_rounded));
@@ -78,7 +88,9 @@ void main() {
     expect(find.text('Dark mode'), findsOneWidget);
   });
 
-  testWidgets('adding an entry through the keypad updates the ledger', (WidgetTester tester) async {
+  testWidgets('adding an entry through the keypad updates the ledger', (
+    WidgetTester tester,
+  ) async {
     await pumpAt(tester, const Size(390, 844));
 
     await tester.tap(find.byIcon(Icons.add_rounded));
@@ -97,10 +109,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('New entry'), findsNothing);
-    expect(AppState.instance.today.expenseMinor, 12500 + 4500 + 12000 + 32000 + 3000);
+    expect(
+      AppState.instance.today.expenseMinor,
+      12500 + 4500 + 12000 + 32000 + 3000,
+    );
   });
 
-  testWidgets('dark mode toggle persists and repaints', (WidgetTester tester) async {
+  testWidgets('dark mode toggle persists and repaints', (
+    WidgetTester tester,
+  ) async {
     await pumpAt(tester, const Size(390, 844));
 
     await tester.runAsync(() async {

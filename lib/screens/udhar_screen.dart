@@ -35,74 +35,86 @@ class _UdharScreenState extends State<UdharScreen> {
     await showAppSheet<void>(
       context: context,
       builder: (BuildContext context) => StatefulBuilder(
-        builder: (BuildContext context, void Function(void Function()) setSheet) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 6, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                SheetTitle(
-                  title: type == UdharType.lent ? 'You lent money' : 'You borrowed money',
-                  subtitle: 'Who is it with?',
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: person,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    hintText: 'Name',
-                    prefixIcon: Icon(Icons.person_outline_rounded, size: 20),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: amount,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    hintText: 'Amount',
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.only(left: 14, right: 6),
-                      child: Text(
-                        AppState.instance.currencySymbol,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.muted(context),
+        builder:
+            (BuildContext context, void Function(void Function()) setSheet) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(20, 6, 20, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SheetTitle(
+                      title: type == UdharType.lent
+                          ? 'You lent money'
+                          : 'You borrowed money',
+                      subtitle: 'Who is it with?',
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: person,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        hintText: 'Name',
+                        prefixIcon: Icon(
+                          Icons.person_outline_rounded,
+                          size: 20,
                         ),
                       ),
                     ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 0),
-                  ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: amount,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Amount',
+                        prefixIcon: Padding(
+                          padding: const EdgeInsets.only(left: 14, right: 6),
+                          child: Text(
+                            AppState.instance.currencySymbol,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.muted(context),
+                            ),
+                          ),
+                        ),
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: note,
+                      decoration: const InputDecoration(
+                        hintText: 'Note (optional)',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    PrimaryButton(
+                      label: 'Save',
+                      icon: Icons.check_rounded,
+                      onPressed: () async {
+                        final int? minor = parseAmountToMinor(amount.text);
+                        if (minor == null || person.text.trim().isEmpty) {
+                          setSheet(() {});
+                          return;
+                        }
+                        await AppState.instance.addUdhar(
+                          type: type,
+                          person: person.text,
+                          amountMinor: minor,
+                          note: note.text,
+                          occurredAt: DateTime.now(),
+                        );
+                        if (context.mounted) Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: note,
-                  decoration: const InputDecoration(hintText: 'Note (optional)'),
-                ),
-                const SizedBox(height: 16),
-                PrimaryButton(
-                  label: 'Save',
-                  icon: Icons.check_rounded,
-                  onPressed: () async {
-                    final int? minor = parseAmountToMinor(amount.text);
-                    if (minor == null || person.text.trim().isEmpty) {
-                      setSheet(() {});
-                      return;
-                    }
-                    await AppState.instance.addUdhar(
-                      type: type,
-                      person: person.text,
-                      amountMinor: minor,
-                      note: note.text,
-                      occurredAt: DateTime.now(),
-                    );
-                    if (context.mounted) Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+              );
+            },
       ),
     );
   }
@@ -115,10 +127,16 @@ class _UdharScreenState extends State<UdharScreen> {
         final AppState state = AppState.instance;
         final String symbol = state.currencySymbol;
         final List<UdharEntry> all = state.udharFor(_type);
-        final List<UdharEntry> open = all.where((UdharEntry e) => !e.returned).toList();
-        final List<UdharEntry> settled = all.where((UdharEntry e) => e.returned).toList();
-        final int openTotal =
-            open.fold<int>(0, (int sum, UdharEntry e) => sum + e.amountMinor);
+        final List<UdharEntry> open = all
+            .where((UdharEntry e) => !e.returned)
+            .toList();
+        final List<UdharEntry> settled = all
+            .where((UdharEntry e) => e.returned)
+            .toList();
+        final int openTotal = open.fold<int>(
+          0,
+          (int sum, UdharEntry e) => sum + e.amountMinor,
+        );
 
         return SafeArea(
           bottom: false,
@@ -142,15 +160,25 @@ class _UdharScreenState extends State<UdharScreen> {
                       _type == UdharType.lent
                           ? '${formatMoney(openTotal, symbol: symbol)} to receive'
                           : '${formatMoney(openTotal, symbol: symbol)} to pay',
-                      style: TextStyle(fontSize: 12.5, color: AppColors.muted(context)),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: AppColors.muted(context),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Segmented<UdharType>(
                       value: _type,
-                      onChanged: (UdharType value) => setState(() => _type = value),
+                      onChanged: (UdharType value) =>
+                          setState(() => _type = value),
                       options: const <SegmentOption<UdharType>>[
-                        SegmentOption<UdharType>(value: UdharType.lent, label: 'I lent'),
-                        SegmentOption<UdharType>(value: UdharType.borrowed, label: 'I borrowed'),
+                        SegmentOption<UdharType>(
+                          value: UdharType.lent,
+                          label: 'I lent',
+                        ),
+                        SegmentOption<UdharType>(
+                          value: UdharType.borrowed,
+                          label: 'I borrowed',
+                        ),
                       ],
                     ),
                   ],
@@ -178,7 +206,9 @@ class _UdharScreenState extends State<UdharScreen> {
                             Padding(
                               padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
                               child: Pressable(
-                                onTap: () => setState(() => _showReturned = !_showReturned),
+                                onTap: () => setState(
+                                  () => _showReturned = !_showReturned,
+                                ),
                                 child: Row(
                                   children: <Widget>[
                                     Text(
@@ -210,7 +240,9 @@ class _UdharScreenState extends State<UdharScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 96),
                 child: PrimaryButton(
-                  label: _type == UdharType.lent ? 'Add lent money' : 'Add borrowed money',
+                  label: _type == UdharType.lent
+                      ? 'Add lent money'
+                      : 'Add borrowed money',
                   icon: Icons.add_rounded,
                   onPressed: _addSheet,
                 ),
@@ -238,13 +270,18 @@ class _UdharRow extends StatelessWidget {
     final Color accent = _accent(context);
 
     return Pressable(
-      onTap: () => AppState.instance.setUdharReturned(entry.id, returned: !entry.returned),
+      onTap: () => AppState.instance.setUdharReturned(
+        entry.id,
+        returned: !entry.returned,
+      ),
       onLongPress: () async {
         final bool? ok = await showDialog<bool>(
           context: context,
           builder: (BuildContext context) => AlertDialog(
             title: const Text('Delete record?'),
-            content: Text('${entry.person} · ${formatMoney(entry.amountMinor, symbol: symbol)}'),
+            content: Text(
+              '${entry.person} · ${formatMoney(entry.amountMinor, symbol: symbol)}',
+            ),
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -296,7 +333,10 @@ class _UdharRow extends StatelessWidget {
                       ].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: AppColors.muted(context)),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.muted(context),
+                      ),
                     ),
                   ],
                 ),
@@ -314,7 +354,10 @@ class _UdharRow extends StatelessWidget {
                   ),
                   Text(
                     entry.returned ? 'returned' : 'tap to settle',
-                    style: TextStyle(fontSize: 10.5, color: AppColors.muted(context)),
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      color: AppColors.muted(context),
+                    ),
                   ),
                 ],
               ),

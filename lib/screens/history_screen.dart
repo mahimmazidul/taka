@@ -120,10 +120,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
           from: from,
         );
         final List<DayGroup<TransactionEntry>> groups =
-            groupByDay<TransactionEntry>(entries, (TransactionEntry e) => e.occurredAt);
+            groupByDay<TransactionEntry>(
+              entries,
+              (TransactionEntry e) => e.occurredAt,
+            );
         final int net = entries.fold<int>(
           0,
-          (int sum, TransactionEntry e) => sum + (e.isExpense ? -e.amountMinor : e.amountMinor),
+          (int sum, TransactionEntry e) =>
+              sum + (e.isExpense ? -e.amountMinor : e.amountMinor),
         );
 
         return SafeArea(
@@ -147,7 +151,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                     Text(
                       '${entries.length} entries · net ${formatMoney(net, symbol: symbol)}',
-                      style: TextStyle(fontSize: 12, color: AppColors.muted(context)),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.muted(context),
+                      ),
                     ),
                   ],
                 ),
@@ -159,8 +166,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   onChanged: (String _) => setState(() {}),
                   decoration: InputDecoration(
                     hintText: 'Search notes',
-                    prefixIcon: Icon(Icons.search_rounded,
-                        size: 20, color: AppColors.muted(context)),
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      size: 20,
+                      color: AppColors.muted(context),
+                    ),
                     suffixIcon: _search.text.isEmpty
                         ? null
                         : IconButton(
@@ -177,7 +187,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 height: 54,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   children: <Widget>[
                     AppChip(
                       label: 'All',
@@ -200,7 +213,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     AppChip(
                       label: _categoryId == null
                           ? 'Category'
-                          : state.categoryById(_categoryId!)?.label ?? 'Category',
+                          : state.categoryById(_categoryId!)?.label ??
+                                'Category',
                       icon: Icons.local_offer_outlined,
                       selected: _categoryId != null,
                       onTap: _openCategoryFilter,
@@ -236,22 +250,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         padding: const EdgeInsets.only(bottom: 110),
                         itemCount: groups.length,
                         itemBuilder: (BuildContext context, int index) {
-                          final DayGroup<TransactionEntry> group = groups[index];
+                          final DayGroup<TransactionEntry> group =
+                              groups[index];
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               _DayHeader(group: group, symbol: symbol),
-                              for (int i = 0; i < group.items.length; i++) ...<Widget>[
+                              for (
+                                int i = 0;
+                                i < group.items.length;
+                                i++
+                              ) ...<Widget>[
                                 EntryRow(
                                   entry: group.items[i],
-                                  category: state.categoryById(group.items[i].categoryId),
+                                  category: state.categoryById(
+                                    group.items[i].categoryId,
+                                  ),
                                   symbol: symbol,
                                   onTap: () => Navigator.of(context).push(
                                     slideFadeRoute<void>(
                                       AddEntryScreen(entry: group.items[i]),
                                     ),
                                   ),
-                                  onLongPress: () => _confirmDelete(group.items[i]),
+                                  onLongPress: () =>
+                                      _confirmDelete(group.items[i]),
                                 ),
                                 if (i != group.items.length - 1)
                                   const Hairline(indent: 76),
@@ -339,7 +361,8 @@ class _FilterRow extends StatelessWidget {
                 style: TextStyle(fontSize: 14.5, color: AppColors.ink(context)),
               ),
             ),
-            if (selected) const Icon(Icons.check_rounded, size: 18, color: Palette.taka),
+            if (selected)
+              const Icon(Icons.check_rounded, size: 18, color: Palette.taka),
           ],
         ),
       ),

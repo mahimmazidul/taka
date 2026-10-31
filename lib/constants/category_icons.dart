@@ -30,20 +30,53 @@ const Map<String, IconData> kCategoryIcons = <String, IconData>{
   'income_other': Icons.add_circle_outline,
 };
 
-IconData categoryIcon(String key) => kCategoryIcons[key] ?? Icons.more_horiz_outlined;
+IconData categoryIcon(String key) =>
+    kCategoryIcons[key] ?? Icons.more_horiz_outlined;
 
 /// Icon keys offered in the category editor.
 const List<String> kIconPickerKeys = <String>[
-  'rice', 'fish', 'meat', 'veg', 'tea', 'restaurant',
-  'cosmetics', 'shirt', 'laundry', 'bus', 'wifi', 'phone',
-  'book', 'medicine', 'movie', 'home', 'sports', 'gift',
-  'savings', 'school', 'scholarship', 'laptop', 'salary', 'other',
+  'rice',
+  'fish',
+  'meat',
+  'veg',
+  'tea',
+  'restaurant',
+  'cosmetics',
+  'shirt',
+  'laundry',
+  'bus',
+  'wifi',
+  'phone',
+  'book',
+  'medicine',
+  'movie',
+  'home',
+  'sports',
+  'gift',
+  'savings',
+  'school',
+  'scholarship',
+  'laptop',
+  'salary',
+  'other',
 ];
 
 /// Colour swatches offered in the category editor.
 const List<String> kCategoryPalette = <String>[
-  '#0E9F6E', '#12A594', '#3C7EDB', '#5B6FE0', '#8B5CF6',
-  '#B455D6', '#E86FA8', '#E8575D', '#E4572E', '#E9A23B',
-  '#D98E2B', '#8CBF3F', '#4CAF50', '#4AA3A2', '#8C6E4A',
+  '#0E9F6E',
+  '#12A594',
+  '#3C7EDB',
+  '#5B6FE0',
+  '#8B5CF6',
+  '#B455D6',
+  '#E86FA8',
+  '#E8575D',
+  '#E4572E',
+  '#E9A23B',
+  '#D98E2B',
+  '#8CBF3F',
+  '#4CAF50',
+  '#4AA3A2',
+  '#8C6E4A',
   '#6B7684',
 ];
