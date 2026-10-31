@@ -58,7 +58,31 @@ class _HistoryScreenState extends State<HistoryScreen> {
               selected: _categoryId == null,
               onTap: () => Navigator.pop(context, ''),
             ),
-            for (final AppCategory category in categories)
+            for (final AppCategory group in categories.where(
+              (AppCategory c) => c.isGroup,
+            )) ...<Widget>[
+              _FilterRow(
+                label: '${group.label}  ·  ${group.name}',
+                icon: group.iconData,
+                tint: group.color,
+                selected: _categoryId == group.id,
+                onTap: () => Navigator.pop(context, group.id),
+              ),
+              for (final AppCategory child in categories.where(
+                (AppCategory c) => c.parentId == group.id,
+              ))
+                _FilterRow(
+                  label: child.label,
+                  icon: child.iconData,
+                  tint: child.color,
+                  indent: true,
+                  selected: _categoryId == child.id,
+                  onTap: () => Navigator.pop(context, child.id),
+                ),
+            ],
+            for (final AppCategory category in categories.where(
+              (AppCategory c) => c.isStandalone,
+            ))
               _FilterRow(
                 label: '${category.label}  ·  ${category.name}',
                 icon: category.iconData,
@@ -114,9 +138,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
           from = startOfDay(now).subtract(const Duration(days: 6));
         }
 
+        // A group filter covers everything inside it; a leaf filters to itself.
+        final Set<String>? categoryIds = _categoryId == null
+            ? null
+            : state.idsUnder(_categoryId!);
+
         final List<TransactionEntry> entries = state.filterEntries(
           type: _type,
-          categoryId: _categoryId,
+          categoryIds: categoryIds,
           search: _search.text,
           from: from,
         );
@@ -216,6 +245,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ? 'Category'
                           : state.categoryById(_categoryId!)?.label ??
                                 'Category',
+                      tint: _categoryId == null
+                          ? null
+                          : state.categoryById(_categoryId!)?.color,
                       icon: Icons.local_offer_outlined,
                       selected: _categoryId != null,
                       onTap: _openCategoryFilter,
@@ -336,6 +368,7 @@ class _FilterRow extends StatelessWidget {
     this.tint,
     required this.selected,
     required this.onTap,
+    this.indent = false,
   });
 
   final String label;
@@ -343,23 +376,33 @@ class _FilterRow extends StatelessWidget {
   final Color? tint;
   final bool selected;
   final VoidCallback onTap;
+  final bool indent;
 
   @override
   Widget build(BuildContext context) {
     return Pressable(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+        padding: EdgeInsets.fromLTRB(indent ? 46 : 20, 13, 20, 13),
         child: Row(
           children: <Widget>[
             if (icon != null) ...<Widget>[
-              Icon(icon, size: 18, color: tint ?? AppColors.muted(context)),
+              Icon(
+                icon,
+                size: indent ? 16 : 18,
+                color: tint ?? AppColors.muted(context),
+              ),
               const SizedBox(width: 12),
             ],
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(fontSize: 14.5, color: AppColors.ink(context)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: indent ? 13.5 : 14.5,
+                  color: AppColors.ink(context),
+                ),
               ),
             ),
             if (selected)
