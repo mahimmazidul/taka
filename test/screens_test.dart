@@ -50,11 +50,14 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('টাকা'), findsOneWidget);
     expect(find.text('৳ 79,000'), findsNothing); // balance lives in a tween
-    expect(find.textContaining('Budget'.toUpperCase()), findsOneWidget);
-    expect(find.text('Today'), findsOneWidget);
+    // v1.3.0: the Home screen must not show a limit. Budgets live in Settings.
+    expect(find.textContaining('Budget'), findsNothing);
+    expect(find.text('Spent today'), findsOneWidget);
+    // …and one quiet line: this week's spend, plus what a day costs from here.
+    expect(find.textContaining('this week'), findsOneWidget);
   });
 
-  testWidgets('layouts hold on small, large and tablet widths', (
+  testWidgets('layouts hold from a small phone to a tablet, both ways up', (
     WidgetTester tester,
   ) async {
     for (final Size size in <Size>[
@@ -62,6 +65,10 @@ void main() {
       const Size(360, 800),
       const Size(414, 896),
       const Size(768, 1024),
+      // Landscape: the add-entry screen splits into form + pad, the lists get
+      // gutters, and nothing overflows.
+      const Size(844, 390),
+      const Size(640, 360),
     ]) {
       await pumpAt(tester, size);
       expect(tester.takeException(), isNull, reason: 'overflow at $size');
@@ -108,16 +115,60 @@ void main() {
     }
 
     await tester.runAsync(() async {
-      await tester.tap(find.text('Save entry'));
+      await tester.tap(find.text('ADD'));
       await Future<void>.delayed(const Duration(milliseconds: 250));
     });
     await tester.pumpAndSettle();
 
-    expect(find.text('New entry'), findsNothing);
+    // The screen stays open on purpose: ভাত, মাছ, a drink are three entries in
+    // a row, and closing after each one was the complaint.
+    expect(find.text('New entry'), findsOneWidget);
+    expect(find.textContaining('Added '), findsOneWidget);
     expect(
       AppState.instance.today.expenseMinor,
       12500 + 4500 + 12000 + 32000 + 3000 + 6000,
     );
+
+    // The amount is cleared, the category is kept for the next one.
+    expect(find.text('125'), findsNothing, reason: 'amount resets');
+
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(find.text('New entry'), findsNothing);
+    expect(find.text('Spent today'), findsOneWidget);
+  });
+
+  testWidgets('meal tags are offered for food only', (
+    WidgetTester tester,
+  ) async {
+    await pumpAt(tester, const Size(390, 844));
+
+    await tester.tap(find.byIcon(Icons.add_rounded));
+    await tester.pumpAndSettle();
+
+    // The screen opens on a food category, so the meal row is there.
+    expect(find.text('Breakfast'), findsOneWidget);
+    expect(find.text('Lunch'), findsOneWidget);
+    expect(find.text('Dinner'), findsOneWidget);
+
+    // Chips carry the Bangla label (কসমেটিকস). Switch group, then pick the
+    // face wash — the exact case from the report.
+    final Finder grooming = find.text('কসমেটিকস');
+    await tester.dragUntilVisible(
+      grooming,
+      find.byType(ListView).first,
+      const Offset(-140, 0),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(grooming);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ফেস ওয়াশ'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Breakfast'), findsNothing);
+    expect(find.text('Lunch'), findsNothing);
+    expect(find.text('Dinner'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('dark mode toggle persists and repaints', (

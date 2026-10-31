@@ -101,6 +101,39 @@ void main() {
     await _shot(tester, 'about');
   });
 
+  testWidgets('11 add entry — landscape', (WidgetTester tester) async {
+    // Form on the left, pad on the right: the whole point of the landscape pass.
+    await _render(tester, darkMode: false, size: const Size(844, 390));
+    await tester.tap(find.byIcon(Icons.add_rounded));
+    await tester.pumpAndSettle();
+    for (final String digit in <String>['8', '0']) {
+      await tester.tap(find.text(digit));
+      await tester.pumpAndSettle();
+    }
+    await _shot(tester, 'add_entry_landscape');
+  });
+
+  testWidgets('12 home — landscape', (WidgetTester tester) async {
+    await _render(tester, darkMode: false, size: const Size(844, 390));
+    await _shot(tester, 'home_landscape');
+  });
+
+  testWidgets('13 add entry — after saving', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    await tester.tap(find.byIcon(Icons.add_rounded));
+    await tester.pumpAndSettle();
+    for (final String digit in <String>['4', '5']) {
+      await tester.tap(find.text(digit));
+      await tester.pumpAndSettle();
+    }
+    await tester.runAsync(() async {
+      await tester.tap(find.text('ADD'));
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    });
+    await tester.pumpAndSettle();
+    await _shot(tester, 'add_entry_saved');
+  });
+
   testWidgets('09 categories', (WidgetTester tester) async {
     await _render(tester, darkMode: false);
     await tester.tap(find.byIcon(Icons.tune_rounded));
