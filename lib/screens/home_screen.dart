@@ -16,6 +16,7 @@ import '../store/settings_actions.dart';
 import '../utils/date_helpers.dart';
 import '../utils/format_currency.dart';
 import 'add_entry_screen.dart';
+import 'period_screen.dart';
 import '../core/clock.dart';
 
 /// Dashboard. One hero, then open sections separated by hairlines — no stacks
@@ -70,6 +71,9 @@ class HomeScreen extends StatelessWidget {
               weekMinor: state.week.expenseMinor,
               monthMinor: state.month.expenseMinor,
               symbol: symbol,
+              onTapToday: () => _openPeriod(context, PeriodMode.week),
+              onTapWeek: () => _openPeriod(context, PeriodMode.week),
+              onTapMonth: () => _openPeriod(context, PeriodMode.month),
             ),
           ),
           Reveal(index: 1, child: _Nudge(state: state)),
@@ -154,6 +158,10 @@ class HomeScreen extends StatelessWidget {
       },
     );
   }
+}
+
+void _openPeriod(BuildContext context, PeriodMode mode) {
+  Navigator.of(context).push(slideFadeRoute<void>(PeriodScreen(mode: mode)));
 }
 
 class _Header extends StatelessWidget {

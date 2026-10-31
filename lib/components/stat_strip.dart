@@ -12,12 +12,21 @@ class StatStrip extends StatelessWidget {
     required this.weekMinor,
     required this.monthMinor,
     required this.symbol,
+    this.onTapToday,
+    this.onTapWeek,
+    this.onTapMonth,
   });
 
   final int todayMinor;
   final int weekMinor;
   final int monthMinor;
   final String symbol;
+
+  /// Tapping a figure opens the period it describes: the day, the week, or the
+  /// month with every month before it.
+  final VoidCallback? onTapToday;
+  final VoidCallback? onTapWeek;
+  final VoidCallback? onTapMonth;
 
   @override
   Widget build(BuildContext context) {
@@ -33,11 +42,22 @@ class StatStrip extends StatelessWidget {
             value: todayMinor,
             symbol: symbol,
             accent: true,
+            onTap: onTapToday,
           ),
           _Divider(),
-          _Stat(label: 'This week', value: weekMinor, symbol: symbol),
+          _Stat(
+            label: 'This week',
+            value: weekMinor,
+            symbol: symbol,
+            onTap: onTapWeek,
+          ),
           _Divider(),
-          _Stat(label: 'This month', value: monthMinor, symbol: symbol),
+          _Stat(
+            label: 'This month',
+            value: monthMinor,
+            symbol: symbol,
+            onTap: onTapMonth,
+          ),
         ],
       ),
     );
@@ -62,39 +82,45 @@ class _Stat extends StatelessWidget {
     required this.value,
     required this.symbol,
     this.accent = false,
+    this.onTap,
   });
 
   final String label;
   final int value;
   final String symbol;
   final bool accent;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: AppColors.muted(context)),
-          ),
-          const SizedBox(height: 3),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: AnimatedMoney(
-              value,
-              symbol: symbol,
-              style: TextStyle(
-                fontSize: accent ? 17 : 15,
-                fontWeight: accent ? FontWeight.w700 : FontWeight.w600,
-                letterSpacing: -0.3,
-                color: accent ? Palette.taka : AppColors.ink(context),
+      child: Pressable(
+        onTap: onTap,
+        scale: 0.96,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              label,
+              style: TextStyle(fontSize: 11, color: AppColors.muted(context)),
+            ),
+            const SizedBox(height: 3),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: AnimatedMoney(
+                value,
+                symbol: symbol,
+                style: TextStyle(
+                  fontSize: accent ? 17 : 15,
+                  fontWeight: accent ? FontWeight.w700 : FontWeight.w600,
+                  letterSpacing: -0.3,
+                  color: accent ? Palette.taka : AppColors.ink(context),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

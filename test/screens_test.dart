@@ -109,10 +109,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('New entry'), findsOneWidget);
 
-    for (final String digit in <String>['1', '2', '5']) {
-      await tester.tap(find.text(digit));
-      await tester.pumpAndSettle();
-    }
+    // The amount is a real field with the phone's own numeric keyboard.
+    await tester.enterText(find.byKey(const Key('amount')), '125');
+    await tester.pumpAndSettle();
 
     await tester.runAsync(() async {
       await tester.tap(find.text('ADD'));
@@ -130,7 +129,10 @@ void main() {
     );
 
     // The amount is cleared, the category is kept for the next one.
-    expect(find.text('125'), findsNothing, reason: 'amount resets');
+    final TextField amount = tester.widget<TextField>(
+      find.byKey(const Key('amount')),
+    );
+    expect(amount.controller!.text, isEmpty, reason: 'amount resets');
 
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
@@ -168,6 +170,46 @@ void main() {
     expect(find.text('Breakfast'), findsNothing);
     expect(find.text('Lunch'), findsNothing);
     expect(find.text('Dinner'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a period figure opens its own breakdown', (
+    WidgetTester tester,
+  ) async {
+    await pumpAt(tester, const Size(390, 844));
+
+    // "This month" → month view: calendar plus every month so far.
+    await tester.tap(find.text('This month'));
+    await tester.pumpAndSettle();
+    expect(find.text('Where it went'), findsOneWidget);
+    expect(find.text('MONTHS'), findsOneWidget);
+    expect(find.text('October 2026'), findsWidgets);
+
+    // Week: seven rows, including the days nothing was spent on.
+    await tester.tap(find.text('Week'));
+    await tester.pumpAndSettle();
+    expect(find.text('nothing logged'), findsWidgets);
+
+    // Year: the whole year at once.
+    await tester.tap(find.text('Year'));
+    await tester.pumpAndSettle();
+    expect(find.text('Spent'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a calendar day opens the entries of that day', (
+    WidgetTester tester,
+  ) async {
+    await pumpAt(tester, const Size(390, 844));
+    await tester.tap(find.text('This month'));
+    await tester.pumpAndSettle();
+
+    // The 31st is the last cell of October 2026 and has five entries.
+    await tester.tap(find.text('31'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Hall dinner'), findsOneWidget);
+    expect(find.text('৳ 575'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 

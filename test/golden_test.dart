@@ -42,10 +42,8 @@ void main() {
     await _render(tester, darkMode: false);
     await tester.tap(find.byIcon(Icons.add_rounded));
     await tester.pumpAndSettle();
-    for (final String digit in <String>['2', '5', '0']) {
-      await tester.tap(find.text(digit));
-      await tester.pumpAndSettle();
-    }
+    await tester.enterText(find.byKey(const Key('amount')), '250');
+    await tester.pumpAndSettle();
     await _shot(tester, 'add_entry');
   });
 
@@ -106,10 +104,8 @@ void main() {
     await _render(tester, darkMode: false, size: const Size(844, 390));
     await tester.tap(find.byIcon(Icons.add_rounded));
     await tester.pumpAndSettle();
-    for (final String digit in <String>['8', '0']) {
-      await tester.tap(find.text(digit));
-      await tester.pumpAndSettle();
-    }
+    await tester.enterText(find.byKey(const Key('amount')), '80');
+    await tester.pumpAndSettle();
     await _shot(tester, 'add_entry_landscape');
   });
 
@@ -122,16 +118,37 @@ void main() {
     await _render(tester, darkMode: false);
     await tester.tap(find.byIcon(Icons.add_rounded));
     await tester.pumpAndSettle();
-    for (final String digit in <String>['4', '5']) {
-      await tester.tap(find.text(digit));
-      await tester.pumpAndSettle();
-    }
+    await tester.enterText(find.byKey(const Key('amount')), '45');
+    await tester.pumpAndSettle();
     await tester.runAsync(() async {
       await tester.tap(find.text('ADD'));
       await Future<void>.delayed(const Duration(milliseconds: 300));
     });
     await tester.pumpAndSettle();
     await _shot(tester, 'add_entry_saved');
+  });
+
+  testWidgets('14 week breakdown', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    await tester.tap(find.text('This week'));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'period_week');
+  });
+
+  testWidgets('15 month breakdown', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    await tester.tap(find.text('This month'));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'period_month');
+  });
+
+  testWidgets('16 year breakdown', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    await tester.tap(find.text('This month'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Year'));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'period_year');
   });
 
   testWidgets('09 categories', (WidgetTester tester) async {
