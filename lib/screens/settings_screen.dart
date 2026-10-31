@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -84,22 +83,14 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _import(BuildContext context) async {
-    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+    // file_picker 13: pickFile() returns a single PlatformFile and bytes are read
+    // from the file itself instead of a withData flag.
+    final PlatformFile? file = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: <String>['json'],
-      withData: true,
     );
-    if (result == null || result.files.isEmpty) return;
-
-    final PlatformFile file = result.files.single;
-    final String raw;
-    if (file.bytes != null) {
-      raw = utf8.decode(file.bytes!);
-    } else if (file.path != null) {
-      raw = await File(file.path!).readAsString();
-    } else {
-      return;
-    }
+    if (file == null) return;
+    final String raw = utf8.decode(await file.readAsBytes());
 
     if (!context.mounted) return;
     final bool? ok = await showDialog<bool>(

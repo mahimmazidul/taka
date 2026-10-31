@@ -119,7 +119,10 @@ Future<void> shareTextFile({
   final Directory dir = await getTemporaryDirectory();
   final File file = File(p.join(dir.path, fileName));
   await file.writeAsString(content);
-  await Share.shareXFiles(<XFile>[
-    XFile(file.path, mimeType: 'text/plain'),
-  ], subject: subject);
+  await SharePlus.instance.share(
+    ShareParams(
+      files: <XFile>[XFile(file.path, mimeType: 'text/plain')],
+      subject: subject,
+    ),
+  );
 }
