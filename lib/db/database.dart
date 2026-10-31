@@ -24,7 +24,7 @@ class AppDatabase {
   }) => AppDatabase._internal(factory, path);
 
   static const String _fileName = 'taka.db';
-  static const int _version = 4;
+  static const int _version = 5;
 
   final DatabaseFactory? _factory;
   final String? _path;
@@ -67,7 +67,8 @@ class AppDatabase {
         sort_order INTEGER NOT NULL DEFAULT 0,
         parent_id TEXT,
         is_group INTEGER NOT NULL DEFAULT 0,
-        food INTEGER NOT NULL DEFAULT 0
+        food INTEGER NOT NULL DEFAULT 0,
+        also_groups TEXT
       )
     ''');
     batch.execute('CREATE INDEX idx_cat_parent ON categories(parent_id)');
@@ -123,12 +124,21 @@ class AppDatabase {
   /// v1 → v2: Bangla labels plus the granular hall-life category set.
   /// Non-destructive: existing rows are relabelled, new ones are inserted.
   Future<void> _upgrade(Database db, int oldVersion, int newVersion) async {
-    // Column additions come before anything that writes a full seed row:
-    // every later step inserts `kDefaultCategories` through `toMap()`, and
-    // that map carries `food` from v4 onwards. Doing this last made a v2 file
-    // try to insert a column that did not exist yet.
+    // Every column addition happens first, before anything that writes a seed
+    // row: the seed map carries every column the current version knows about, so
+    // adding a column at the end of this method makes a v2 file try to insert a
+    // column that does not exist yet. Learned twice — once for `food`, once for
+    // `also_groups`.
     if (oldVersion < 4) {
-      await _upgradeToFood(db);
+      await _addColumnIfMissing(
+        db,
+        'categories',
+        'food',
+        'INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+    if (oldVersion < 5) {
+      await _addColumnIfMissing(db, 'categories', 'also_groups', 'TEXT');
     }
 
     if (oldVersion < 2) {
@@ -196,6 +206,59 @@ class AppDatabase {
     if (oldVersion < 3) {
       await _upgradeToGroups(db);
     }
+
+    if (oldVersion < 4) {
+      await _upgradeToFood(db);
+    }
+
+    if (oldVersion < 5) {
+      await _upgradeToAlsoGroups(db);
+    }
+  }
+
+  /// v4 → v5: an item can be listed under more than one group.
+  ///
+  /// v1.3.0 shipped egg and noodles twice — once in snacks, once in the main
+  /// course — as two categories. That split the spend in half and made "how much
+  /// did I spend on egg?" answer with two numbers. The duplicates are merged
+  /// back into the original item here, entries included, and the one row is
+  /// listed in both groups from now on.
+  Future<void> _upgradeToAlsoGroups(Database db) async {
+    const Map<String, String> duplicateToOriginal = <String, String>{
+      'egg_snack': 'egg',
+      'noodles_main': 'noodles',
+    };
+    for (final MapEntry<String, String> pair in duplicateToOriginal.entries) {
+      final List<Map<String, Object?>> rows = await db.query(
+        'categories',
+        where: 'id = ?',
+        whereArgs: <Object?>[pair.key],
+      );
+      if (rows.isEmpty) continue;
+      await db.update(
+        'transactions',
+        <String, Object?>{'category_id': pair.value},
+        where: 'category_id = ?',
+        whereArgs: <Object?>[pair.key],
+      );
+      await db.delete(
+        'categories',
+        where: 'id = ?',
+        whereArgs: <Object?>[pair.key],
+      );
+    }
+
+    final Batch batch = db.batch();
+    for (final AppCategory category in kDefaultCategories) {
+      if (category.alsoGroups.isEmpty) continue;
+      batch.update(
+        'categories',
+        <String, Object?>{'also_groups': category.alsoGroups.join(',')},
+        where: 'id = ?',
+        whereArgs: <Object?>[category.id],
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   /// v3 → v4: mark the edible categories.
@@ -205,12 +268,6 @@ class AppDatabase {
   /// seed list; anything the user created stays non-food (no meal tag) until
   /// they say otherwise.
   Future<void> _upgradeToFood(Database db) async {
-    await _addColumnIfMissing(
-      db,
-      'categories',
-      'food',
-      'INTEGER NOT NULL DEFAULT 0',
-    );
     final Batch batch = db.batch();
     for (final AppCategory category in kDefaultCategories) {
       if (!category.isFood) continue;

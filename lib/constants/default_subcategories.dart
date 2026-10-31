@@ -16,6 +16,7 @@ AppCategory _item(
   String color,
   int order, {
   bool food = false,
+  List<String> also = const <String>[],
 }) => AppCategory(
   id: id,
   name: name,
@@ -26,6 +27,7 @@ AppCategory _item(
   parentId: parentId,
   sortOrder: order,
   isFood: food,
+  alsoGroups: also,
 );
 
 /// Everything inside the food groups — the messy part of hall life.
@@ -55,16 +57,16 @@ final List<AppCategory> _food = <AppCategory>[
   ),
   _item('g_main', 'veg', 'Vegetables', 'সবজি', 'veg', '#4CAF50', 5, food: true),
   _item('g_main', 'dal', 'Dal', 'ডাল', 'dal', '#8CBF3F', 6, food: true),
-  _item('g_main', 'egg', 'Egg', 'ডিম', 'egg', '#E9A23B', 7, food: true),
   _item(
     'g_main',
-    'noodles_main',
-    'Noodles',
-    'নুডলস',
-    'noodles',
-    '#D98E2B',
-    8,
+    'egg',
+    'Egg',
+    'ডিম',
+    'egg',
+    '#E9A23B',
+    7,
     food: true,
+    also: <String>['g_snacks'],
   ),
 
   _item(
@@ -190,8 +192,8 @@ final List<AppCategory> _food = <AppCategory>[
     '#E9A23B',
     8,
     food: true,
+    also: <String>['g_main'],
   ),
-  _item('g_snacks', 'egg_snack', 'Egg', 'ডিম', 'egg', '#D98E2B', 9, food: true),
   _item(
     'g_snacks',
     'snacks',
@@ -199,7 +201,7 @@ final List<AppCategory> _food = <AppCategory>[
     'চা-নাস্তা',
     'snacks',
     '#D98E2B',
-    7,
+    9,
     food: true,
   ),
 

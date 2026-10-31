@@ -34,6 +34,7 @@ class AppCategory {
     this.parentId,
     this.isGroup = false,
     this.isFood = false,
+    this.alsoGroups = const <String>[],
   });
 
   final String id;
@@ -62,6 +63,18 @@ class AppCategory {
   /// tag — a face wash does not belong to breakfast, and letting it would put
   /// money into the meals strip that never came from a meal.
   final bool isFood;
+
+  /// Other groups this item also appears under, beyond its [parentId].
+  ///
+  /// Egg is bought for breakfast and eaten at dinner; it is one row, one id and
+  /// one total, listed in two places. Duplicating the category to make that work
+  /// would split the spend in half and answer "how much did I spend on egg?"
+  /// with two numbers.
+  final List<String> alsoGroups;
+
+  /// Does this item show under [groupId]?
+  bool listedIn(String groupId) =>
+      parentId == groupId || alsoGroups.contains(groupId);
 
   Color get color => colorFromHex(colorHex);
 
@@ -93,6 +106,7 @@ class AppCategory {
     bool moveToTopLevel = false,
     bool? isGroup,
     bool? isFood,
+    List<String>? alsoGroups,
   }) {
     return AppCategory(
       id: id,
@@ -106,6 +120,7 @@ class AppCategory {
       parentId: moveToTopLevel ? null : (parentId ?? this.parentId),
       isGroup: isGroup ?? this.isGroup,
       isFood: isFood ?? this.isFood,
+      alsoGroups: alsoGroups ?? this.alsoGroups,
     );
   }
 
@@ -122,6 +137,10 @@ class AppCategory {
       parentId: map['parent_id'] as String?,
       isGroup: ((map['is_group'] as int?) ?? 0) == 1,
       isFood: ((map['food'] as int?) ?? 0) == 1,
+      alsoGroups: ((map['also_groups'] as String?) ?? '')
+          .split(',')
+          .where((String id) => id.trim().isNotEmpty)
+          .toList(growable: false),
     );
   }
 
@@ -138,6 +157,7 @@ class AppCategory {
       'parent_id': parentId,
       'is_group': isGroup ? 1 : 0,
       'food': isFood ? 1 : 0,
+      'also_groups': alsoGroups.isEmpty ? null : alsoGroups.join(','),
     };
   }
 }

@@ -219,6 +219,138 @@ void main() {
     expect(kept.meal, isNull, reason: 'old rows simply have no meal tag');
   });
 
+  test('a v4 database merges the duplicated egg and noodles rows', () async {
+    final String path = p.join(
+      await databaseFactoryFfi.getDatabasesPath(),
+      'merge-${DateTime.now().microsecondsSinceEpoch}.db',
+    );
+    addTearDown(() async {
+      await databaseFactoryFfi.deleteDatabase(path);
+    });
+
+    // A v4 file, exactly as v1.3.0 shipped it: egg twice, noodles twice.
+    final Database legacy = await databaseFactoryFfi.openDatabase(
+      path,
+      options: OpenDatabaseOptions(
+        version: 4,
+        onCreate: (Database db, int version) async {
+          await db.execute('''
+            CREATE TABLE categories (
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              name_bn TEXT NOT NULL DEFAULT '',
+              icon TEXT NOT NULL,
+              color TEXT NOT NULL,
+              kind TEXT NOT NULL,
+              budget_minor INTEGER,
+              sort_order INTEGER NOT NULL DEFAULT 0,
+              parent_id TEXT,
+              is_group INTEGER NOT NULL DEFAULT 0,
+              food INTEGER NOT NULL DEFAULT 0
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE transactions (
+              id TEXT PRIMARY KEY,
+              type TEXT NOT NULL,
+              amount_minor INTEGER NOT NULL,
+              category_id TEXT NOT NULL,
+              note TEXT NOT NULL DEFAULT '',
+              occurred_at INTEGER NOT NULL,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL,
+              meal TEXT
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE udhar_entries (
+              id TEXT PRIMARY KEY,
+              type TEXT NOT NULL,
+              person TEXT NOT NULL,
+              amount_minor INTEGER NOT NULL,
+              note TEXT NOT NULL DEFAULT '',
+              occurred_at INTEGER NOT NULL,
+              returned INTEGER NOT NULL DEFAULT 0,
+              returned_at INTEGER,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL
+            )
+          ''');
+          await db.execute(
+            'CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
+          );
+          for (final List<Object?> row in <List<Object?>>[
+            <Object?>['g_main', 'Main course', 0],
+            <Object?>['g_snacks', 'Snacks', 1],
+            <Object?>['egg', 'Egg', 0],
+            <Object?>['egg_snack', 'Egg', 0],
+            <Object?>['noodles', 'Noodles', 1],
+            <Object?>['noodles_main', 'Noodles', 1],
+          ]) {
+            await db.insert('categories', <String, Object?>{
+              'id': row[0],
+              'name': row[1],
+              'name_bn': row[1] as String,
+              'icon': 'egg',
+              'color': '#E9A23B',
+              'kind': 'expense',
+              'sort_order': 0,
+              'parent_id': row[0] == 'g_main' || row[0] == 'g_snacks'
+                  ? null
+                  : (row[2] == 0 ? 'g_main' : 'g_snacks'),
+              'is_group': row[0] == 'g_main' || row[0] == 'g_snacks' ? 1 : 0,
+              'food': 1,
+            });
+          }
+        },
+      ),
+    );
+    await legacy.insert('transactions', <String, Object?>{
+      'id': 'dup-1',
+      'type': 'expense',
+      'amount_minor': 2000,
+      'category_id': 'egg_snack',
+      'note': 'two eggs with cha',
+      'occurred_at': DateTime(2026, 10, 20, 9).millisecondsSinceEpoch,
+      'created_at': DateTime(2026, 10, 20, 9).millisecondsSinceEpoch,
+      'updated_at': DateTime(2026, 10, 20, 9).millisecondsSinceEpoch,
+    });
+    await legacy.close();
+
+    final AppDatabase upgraded = AppDatabase.at(
+      factory: databaseFactoryFfi,
+      path: path,
+    );
+    addTearDown(upgraded.close);
+
+    final List<AppCategory> all = await CategoryRepository(database: upgraded)
+        .all();
+
+    expect(
+      all.where((AppCategory c) => c.id == 'egg_snack'),
+      isEmpty,
+      reason: 'the duplicate row is gone',
+    );
+    expect(
+      all.where((AppCategory c) => c.id == 'noodles_main'),
+      isEmpty,
+      reason: 'the duplicate row is gone',
+    );
+
+    final AppCategory egg = all.firstWhere((AppCategory c) => c.id == 'egg');
+    expect(egg.alsoGroups, <String>['g_snacks']);
+
+    final List<TransactionEntry> kept = await TransactionRepository(
+      database: upgraded,
+    ).query(const TransactionQuery());
+    expect(
+      kept.single.categoryId,
+      'egg',
+      reason: 'the entry moved to the original category, not lost',
+    );
+    expect(kept.single.amountMinor, 2000);
+  });
+
   test('insert, update and delete a transaction', () async {
     await transactions.insert(
       entry(

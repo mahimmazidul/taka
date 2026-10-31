@@ -78,22 +78,69 @@ void main() {
       }
     });
 
-    test('noodles and egg are reachable from snacks, noodles from main', () {
+    test('egg and noodles are listed twice but stored once', () {
+      final AppCategory egg = seeded('egg');
       final AppCategory noodles = seeded('noodles');
-      final AppCategory eggSnack = seeded('egg_snack');
-      final AppCategory noodlesMain = seeded('noodles_main');
 
+      // One row each: one id, one total, one thing to budget.
+      expect(egg.parentId, 'g_main');
+      expect(egg.alsoGroups, <String>['g_snacks']);
       expect(noodles.parentId, 'g_snacks');
-      expect(eggSnack.parentId, 'g_snacks');
-      expect(noodlesMain.parentId, 'g_main');
-      for (final AppCategory c in <AppCategory>[
-        noodles,
-        eggSnack,
-        noodlesMain,
-      ]) {
-        expect(c.isFood, isTrue);
-        expect(c.nameBn, isNotEmpty);
-      }
+      expect(noodles.alsoGroups, <String>['g_main']);
+
+      expect(egg.listedIn('g_main'), isTrue);
+      expect(egg.listedIn('g_snacks'), isTrue);
+      expect(noodles.listedIn('g_snacks'), isTrue);
+      expect(noodles.listedIn('g_main'), isTrue);
+
+      // The v1.3.0 duplicates are gone for good.
+      expect(
+        kDefaultCategories.where((AppCategory c) => c.id == 'egg_snack'),
+        isEmpty,
+      );
+      expect(
+        kDefaultCategories.where((AppCategory c) => c.id == 'noodles_main'),
+        isEmpty,
+      );
+    });
+
+    test('the picker lists a shared item under each of its groups', () {
+      final List<String> snacks = state
+          .childrenOf('g_snacks')
+          .map((AppCategory c) => c.id)
+          .toList();
+      final List<String> main = state
+          .childrenOf('g_main')
+          .map((AppCategory c) => c.id)
+          .toList();
+
+      expect(snacks, contains('egg'));
+      expect(main, contains('egg'));
+      expect(snacks, contains('noodles'));
+      expect(main, contains('noodles'));
+      expect(snacks.toSet().length, snacks.length, reason: 'no duplicate rows');
+      expect(main.toSet().length, main.length, reason: 'no duplicate rows');
+    });
+
+    test('spending on egg is one number, not two', () async {
+      await state.addTransaction(
+        type: EntryType.expense,
+        amountMinor: 2000,
+        categoryId: 'egg',
+        note: 'two eggs',
+        occurredAt: kTestNow,
+      );
+      expect(state.monthSpend['egg'], 2000);
+      // It rolls into both groups it is listed under, and still once into the
+      // month's total.
+      expect(state.spendOf('g_main'), greaterThanOrEqualTo(2000));
+      expect(state.spendOf('g_snacks'), greaterThanOrEqualTo(2000));
+      // Listed in two groups, counted once in the month: 99,000 seeded + 2,000.
+      expect(
+        state.monthSpend.values.fold<int>(0, (int a, int b) => a + b),
+        101000,
+      );
+      expect(state.month.expenseMinor, 101000);
     });
 
     test('every item points at a real group, and ids are unique', () {
@@ -114,7 +161,7 @@ void main() {
   group('acceptsMeal', () {
     test('true for food items, false for everything else', () {
       expect(state.acceptsMeal('rice'), isTrue);
-      expect(state.acceptsMeal('egg_snack'), isTrue);
+      expect(state.acceptsMeal('egg'), isTrue);
       expect(state.acceptsMeal('noodles'), isTrue);
       expect(state.acceptsMeal('cosmetics'), isFalse);
       expect(state.acceptsMeal('khata'), isFalse);

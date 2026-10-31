@@ -168,8 +168,10 @@ class AppState extends ChangeNotifier {
       .where((AppCategory c) => c.kind == CategoryKind.expense && c.isLoggable)
       .toList(growable: false);
 
+  /// Everything listed under [groupId] — its own children plus items that only
+  /// also appear there (egg is one row, shown in snacks and in the main course).
   List<AppCategory> childrenOf(String groupId) => categories
-      .where((AppCategory c) => c.parentId == groupId)
+      .where((AppCategory c) => !c.isGroup && c.listedIn(groupId))
       .toList(growable: false);
 
   /// The group id that owns [categoryId], if any.
