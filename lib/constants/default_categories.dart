@@ -1,208 +1,263 @@
 import '../models/app_category.dart';
+import 'default_subcategories.dart';
 
-/// Seeded on first launch. Hall-life categories, granular on purpose: rice,
-/// fish, cosmetics and laundry are separate so the ledger can actually answer
-/// "where did my taka go?" without tagging every entry by hand.
-const List<AppCategory> kDefaultCategories = <AppCategory>[
-  // ── Food & mess ───────────────────────────────────────────────────────────
-  AppCategory(
-    id: 'rice',
-    name: 'Rice & meal',
-    nameBn: 'ভাত',
+/// The seeded **groups** — the first row of chips on the add-entry screen.
+/// A group is a container: it rolls up its items' spend and can hold its own
+/// monthly limit, but entries are logged against the items inside it.
+AppCategory _group({
+  required String id,
+  required String name,
+  required String nameBn,
+  required String icon,
+  required String color,
+  required int order,
+}) => AppCategory(
+  id: id,
+  name: name,
+  nameBn: nameBn,
+  icon: icon,
+  colorHex: color,
+  kind: CategoryKind.expense,
+  sortOrder: order,
+  isGroup: true,
+);
+
+/// A top-level item with no parent: loggable on its own (Dining out, Other).
+AppCategory _leaf({
+  required String id,
+  required String name,
+  required String nameBn,
+  required String icon,
+  required String color,
+  required int order,
+  CategoryKind kind = CategoryKind.expense,
+}) => AppCategory(
+  id: id,
+  name: name,
+  nameBn: nameBn,
+  icon: icon,
+  colorHex: color,
+  kind: kind,
+  sortOrder: order,
+);
+
+/// Expense groups, in the order a hall student thinks about money: food first,
+/// then body, then books, then the boring bills.
+final List<AppCategory> _expenseGroups = <AppCategory>[
+  _group(
+    id: 'g_main',
+    name: 'Main course',
+    nameBn: 'মেইন কোর্স',
     icon: 'rice',
-    colorHex: '#E9A23B',
-    kind: CategoryKind.expense,
+    color: '#E9A23B',
+    order: 0,
   ),
-  AppCategory(
-    id: 'fish',
-    name: 'Fish',
-    nameBn: 'মাছ',
-    icon: 'fish',
-    colorHex: '#3C7EDB',
-    kind: CategoryKind.expense,
-    sortOrder: 1,
+  _group(
+    id: 'g_drinks',
+    name: 'Drinks',
+    nameBn: 'ড্রিংকস',
+    icon: 'drink',
+    color: '#3C7EDB',
+    order: 1,
   ),
-  AppCategory(
-    id: 'meat',
-    name: 'Meat & egg',
-    nameBn: 'মাংস',
-    icon: 'meat',
-    colorHex: '#E8575D',
-    kind: CategoryKind.expense,
-    sortOrder: 2,
-  ),
-  AppCategory(
-    id: 'veg',
-    name: 'Vegetables',
-    nameBn: 'সবজি',
-    icon: 'veg',
-    colorHex: '#4CAF50',
-    kind: CategoryKind.expense,
-    sortOrder: 3,
-  ),
-  AppCategory(
-    id: 'snacks',
-    name: 'Snacks & tea',
+  _group(
+    id: 'g_snacks',
+    name: 'Snacks',
     nameBn: 'নাস্তা',
-    icon: 'tea',
-    colorHex: '#D98E2B',
-    kind: CategoryKind.expense,
-    sortOrder: 4,
+    icon: 'snacks',
+    color: '#E4572E',
+    order: 2,
   ),
-  AppCategory(
-    id: 'eatout',
-    name: 'Eating out',
-    nameBn: 'বাইরের খাবার',
-    icon: 'restaurant',
-    colorHex: '#E4572E',
-    kind: CategoryKind.expense,
-    sortOrder: 5,
+  _group(
+    id: 'g_sweets',
+    name: 'Sweets',
+    nameBn: 'মিষ্টি',
+    icon: 'sweets',
+    color: '#E86FA8',
+    order: 3,
   ),
-  // ── Hall & self-care ──────────────────────────────────────────────────────
-  AppCategory(
-    id: 'cosmetics',
-    name: 'Cosmetics',
+  _group(
+    id: 'g_fruits',
+    name: 'Fruits',
+    nameBn: 'ফল',
+    icon: 'fruit',
+    color: '#4CAF50',
+    order: 4,
+  ),
+  _group(
+    id: 'g_grooming',
+    name: 'Cosmetics & grooming',
     nameBn: 'কসমেটিকস',
     icon: 'cosmetics',
-    colorHex: '#E86FA8',
-    kind: CategoryKind.expense,
-    sortOrder: 6,
+    color: '#B455D6',
+    order: 5,
   ),
-  AppCategory(
-    id: 'clothes',
+  _group(
+    id: 'g_study',
+    name: 'Books & stationery',
+    nameBn: 'বই-খাতা',
+    icon: 'book',
+    color: '#8C6E4A',
+    order: 6,
+  ),
+  _group(
+    id: 'g_clothes',
     name: 'Clothes',
     nameBn: 'কাপড়',
     icon: 'shirt',
-    colorHex: '#8B5CF6',
-    kind: CategoryKind.expense,
-    sortOrder: 7,
+    color: '#5B6FE0',
+    order: 7,
   ),
-  AppCategory(
+  _group(
+    id: 'g_health',
+    name: 'Health',
+    nameBn: 'স্বাস্থ্য',
+    icon: 'health',
+    color: '#12A594',
+    order: 8,
+  ),
+  _group(
+    id: 'g_hall',
+    name: 'Hall & room',
+    nameBn: 'হল খরচ',
+    icon: 'home',
+    color: '#8C6E4A',
+    order: 9,
+  ),
+  _group(
+    id: 'g_transport',
+    name: 'Transport',
+    nameBn: 'যাতায়াত',
+    icon: 'bus',
+    color: '#4AA3A2',
+    order: 10,
+  ),
+  _group(
+    id: 'g_mobile',
+    name: 'Mobile & internet',
+    nameBn: 'মোবাইল',
+    icon: 'phone',
+    color: '#6B7684',
+    order: 11,
+  ),
+  _group(
+    id: 'g_fun',
+    name: 'Entertainment',
+    nameBn: 'বিনোদন',
+    icon: 'movie',
+    color: '#E4572E',
+    order: 12,
+  ),
+  _group(
+    id: 'g_gifts',
+    name: 'Gifts & family',
+    nameBn: 'উপহার ও পরিবার',
+    icon: 'gift',
+    color: '#E86FA8',
+    order: 13,
+  ),
+  _group(
+    id: 'g_fees',
+    name: 'Fees & fines',
+    nameBn: 'ফি ও জরিমানা',
+    icon: 'receipt',
+    color: '#D98E2B',
+    order: 14,
+  ),
+];
+
+/// Items that sit on the top row themselves — no sub-list, one tap.
+final List<AppCategory> _standalone = <AppCategory>[
+  _leaf(
+    id: 'eatout',
+    name: 'Dining out',
+    nameBn: 'বাইরের খাবার',
+    icon: 'restaurant',
+    color: '#E4572E',
+    order: 20,
+  ),
+  _leaf(
     id: 'laundry',
     name: 'Laundry',
     nameBn: 'লন্ড্রি',
     icon: 'laundry',
-    colorHex: '#4AA3A2',
-    kind: CategoryKind.expense,
-    sortOrder: 8,
+    color: '#4AA3A2',
+    order: 21,
   ),
-  AppCategory(
-    id: 'medicine',
-    name: 'Medicine',
-    nameBn: 'ওষুধ',
-    icon: 'medicine',
-    colorHex: '#0E9F6E',
-    kind: CategoryKind.expense,
-    sortOrder: 9,
-  ),
-  AppCategory(
-    id: 'hall',
-    name: 'Hall & room',
-    nameBn: 'হল খরচ',
-    icon: 'home',
-    colorHex: '#8C6E4A',
-    kind: CategoryKind.expense,
-    sortOrder: 10,
-  ),
-  // ── Study & living ────────────────────────────────────────────────────────
-  AppCategory(
-    id: 'transport',
-    name: 'Transport',
-    nameBn: 'যাতায়াত',
-    icon: 'bus',
-    colorHex: '#5B6FE0',
-    kind: CategoryKind.expense,
-    sortOrder: 11,
-  ),
-  AppCategory(
-    id: 'mobile',
-    name: 'Mobile & internet',
-    nameBn: 'মোবাইল',
-    icon: 'wifi',
-    colorHex: '#6B7684',
-    kind: CategoryKind.expense,
-    sortOrder: 12,
-  ),
-  AppCategory(
-    id: 'books',
-    name: 'Books & stationery',
-    nameBn: 'বই-খাতা',
-    icon: 'book',
-    colorHex: '#3F8E5C',
-    kind: CategoryKind.expense,
-    sortOrder: 13,
-  ),
-  AppCategory(
-    id: 'fun',
-    name: 'Entertainment',
-    nameBn: 'বিনোদন',
-    icon: 'movie',
-    colorHex: '#B455D6',
-    kind: CategoryKind.expense,
-    sortOrder: 14,
-  ),
-  // Protected fallback: deleting a category moves its entries here.
-  AppCategory(
+  _leaf(
     id: 'other',
     name: 'Other',
     nameBn: 'অন্যান্য',
     icon: 'other',
-    colorHex: '#6B7684',
-    kind: CategoryKind.expense,
-    sortOrder: 15,
+    color: '#6B7684',
+    order: 99,
   ),
-  // ── Income sources ────────────────────────────────────────────────────────
-  AppCategory(
+];
+
+/// Money coming in. Income sources stay flat — you do not need a tree to say
+/// "tuition".
+final List<AppCategory> _incomeSources = <AppCategory>[
+  _leaf(
     id: 'home_money',
     name: 'From home',
-    nameBn: 'বাড়ি থেকে',
+    nameBn: 'বাসা থেকে',
     icon: 'savings',
-    colorHex: '#0E9F6E',
+    color: '#0E9F6E',
+    order: 0,
     kind: CategoryKind.income,
   ),
-  AppCategory(
+  _leaf(
     id: 'tuition',
     name: 'Tuition',
     nameBn: 'টিউশন',
     icon: 'school',
-    colorHex: '#3C7EDB',
+    color: '#3C7EDB',
+    order: 1,
     kind: CategoryKind.income,
-    sortOrder: 1,
   ),
-  AppCategory(
+  _leaf(
     id: 'scholarship',
     name: 'Scholarship',
     nameBn: 'বৃত্তি',
     icon: 'scholarship',
-    colorHex: '#8B5CF6',
+    color: '#8B5CF6',
+    order: 2,
     kind: CategoryKind.income,
-    sortOrder: 2,
   ),
-  AppCategory(
+  _leaf(
     id: 'freelance',
     name: 'Freelance',
     nameBn: 'ফ্রিল্যান্স',
     icon: 'laptop',
-    colorHex: '#0E9F6E',
+    color: '#4AA3A2',
+    order: 3,
     kind: CategoryKind.income,
-    sortOrder: 3,
   ),
-  AppCategory(
+  _leaf(
     id: 'gift',
     name: 'Gift',
     nameBn: 'উপহার',
     icon: 'gift',
-    colorHex: '#E86FA8',
+    color: '#E86FA8',
+    order: 4,
     kind: CategoryKind.income,
-    sortOrder: 4,
   ),
-  AppCategory(
+  _leaf(
     id: 'other_income',
     name: 'Other',
     nameBn: 'অন্যান্য',
     icon: 'income_other',
-    colorHex: '#12A594',
+    color: '#12A594',
+    order: 5,
     kind: CategoryKind.income,
-    sortOrder: 5,
   ),
+];
+
+/// Everything the database seeds on a fresh install, parents before children so
+/// a foreign key on `parent_id` could be added later without reordering.
+final List<AppCategory> kDefaultCategories = <AppCategory>[
+  ..._expenseGroups,
+  ...kDefaultSubcategories,
+  ..._standalone,
+  ..._incomeSources,
 ];
