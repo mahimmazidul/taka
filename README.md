@@ -12,8 +12,8 @@ much of the month is left.
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-59%20passing-0E9F6E)
-[![Download APK](https://img.shields.io/badge/download-v1.3.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+![Tests](https://img.shields.io/badge/tests-77%20passing-0E9F6E)
+[![Download APK](https://img.shields.io/badge/download-v1.4.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -40,17 +40,21 @@ refreshed whenever the UI changes. No mockups.
 |---|---|
 | ![Categories](docs/screenshots/categories.png) | ![Settings](docs/screenshots/settings.png) |
 
-| Add entry (after saving) | Landscape |
+| Add entry (after saving) | Week breakdown |
 |---|---|
-| ![Add entry, saved](docs/screenshots/add_entry_saved.png) | ![Add entry in landscape](docs/screenshots/add_entry_landscape.png) |
+| ![Add entry, saved](docs/screenshots/add_entry_saved.png) | ![Week](docs/screenshots/period_week.png) |
 
-| Home (landscape) | Small phone (320 × 568) |
+| Month breakdown | Year breakdown |
 |---|---|
-| ![Home in landscape](docs/screenshots/home_landscape.png) | ![Small phone](docs/screenshots/home_small.png) |
+| ![Month](docs/screenshots/period_month.png) | ![Year](docs/screenshots/period_year.png) |
 
-| About | |
+| Add entry (landscape) | Home (landscape) |
 |---|---|
-| ![About](docs/screenshots/about.png) | |
+| ![Add entry in landscape](docs/screenshots/add_entry_landscape.png) | ![Home in landscape](docs/screenshots/home_landscape.png) |
+
+| About | Small phone (320 × 568) |
+|---|---|
+| ![About](docs/screenshots/about.png) | ![Small phone](docs/screenshots/home_small.png) |
 
 ---
 
@@ -169,7 +173,7 @@ Quality gates used in CI:
 
 ```bash
 flutter analyze                               # 0 issues
-flutter test --concurrency=1                  # 59 tests
+flutter test --concurrency=1                  # 77 tests
 dart format --output=none --set-exit-if-changed lib test
 ```
 
@@ -225,11 +229,11 @@ Five runtime dependencies, all of them boring: `sqflite` (local SQLite), `path`,
 Android's share sheet) and `file_picker` 13 (pick a JSON file to restore). No
 state-management package, no chart package, no HTTP client, no analytics.
 
-### Data model (SQLite `taka.db`, schema v4)
+### Data model (SQLite `taka.db`, schema v5)
 
 ```sql
 categories(id, name, name_bn, icon, color, kind, budget_minor,
-           sort_order, parent_id, is_group, food)
+           sort_order, parent_id, is_group, food, also_groups)
 transactions(id, type, amount_minor, category_id, note,
              occurred_at, created_at, updated_at, meal)
 udhar_entries(id, type, person, amount_minor, note, occurred_at,
@@ -272,14 +276,15 @@ through two upgrades, v2 → v4.
 
 ### Tests
 
-59 tests, all offline (26 logic, 24 database and food rules, 8 screen, 13 golden):
+77 tests, all offline (26 logic, 25 database and rules, 10 screen, 16 golden):
 
 | File | Covers |
 |---|---|
 | `test/logic_test.dart` | money formatting, exact keypad→paisa conversion, date helpers, budget thresholds, labels |
-| `test/database_test.dart` | the real schema and SQL on SQLite: seeds and the category tree, CRUD, totals, per-day buckets, filters, category reassignment and group deletion, udhar settlement, settings, backup round-trip, CSV, and the v2 → v3 migration |
+| `test/database_test.dart` | the real schema and SQL on SQLite: seeds and the category tree, CRUD, totals, per-day buckets, filters, category reassignment and group deletion, udhar settlement, settings, backup round-trip, CSV, and both migrations (v2 → v4, and the v4 duplicate merge) |
+| `test/period_stats_test.dart` | the day / week / month / year maths behind the breakdowns: empty days kept, income kept apart from spending, the month list starting where the history starts, a day's entries newest first |
 | `test/food_logic_test.dart` | the meal rule: which categories may take a meal, that a non-food entry never lands in a meal total even if an old row stored one, why noodles and egg exist twice, and that `today` really resets at midnight |
-| `test/screens_test.dart` | the whole app at 320 / 360 / 414 / 768 widths **and in landscape**, 1.3× text scale, tab switching, adding an entry end-to-end, the meal row disappearing for a face wash, dark-mode toggle |
+| `test/screens_test.dart` | the whole app at 320 / 360 / 414 / 768 widths **and in landscape**, 1.3× text scale, tab switching, adding an entry end-to-end, the meal row disappearing for a face wash, the period breakdowns and their day sheet, dark-mode toggle |
 | `test/golden_test.dart` | every screenshot in this README |
 
 ---
@@ -294,6 +299,17 @@ through two upgrades, v2 → v4.
 
 ## Changelog
 
+- **v1.4.0** — the numbers have somewhere to go. Tapping **Spent today / This
+  week / This month** on Home opens a breakdown: week gives all seven days with
+  the amount for each (empty days included), month gives a calendar where any
+  date opens that day's entries plus every month since you started using the app,
+  and year gives the whole year month by month. The hand-built keypad is gone —
+  the amount is a normal field with the phone's own numeric keyboard, so the keys
+  are the size the OS says, and the cursor stays in it after saving so
+  type–tap–type–tap works. Egg and noodles are no longer two categories each: one
+  row, one total, listed under both groups (`also_groups`, schema v5), with the
+  duplicates from 1.3.0 merged back on upgrade. Two migration-order bugs found and
+  fixed by the tests, again.
 - **v1.3.0** — the correctness release. Meal tags are now a property of the
   category (`food`), not a guess: a face wash can no longer be logged as
   breakfast, and the meal strip only counts food money. Added noodles and egg to
