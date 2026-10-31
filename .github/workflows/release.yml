@@ -76,17 +76,22 @@ jobs:
       # --split-per-abi matters for size: one universal APK carries three CPU
       # builds (arm64 + arm32 + x86), which is most of the download. Split, each
       # APK is a fraction of that and identical in features and UI.
+      # --split-debug-info keeps the DWARF data out of the shipped binary (it is
+      # uploaded as its own artifact, so crash reports stay readable) and the
+      # obfuscated symbol names cost nothing in features or UI.
       - name: Build release APKs (one per CPU)
         run: |
           flutter build apk --release --split-per-abi \
             --build-name ${{ steps.version.outputs.name }} \
-            --build-number ${{ steps.version.outputs.code }}
+            --build-number ${{ steps.version.outputs.code }} \
+            --obfuscate --split-debug-info=build/symbols
 
       - name: Build app bundle
         run: |
           flutter build appbundle --release \
             --build-name ${{ steps.version.outputs.name }} \
-            --build-number ${{ steps.version.outputs.code }}
+            --build-number ${{ steps.version.outputs.code }} \
+            --obfuscate --split-debug-info=build/symbols
 
       - name: Collect artifacts
         run: |
@@ -111,6 +116,15 @@ jobs:
         with:
           name: taka-aab
           path: artifacts/*.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      # Needed to symbolicate a crash report from an obfuscated build.
+      - name: Upload symbol files
+        uses: actions/upload-artifact@v4
+        with:
+          name: taka-symbols
+          path: build/symbols
           if-no-files-found: error
           retention-days: 30
 
