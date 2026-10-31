@@ -79,6 +79,18 @@ void main() {
     await _shot(tester, 'budgets');
   });
 
+  testWidgets('10 about', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+    // The About row lives at the bottom of Settings.
+    await tester.scrollUntilVisible(find.textContaining('Made by'), 220);
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Made by'));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'about');
+  });
+
   testWidgets('09 categories', (WidgetTester tester) async {
     await _render(tester, darkMode: false);
     await tester.tap(find.byIcon(Icons.tune_rounded));
