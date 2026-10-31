@@ -15,8 +15,16 @@ class AppDatabase {
   factory AppDatabase.inMemory({required DatabaseFactory factory}) =>
       AppDatabase._internal(factory, ':memory:');
 
+  /// A database at an explicit path. Tests use it to open a *file*, close it and
+  /// reopen it, which is the only way to exercise `onUpgrade` and the additive
+  /// seeding that protects a user's data across versions.
+  factory AppDatabase.at({
+    required DatabaseFactory factory,
+    required String path,
+  }) => AppDatabase._internal(factory, path);
+
   static const String _fileName = 'taka.db';
-  static const int _version = 2;
+  static const int _version = 3;
 
   final DatabaseFactory? _factory;
   final String? _path;
@@ -39,6 +47,7 @@ class AppDatabase {
         },
         onCreate: _createSchema,
         onUpgrade: _upgrade,
+        onOpen: _seedMissingCategories,
       ),
     );
   }
@@ -55,9 +64,12 @@ class AppDatabase {
         color TEXT NOT NULL,
         kind TEXT NOT NULL CHECK(kind IN ('expense', 'income')),
         budget_minor INTEGER,
-        sort_order INTEGER NOT NULL DEFAULT 0
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        parent_id TEXT,
+        is_group INTEGER NOT NULL DEFAULT 0
       )
     ''');
+    batch.execute('CREATE INDEX idx_cat_parent ON categories(parent_id)');
 
     batch.execute('''
       CREATE TABLE transactions (
@@ -68,7 +80,8 @@ class AppDatabase {
         note TEXT NOT NULL DEFAULT '',
         occurred_at INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
+        updated_at INTEGER NOT NULL,
+        meal TEXT
       )
     ''');
     batch.execute(
@@ -170,6 +183,104 @@ class AppDatabase {
       }
       await batch.commit(noResult: true);
     }
+
+    if (oldVersion < 3) {
+      await _upgradeToGroups(db);
+    }
+  }
+
+  /// v2 → v3: two-level categories plus meal tags.
+  ///
+  /// Nothing is dropped and no transaction is rewritten. Existing rows simply
+  /// gain a parent (rice → Main course, cosmetics → Grooming…), the new items
+  /// are inserted, and every old entry keeps pointing at the same id — which is
+  /// the whole reason those ids were never renamed.
+  Future<void> _upgradeToGroups(Database db) async {
+    // Idempotent on purpose: an interrupted upgrade (or a database restored from
+    // a backup mid-way) must not leave the app unable to open its own file.
+    await _addColumnIfMissing(db, 'categories', 'parent_id', 'TEXT');
+    await _addColumnIfMissing(
+      db,
+      'categories',
+      'is_group',
+      'INTEGER NOT NULL DEFAULT 0',
+    );
+    await _addColumnIfMissing(db, 'transactions', 'meal', 'TEXT');
+
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_cat_parent ON categories(parent_id)',
+    );
+
+    // Groups first, then reparent what already exists, then add what is new.
+    final Batch groups = db.batch();
+    for (final AppCategory category in kDefaultCategories) {
+      if (category.isGroup) {
+        groups.insert(
+          'categories',
+          category.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    }
+    await groups.commit(noResult: true);
+
+    final Batch links = db.batch();
+    for (final AppCategory category in kDefaultCategories) {
+      final String? parentId = category.parentId;
+      if (parentId == null) continue;
+      links.update(
+        'categories',
+        <String, Object?>{'parent_id': parentId},
+        where: 'id = ? AND parent_id IS NULL AND is_group = 0',
+        whereArgs: <Object?>[category.id],
+      );
+    }
+    await links.commit(noResult: true);
+
+    await _seedMissingCategories(db);
+  }
+
+  Future<void> _addColumnIfMissing(
+    Database db,
+    String table,
+    String column,
+    String definition,
+  ) async {
+    final List<Map<String, Object?>> info = await db.rawQuery(
+      'PRAGMA table_info($table)',
+    );
+    if (info.any((Map<String, Object?> c) => c['name'] == column)) return;
+    await db.execute('ALTER TABLE $table ADD COLUMN $column $definition');
+  }
+
+  /// Inserts any seeded category the database does not have yet.
+  ///
+  /// Runs on **every** open, not just on a version bump, so a future release can
+  /// ship new categories (or whole new groups) without touching the schema and
+  /// without ever overwriting a name, colour, icon or limit the user changed.
+  Future<void> _seedMissingCategories(Database db) async {
+    final List<Map<String, Object?>> rows = await db.query(
+      'categories',
+      columns: <String>['id'],
+    );
+    final Set<String> present = rows
+        .map((Map<String, Object?> row) => row['id']! as String)
+        .toSet();
+
+    final Batch batch = db.batch();
+    int added = 0;
+    for (final AppCategory category in kDefaultCategories) {
+      if (present.contains(category.id)) continue;
+      // A child whose parent was deleted on an older build would be orphaned;
+      // fall back to the top level so it stays usable.
+      batch.insert(
+        'categories',
+        category.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+      added++;
+    }
+    if (added > 0) await batch.commit(noResult: true);
   }
 
   Future<void> close() async {
