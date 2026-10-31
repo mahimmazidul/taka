@@ -6,7 +6,9 @@ plugins {
 
 android {
     namespace = "com.mahimmazidul.taka"
-    compileSdk = flutter.compileSdkVersion
+    // Plugins (file_picker, share_plus, path_provider) are compiled against API 36,
+    // so the app must match or AGP rejects :file_picker:checkReleaseAarMetadata.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
