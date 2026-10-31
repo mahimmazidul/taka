@@ -6,7 +6,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Platform](https://img.shields.io/badge/Android-offline%20first-0E9F6E)
-![Tests](https://img.shields.io/badge/tests-35%20passing-0E9F6E)
+![Tests](https://img.shields.io/badge/tests-41%20passing-0E9F6E)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -84,7 +84,7 @@ Quality gates used in CI:
 
 ```bash
 flutter analyze                               # 0 issues
-flutter test --concurrency=1                  # 35 tests
+flutter test --concurrency=1                  # 41 tests
 dart format --output=none --set-exit-if-changed lib test
 ```
 
@@ -158,7 +158,7 @@ settings(key, value)
 
 ### Tests
 
-35 tests, all offline:
+41 tests, all offline (28 logic + database, 6 screen, 7 golden):
 
 | File | Covers |
 |---|---|
