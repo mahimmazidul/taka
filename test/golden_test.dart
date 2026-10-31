@@ -10,7 +10,7 @@ import 'package:taka/store/settings_actions.dart';
 import 'support/fonts.dart';
 import 'support/seed.dart';
 
-/// Screenshots committed to `docs/screenshots/` and the README.
+/// Screenshots committed to `docs/screenshots/` and the README — one per screen.
 /// Refresh with: flutter test test/golden_test.dart --update-goldens
 void main() {
   setUpAll(() async {
@@ -68,6 +68,24 @@ void main() {
     await tester.tap(find.byIcon(Icons.tune_rounded));
     await tester.pumpAndSettle();
     await _shot(tester, 'settings');
+  });
+
+  testWidgets('08 budgets', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Monthly budgets'));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'budgets');
+  });
+
+  testWidgets('09 categories', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Manage categories'));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'categories');
   });
 }
 
