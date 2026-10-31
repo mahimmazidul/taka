@@ -60,16 +60,29 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "name=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=0.${GITHUB_RUN_NUMBER}.0" >> "$GITHUB_OUTPUT"
+          fi
+          echo "code=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
       # Signed with the debug key so every push produces an installable APK.
       # Add a keystore + key.properties as secrets to ship a proper release key.
       - name: Build release APK
-        run: flutter build apk --release --build-name ${{ github.run_number }}.0 --build-number ${{ github.run_number }}
+        run: |
+          flutter build apk --release \
+            --build-name ${{ steps.version.outputs.name }} \
+            --build-number ${{ steps.version.outputs.code }}
 
       - name: Rename artifact
         run: |
           mkdir -p artifacts
           cp build/app/outputs/flutter-apk/app-release.apk \
-             artifacts/taka-${{ github.run_number }}.apk
+             artifacts/taka-${{ steps.version.outputs.name }}.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
