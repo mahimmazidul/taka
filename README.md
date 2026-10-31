@@ -12,7 +12,7 @@ much of the month is left.
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-58%20passing-0E9F6E)
+![Tests](https://img.shields.io/badge/tests-59%20passing-0E9F6E)
 [![Download APK](https://img.shields.io/badge/download-v1.3.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
@@ -169,7 +169,7 @@ Quality gates used in CI:
 
 ```bash
 flutter analyze                               # 0 issues
-flutter test --concurrency=1                  # 58 tests
+flutter test --concurrency=1                  # 59 tests
 dart format --output=none --set-exit-if-changed lib test
 ```
 
@@ -272,7 +272,7 @@ through two upgrades, v2 → v4.
 
 ### Tests
 
-58 tests, all offline (26 logic, 23 database and food rules, 8 screen, 13 golden):
+59 tests, all offline (26 logic, 24 database and food rules, 8 screen, 13 golden):
 
 | File | Covers |
 |---|---|
