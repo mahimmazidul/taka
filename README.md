@@ -1,14 +1,19 @@
 # Taka · টাকা
 
 A daily khata for hall life — what you ate, what you spent, who owes you, and how
-much of the month is left. Built by **Mahim Mazidul** for one hall student in
-Dhaka, and for anyone else keeping a khata in their pocket.
+much of the month is left.
+
+**Built by Mazidul Islam Mahim** (মাজিদুল ইসলাম মাহিম).
+
+<p align="center">
+  <img src="docs/icon.png" width="132" alt="Taka app icon">
+</p>
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-45%20passing-0E9F6E)
-[![Download APK](https://img.shields.io/badge/download-v1.1.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+[![Download APK](https://img.shields.io/badge/download-v1.2.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -38,6 +43,24 @@ refreshed whenever the UI changes. No mockups.
 | About | Small phone (320 × 568) |
 |---|---|
 | ![About](docs/screenshots/about.png) | ![Small phone](docs/screenshots/home_small.png) |
+
+---
+
+## The mark
+
+![Taka icon](docs/icon.png)
+
+A sage-to-eucalyptus gradient with the taka sign, rendered by
+[`tool/make_icon.py`](tool/make_icon.py) — one script draws every Android density,
+the adaptive icon and its monochrome layer, so the icon can never drift out of sync
+with the app.
+
+## Motion
+
+Nothing snaps. Tabs glide between each other over 280 ms, pages fade and rise into
+place over 320 ms, rows and chips press to 97% under the finger, amounts count
+up instead of jumping, and Home's seven bars grow in one after another. Sized so it
+still feels instant on a two-year-old phone.
 
 ---
 
@@ -249,14 +272,16 @@ code and asserts the old entry, its category and its budget all survived.
 
 ## Credits
 
-- **Mahim Mazidul** (মাহিম মাজিদুল) — idea, requirements, and the refusal to accept a
-  boxy app or an emoji.
+- **Mazidul Islam Mahim** (মাজিদুল ইসলাম মাহিম) — idea, requirements, and the refusal
+  to accept a boxy app or an emoji.
 - **Hind Siliguri** (Indian Type Foundry / Google Fonts) — SIL Open Font License 1.1.
   Bundled in `assets/fonts/` so Bangla, Latin and ৳ all render in one family.
 - Icons: Material Symbols via `flutter/material`.
 
 ## Changelog
 
+- **v1.2.0** — new launcher icon (rendered from `tool/make_icon.py`), animated tab
+  changes and richer page transitions, credit corrected to Mazidul Islam Mahim.
 - **v1.1.0** — two-level categories (groups + items, 90+ seeded items), meal tags
   with a "today's meals" strip, group budgets and group filters, additive seeding
   and a safe v2 → v3 migration, About screen with the author credit, and CI now

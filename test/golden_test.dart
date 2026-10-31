@@ -83,8 +83,18 @@ void main() {
     await _render(tester, darkMode: false);
     await tester.tap(find.byIcon(Icons.tune_rounded));
     await tester.pumpAndSettle();
-    // The About row lives at the bottom of Settings.
-    await tester.scrollUntilVisible(find.textContaining('Made by'), 220);
+    // The About row lives at the bottom of Settings. The scrollable is named
+    // explicitly because the tab PageView is one too.
+    await tester.scrollUntilVisible(
+      find.textContaining('Made by'),
+      220,
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('Made by'));
     await tester.pumpAndSettle();
