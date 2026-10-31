@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../components/app_sheet.dart';
 import '../components/section_title.dart';
 import '../components/settings_row.dart';
+import '../core/app_info.dart';
 import '../core/app_theme.dart';
 import '../core/motion.dart';
 import '../store/app_state.dart';
@@ -14,6 +15,7 @@ import '../store/settings_actions.dart';
 import '../utils/currency_catalog.dart';
 import '../utils/export_data.dart';
 import 'budgets_screen.dart';
+import 'about_screen.dart';
 import 'categories_screen.dart';
 import '../core/clock.dart';
 
@@ -263,16 +265,14 @@ class SettingsScreen extends StatelessWidget {
               const SectionTitle(title: 'About'),
               SettingsGroup(
                 children: <Widget>[
-                  const SettingsRow(
-                    icon: Icons.info_outline_rounded,
-                    title: 'Taka · টাকা',
-                    subtitle: 'Amar taka gelota koi?',
-                    value: 'v1.0.0',
-                  ),
                   SettingsRow(
-                    icon: Icons.lock_outline_rounded,
-                    title: 'Fully offline',
-                    subtitle: 'No account, no cloud, no tracking. Your data stays on this phone.',
+                    icon: Icons.info_outline_rounded,
+                    title: '${AppInfo.name} · ${AppInfo.nameBn}',
+                    subtitle: 'Made by ${AppInfo.author}',
+                    value: 'v${AppInfo.version}',
+                    onTap: () =>
+                        Navigator.of(context)
+                            .push(slideFadeRoute<void>(const AboutScreen())),
                   ),
                 ],
               ),
