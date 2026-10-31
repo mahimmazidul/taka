@@ -16,7 +16,8 @@ class CategoryRepository {
     final Database db = await _database.database;
     final List<Map<String, Object?>> rows = await db.query(
       _table,
-      orderBy: 'kind ASC, sort_order ASC, name ASC',
+      // Groups before their items, then the user's own ordering.
+      orderBy: 'kind ASC, is_group DESC, sort_order ASC, name ASC',
     );
     return rows.map(AppCategory.fromMap).toList(growable: false);
   }
@@ -75,6 +76,37 @@ class CategoryRepository {
         whereArgs: <Object?>[fromCategoryId],
       );
     });
+  }
+
+  /// Deletes a group without losing its items: they move to the top level and
+  /// stay selectable. Only the group row itself (and its limit) goes away.
+  Future<void> deleteGroup(String groupId) async {
+    final Database db = await _database.database;
+    await db.transaction((Transaction txn) async {
+      await txn.update(
+        _table,
+        <String, Object?>{'parent_id': null},
+        where: 'parent_id = ?',
+        whereArgs: <Object?>[groupId],
+      );
+      await txn.delete(_table, where: 'id = ?', whereArgs: <Object?>[groupId]);
+    });
+  }
+
+  /// Every id under [groupId], including the group's own id — used by History
+  /// to filter "all food" in one tap.
+  Future<List<String>> idsUnder(String groupId) async {
+    final Database db = await _database.database;
+    final List<Map<String, Object?>> rows = await db.query(
+      _table,
+      columns: <String>['id'],
+      where: 'parent_id = ?',
+      whereArgs: <Object?>[groupId],
+    );
+    return <String>[
+      groupId,
+      ...rows.map((Map<String, Object?> r) => r['id']! as String),
+    ];
   }
 
   Future<int> nextSortOrder(CategoryKind kind) async {
