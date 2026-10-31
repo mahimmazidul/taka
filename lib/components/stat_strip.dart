@@ -26,7 +26,14 @@ class StatStrip extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _Stat(label: 'Today', value: todayMinor, symbol: symbol),
+          // Today leads and is tinted: the daily number is the one that resets
+          // at midnight and the one a student actually checks.
+          _Stat(
+            label: 'Spent today',
+            value: todayMinor,
+            symbol: symbol,
+            accent: true,
+          ),
           _Divider(),
           _Stat(label: 'This week', value: weekMinor, symbol: symbol),
           _Divider(),
@@ -50,11 +57,17 @@ class _Divider extends StatelessWidget {
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({required this.label, required this.value, required this.symbol});
+  const _Stat({
+    required this.label,
+    required this.value,
+    required this.symbol,
+    this.accent = false,
+  });
 
   final String label;
   final int value;
   final String symbol;
+  final bool accent;
 
   @override
   Widget build(BuildContext context) {
@@ -74,10 +87,10 @@ class _Stat extends StatelessWidget {
               value,
               symbol: symbol,
               style: TextStyle(
-                fontSize: 15.5,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.2,
-                color: AppColors.ink(context),
+                fontSize: accent ? 17 : 15,
+                fontWeight: accent ? FontWeight.w700 : FontWeight.w600,
+                letterSpacing: -0.3,
+                color: accent ? Palette.taka : AppColors.ink(context),
               ),
             ),
           ),

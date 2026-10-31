@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../components/budget_line.dart';
+import '../utils/responsive.dart';
 import '../components/empty_state.dart';
 import '../components/entry_row.dart';
 import '../components/hero_balance.dart';
@@ -9,7 +9,6 @@ import '../components/stat_strip.dart';
 import '../components/week_bars.dart';
 import '../core/app_theme.dart';
 import '../core/motion.dart';
-import '../models/budget_progress.dart';
 import '../models/meal_slot.dart';
 import '../models/transaction_entry.dart';
 import '../store/app_state.dart';
@@ -17,7 +16,6 @@ import '../store/settings_actions.dart';
 import '../utils/date_helpers.dart';
 import '../utils/format_currency.dart';
 import 'add_entry_screen.dart';
-import 'budgets_screen.dart';
 import '../core/clock.dart';
 
 /// Dashboard. One hero, then open sections separated by hairlines — no stacks
@@ -47,95 +45,110 @@ class HomeScreen extends StatelessWidget {
         final String symbol = state.currencySymbol;
         final DateTime now = AppClock.now();
 
+        // Two groups of sections. Portrait stacks them into one list; landscape
+        // puts money on the left and the rest on the right, the way a page
+        // reflows — the screen is short, so a single column hides everything.
+        final List<Widget> money = <Widget>[
+          _Header(
+            monthLabel: formatMonthYear(now),
+            isDark: state.settings.darkMode,
+          ),
+          const SizedBox(height: 14),
+          Reveal(
+            child: HeroBalance(
+              balanceMinor: state.month.netMinor,
+              incomeMinor: state.month.incomeMinor,
+              expenseMinor: state.month.expenseMinor,
+              monthLabel: 'Balance · ${monthName(now.month)}',
+              symbol: symbol,
+            ),
+          ),
+          Reveal(
+            index: 1,
+            child: StatStrip(
+              todayMinor: state.today.expenseMinor,
+              weekMinor: state.week.expenseMinor,
+              monthMinor: state.month.expenseMinor,
+              symbol: symbol,
+            ),
+          ),
+          Reveal(index: 1, child: _Nudge(state: state)),
+        ];
+
+        final List<Widget> detail = <Widget>[
+          if (state.today.expenseMinor > 0) ...<Widget>[
+            const SectionTitle(title: 'Today\'s meals'),
+            _MealsStrip(spend: state.mealSpendToday, symbol: symbol),
+          ],
+          SectionTitle(
+            title: 'Last 7 days',
+            actionLabel: 'History',
+            onAction: onOpenHistory,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Reveal(index: 2, child: WeekBars(days: state.lastSevenDays)),
+          ),
+          if (state.settings.udharEnabled) ...<Widget>[
+            SectionTitle(
+              title: 'Udhar',
+              actionLabel: 'Open',
+              onAction: onOpenUdhar,
+            ),
+            _UdharRow(
+              lentMinor: state.udharTotals.lentMinor,
+              borrowedMinor: state.udharTotals.borrowedMinor,
+              symbol: symbol,
+              onTap: onOpenUdhar,
+            ),
+          ],
+          SectionTitle(
+            title: 'Recent',
+            actionLabel: state.recentEntries.isEmpty ? null : 'See all',
+            onAction: onOpenHistory,
+          ),
+          _RecentBlock(
+            entries: state.recentEntries,
+            symbol: symbol,
+            onOpenHistory: onOpenHistory,
+          ),
+        ];
+
+        final Screen screen = Screen.of(context);
+        final double gutter = screen.gutter;
+
+        Widget column(List<Widget> sections, {double? side}) => ListView(
+          padding: EdgeInsets.fromLTRB(side ?? gutter, 0, side ?? gutter, 110),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: sections,
+        );
+
         return SafeArea(
           bottom: false,
           child: RefreshIndicator(
             onRefresh: state.refresh,
             color: Palette.taka,
-            child: ListView(
-              padding: const EdgeInsets.only(bottom: 110),
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: <Widget>[
-                _Header(
-                  monthLabel: formatMonthYear(now),
-                  isDark: state.settings.darkMode,
-                ),
-                const SizedBox(height: 14),
-                Reveal(
-                  child: HeroBalance(
-                    balanceMinor: state.month.netMinor,
-                    incomeMinor: state.month.incomeMinor,
-                    expenseMinor: state.month.expenseMinor,
-                    monthLabel: 'Balance · ${monthName(now.month)}',
-                    symbol: symbol,
-                  ),
-                ),
-                Reveal(
-                  index: 1,
-                  child: StatStrip(
-                    todayMinor: state.today.expenseMinor,
-                    weekMinor: state.week.expenseMinor,
-                    monthMinor: state.month.expenseMinor,
-                    symbol: symbol,
-                  ),
-                ),
-                if (state.today.expenseMinor > 0) ...<Widget>[
-                  const SectionTitle(title: 'Today\'s meals'),
-                  _MealsStrip(spend: state.mealSpendToday, symbol: symbol),
-                ],
-                SectionTitle(
-                  title: 'Last 7 days',
-                  actionLabel: 'History',
-                  onAction: onOpenHistory,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Reveal(
-                    index: 2,
-                    child: WeekBars(days: state.lastSevenDays),
-                  ),
-                ),
-                if (state.settings.budgetsEnabled) ...<Widget>[
-                  SectionTitle(
-                    title: 'Budgets',
-                    actionLabel: 'Manage',
-                    onAction: () =>
-                        Navigator.of(context)
-                            .push(slideFadeRoute<void>(const BudgetsScreen())),
-                  ),
-                  _BudgetsBlock(
-                    budgets: state.budgets,
-                    symbol: symbol,
-                    onManage: () =>
-                        Navigator.of(context)
-                            .push(slideFadeRoute<void>(const BudgetsScreen())),
-                  ),
-                ],
-                if (state.settings.udharEnabled) ...<Widget>[
-                  SectionTitle(
-                    title: 'Udhar',
-                    actionLabel: 'Open',
-                    onAction: onOpenUdhar,
-                  ),
-                  _UdharRow(
-                    lentMinor: state.udharTotals.lentMinor,
-                    borrowedMinor: state.udharTotals.borrowedMinor,
-                    symbol: symbol,
-                    onTap: onOpenUdhar,
-                  ),
-                ],
-                SectionTitle(
-                  title: 'Recent',
-                  actionLabel: state.recentEntries.isEmpty ? null : 'See all',
-                  onAction: onOpenHistory,
-                ),
-                _RecentBlock(
-                  entries: state.recentEntries,
-                  symbol: symbol,
-                  onOpenHistory: onOpenHistory,
-                ),
-              ],
-            ),
+            child: screen.useTwoPanes
+                ? Center(
+                    child: ConstrainedBox(
+                      // Two columns, each with a sane measure — the 620 px
+                      // single-column cap would squeeze them into slivers.
+                      constraints: const BoxConstraints(maxWidth: 1000),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Expanded(child: column(money, side: screen.px(18))),
+                          Expanded(
+                            child: column(<Widget>[
+                              SizedBox(height: screen.px(10)),
+                              ...detail,
+                            ], side: screen.px(18)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : column(<Widget>[...money, ...detail]),
           ),
         );
       },
@@ -277,54 +290,54 @@ class _MealsStrip extends StatelessWidget {
   }
 }
 
-class _BudgetsBlock extends StatelessWidget {
-  const _BudgetsBlock({
-    required this.budgets,
-    required this.symbol,
-    required this.onManage,
-  });
+/// One line, no charts: what this week has cost, and what is left to spend per
+/// remaining day if the month's income were the ceiling.
+class _Nudge extends StatelessWidget {
+  const _Nudge({required this.state});
 
-  final List<BudgetProgress> budgets;
-  final String symbol;
-  final VoidCallback onManage;
+  final AppState state;
 
   @override
   Widget build(BuildContext context) {
-    if (budgets.isEmpty) {
-      return EmptyState(
-        icon: Icons.flag_outlined,
-        title: 'No budget set',
-        message:
-            'Set a monthly limit per category and Taka will warn you at 80%.',
-        actionLabel: 'Set a budget',
-        onAction: onManage,
-        compact: true,
-      );
-    }
+    final DateTime now = AppClock.now();
+    final int spentWeek = state.week.expenseMinor;
+    final int daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final int daysLeft = (daysInMonth - now.day + 1).clamp(1, 31);
+    final int left = state.month.incomeMinor - state.month.expenseMinor;
+    final String perDay = left > 0
+        ? formatMoney(left ~/ daysLeft, symbol: state.currencySymbol)
+        : formatMoney(0, symbol: state.currencySymbol);
 
-    final List<BudgetProgress> visible = budgets.length > 3
-        ? budgets.sublist(0, 3)
-        : budgets;
+    final String spent = formatMoney(spentWeek, symbol: state.currencySymbol);
+    final String line = left <= 0
+        ? '$spent this week · nothing left of this month\'s income'
+        : daysLeft == 1
+        ? '$spent this week · $perDay left for today'
+        : '$spent this week · $perDay a day left';
 
-    return Column(
-      children: <Widget>[
-        for (final BudgetProgress progress in visible)
-          BudgetLine(progress: progress, symbol: symbol, onTap: onManage),
-        if (budgets.length > visible.length)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                '+${budgets.length - visible.length} more',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: AppColors.muted(context),
-                ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
+      child: Row(
+        children: <Widget>[
+          Icon(
+            left > 0 ? Icons.trending_flat_rounded : Icons.info_outline_rounded,
+            size: 15,
+            color: AppColors.muted(context),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              line,
+              maxLines: 2,
+              style: TextStyle(
+                fontSize: 11.5,
+                height: 1.4,
+                color: AppColors.muted(context),
               ),
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 }
