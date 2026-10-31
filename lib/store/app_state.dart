@@ -7,6 +7,7 @@ import '../db/udhar_repository.dart';
 import '../models/app_category.dart';
 import '../models/app_settings.dart';
 import '../models/budget_progress.dart';
+import '../models/meal_slot.dart';
 import '../models/period_totals.dart';
 import '../models/transaction_entry.dart';
 import '../models/udhar_entry.dart';
@@ -105,7 +106,17 @@ class AppState extends ChangeNotifier {
     monthSpend = spentThisMonth;
     budgets = buildBudgetProgress(
       categories: categories,
-      spentByCategoryMinor: spentThisMonth,
+      // Pass the group spend too: a group with a limit needs its children's
+      // total, and a leaf needs its own.
+      spentByCategoryMinor: <String, int>{
+        ...spentThisMonth,
+        for (final AppCategory group in categories.where(
+          (AppCategory c) => c.isGroup,
+        ))
+          group.id:
+              spentThisMonth[group.id] ??
+              _sumChildren(group.id, spentThisMonth),
+      },
     );
 
     if (settings.udharEnabled) {
@@ -115,6 +126,15 @@ class AppState extends ChangeNotifier {
       udharEntries = const <UdharEntry>[];
       udharTotals = const UdharTotals.empty();
     }
+  }
+
+  int _sumChildren(String groupId, Map<String, int> spend) {
+    int total = spend[groupId] ?? 0;
+    for (final AppCategory category in categories) {
+      if (category.parentId != groupId) continue;
+      total += spend[category.id] ?? 0;
+    }
+    return total;
   }
 
   AppCategory? categoryById(String id) {
@@ -127,6 +147,84 @@ class AppState extends ChangeNotifier {
   List<AppCategory> categoriesForKind(CategoryKind kind) => categories
       .where((AppCategory category) => category.kind == kind)
       .toList(growable: false);
+
+  // ── two-level categories ───────────────────────────────────────────────────
+
+  /// Expense groups, in seed order — the first row of chips.
+  List<AppCategory> get expenseGroups => categories
+      .where((AppCategory c) => c.kind == CategoryKind.expense && c.isGroup)
+      .toList(growable: false);
+
+  /// Expense items that live on the top row themselves (Dining out, Other) and
+  /// any custom category the user made without a parent.
+  List<AppCategory> get standaloneExpense => categories
+      .where(
+        (AppCategory c) => c.kind == CategoryKind.expense && c.isStandalone,
+      )
+      .toList(growable: false);
+
+  /// Everything a transaction may point at, for pickers and filters.
+  List<AppCategory> get loggableExpense => categories
+      .where((AppCategory c) => c.kind == CategoryKind.expense && c.isLoggable)
+      .toList(growable: false);
+
+  List<AppCategory> childrenOf(String groupId) => categories
+      .where((AppCategory c) => c.parentId == groupId)
+      .toList(growable: false);
+
+  /// The group id that owns [categoryId], if any.
+  String? groupOf(String categoryId) => categoryById(categoryId)?.parentId;
+
+  /// A group plus everything inside it, ready for a one-tap History filter.
+  Set<String> idsUnder(String categoryId) {
+    final List<AppCategory> children = childrenOf(categoryId);
+    return <String>{
+      categoryId,
+      for (final AppCategory child in children) child.id,
+    };
+  }
+
+  /// Spend for a category, rolling up children when it is a group.
+  int spendOf(String categoryId, {Map<String, int>? from}) {
+    final Map<String, int> spend = from ?? monthSpend;
+    int total = spend[categoryId] ?? 0;
+    for (final AppCategory child in childrenOf(categoryId)) {
+      total += spend[child.id] ?? 0;
+    }
+    return total;
+  }
+
+  /// `monthSpend` with a row per group, so budgets and totals can show a group
+  /// in one number.
+  Map<String, int> get monthSpendWithGroups {
+    final Map<String, int> rolled = <String, int>{...monthSpend};
+    for (final AppCategory group in expenseGroups) {
+      rolled[group.id] = spendOf(group.id);
+    }
+    return rolled;
+  }
+
+  /// Today's spend per meal slot, for the "today's meals" strip on Home.
+  Map<MealSlot, int> get mealSpendToday {
+    final DateTime dayStart = startOfDay(now);
+    final DateTime dayEnd = startOfNextDay(now);
+    final Map<MealSlot, int> totals = <MealSlot, int>{
+      for (final MealSlot slot in MealSlot.values) slot: 0,
+    };
+    for (final TransactionEntry entry in allEntries) {
+      final MealSlot? slot = entry.meal;
+      if (slot == null || !entry.isExpense) continue;
+      if (entry.occurredAt.isBefore(dayStart)) continue;
+      if (!entry.occurredAt.isBefore(dayEnd)) continue;
+      totals[slot] = totals[slot]! + entry.amountMinor;
+    }
+    return totals;
+  }
+
+  /// Remembers the item just used so the picker can open on its group.
+  Future<void> rememberCategory(String categoryId) async {
+    await applySettings(settings.copyWith(lastCategoryId: categoryId));
+  }
 
   /// Applies and persists settings, then notifies listeners.
   Future<void> applySettings(AppSettings next) async {
@@ -141,6 +239,7 @@ class AppState extends ChangeNotifier {
     required String categoryId,
     required String note,
     required DateTime occurredAt,
+    MealSlot? meal,
   }) async {
     final DateTime now = _clock();
     await transactions.insert(
@@ -153,8 +252,10 @@ class AppState extends ChangeNotifier {
         occurredAt: occurredAt,
         createdAt: now,
         updatedAt: now,
+        meal: meal,
       ),
     );
+    await rememberCategory(categoryId);
     await refresh();
   }
 
@@ -172,6 +273,7 @@ class AppState extends ChangeNotifier {
   List<TransactionEntry> filterEntries({
     EntryType? type,
     String? categoryId,
+    Set<String>? categoryIds,
     String search = '',
     DateTime? from,
     DateTime? toExclusive,
@@ -183,6 +285,11 @@ class AppState extends ChangeNotifier {
             return false;
           }
           if (categoryId != null && entry.categoryId != categoryId) {
+            return false;
+          }
+          if (categoryIds != null &&
+              categoryIds.isNotEmpty &&
+              !categoryIds.contains(entry.categoryId)) {
             return false;
           }
           if (needle.isNotEmpty && !entry.note.toLowerCase().contains(needle)) {
