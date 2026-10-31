@@ -109,11 +109,20 @@ expected for an app that isn't on the Play Store.
 
 ### About the download size
 
-One universal APK bundles three CPU builds and is roughly 50 MB. Split per ABI,
-the arm64 build is a fraction of that, because it carries only what your phone
-actually runs. Minifying the Dart code (`--obfuscate`) or trimming Android
-resources would shave a little more, at the cost of readable crash reports —
-not worth it for an app whose weight is the Flutter engine itself.
+One universal APK bundles three CPU builds — arm64, arm32 and x86 — so v1.0 was
+53 MB. Split per ABI (and with the Dart debug info stripped out of the shipped
+binary), the same app with the same features and UI is:
+
+| File | Size | What is inside |
+|---|---|---|
+| `taka-1.1.0-arm64.apk` | 17.8 MB | one CPU build, 1.2 MB of it Hind Siliguri |
+| `taka-1.1.0-arm32.apk` | 15.0 MB | the same for very old phones |
+| `taka-1.1.0.aab` | 48.9 MB | all three plus what a store needs — Google Play serves ~18 MB from it |
+
+What is left is mostly the Flutter engine itself (11.8 MB `libflutter.so`) and the
+compiled Dart (`libapp.so`, ~5 MB). Regular R8 resource shrinking would win a few
+hundred kilobytes and cost readable stack traces; the symbol files are uploaded as a
+separate build artifact instead, so a crash report can still be symbolicated.
 
 ## Run it yourself
 
