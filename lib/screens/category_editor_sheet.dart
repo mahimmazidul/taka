@@ -7,6 +7,7 @@ import '../models/app_category.dart';
 import '../store/app_state.dart';
 import '../store/category_actions.dart';
 import '../components/app_sheet.dart';
+import '../components/segmented.dart';
 import '../components/primary_button.dart';
 import '../utils/color_hex.dart';
 
@@ -15,20 +16,29 @@ Future<void> showCategoryEditor(
   BuildContext context, {
   AppCategory? category,
   required CategoryKind kind,
+  String? parentId,
 }) async {
   await showAppSheet<void>(
     context: context,
     expand: true,
-    builder: (BuildContext context) =>
-        _CategoryEditor(category: category, kind: kind),
+    builder: (BuildContext context) => _CategoryEditor(
+      category: category,
+      kind: kind,
+      initialParentId: parentId ?? category?.parentId,
+    ),
   );
 }
 
 class _CategoryEditor extends StatefulWidget {
-  const _CategoryEditor({required this.category, required this.kind});
+  const _CategoryEditor({
+    required this.category,
+    required this.kind,
+    this.initialParentId,
+  });
 
   final AppCategory? category;
   final CategoryKind kind;
+  final String? initialParentId;
 
   @override
   State<_CategoryEditor> createState() => _CategoryEditorState();
@@ -43,6 +53,8 @@ class _CategoryEditorState extends State<_CategoryEditor> {
   );
   late String _icon = widget.category?.icon ?? kIconPickerKeys.first;
   late String _color = widget.category?.colorHex ?? kCategoryPalette.first;
+  late String? _parentId = widget.initialParentId;
+  late bool _asGroup = widget.category?.isGroup ?? false;
 
   bool get _isNew => widget.category == null;
 
@@ -59,6 +71,8 @@ class _CategoryEditorState extends State<_CategoryEditor> {
         kind: widget.kind,
         icon: _icon,
         colorHex: _color,
+        parentId: _asGroup ? null : _parentId,
+        asGroup: _asGroup,
       );
     } else {
       await state.saveCategory(
@@ -67,6 +81,9 @@ class _CategoryEditorState extends State<_CategoryEditor> {
           nameBn: bn,
           icon: _icon,
           colorHex: _color,
+          isGroup: _asGroup,
+          parentId: _asGroup ? null : _parentId,
+          moveToTopLevel: _asGroup || _parentId == null,
         ),
       );
     }
@@ -75,9 +92,7 @@ class _CategoryEditorState extends State<_CategoryEditor> {
 
   Future<void> _delete() async {
     final AppCategory category = widget.category!;
-    final int used = await AppState.instance.categoryRepo.usageCount(
-      category.id,
-    );
+    final int used = AppState.instance.usageOf(category.id);
     if (!mounted) return;
 
     final bool? ok = await showDialog<bool>(
@@ -85,7 +100,9 @@ class _CategoryEditorState extends State<_CategoryEditor> {
       builder: (BuildContext context) => AlertDialog(
         title: Text('Delete ${category.label}?'),
         content: Text(
-          used == 0
+          category.isGroup
+              ? 'The items inside it stay — they move to the top row.'
+              : used == 0
               ? 'This category has no entries.'
               : '$used entries will move to "Other" so your ledger stays complete.',
         ),
@@ -117,9 +134,13 @@ class _CategoryEditorState extends State<_CategoryEditor> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         SheetTitle(
-          title: _isNew ? 'New category' : 'Edit category',
+          title: _isNew
+              ? (_asGroup ? 'New group' : 'New category')
+              : (_asGroup ? 'Edit group' : 'Edit category'),
           subtitle: widget.kind == CategoryKind.expense
-              ? 'Expense category'
+              ? (_asGroup
+                    ? 'A group holds items and rolls up their spend'
+                    : 'Expense category')
               : 'Income source',
         ),
         Flexible(
@@ -152,6 +173,53 @@ class _CategoryEditorState extends State<_CategoryEditor> {
                 controller: _name,
                 decoration: const InputDecoration(hintText: 'English name'),
               ),
+              if (widget.kind == CategoryKind.expense) ...<Widget>[
+                const SizedBox(height: 18),
+                Row(
+                  children: <Widget>[
+                    Expanded(child: _Label('Lives in')),
+                    Switch.adaptive(
+                      value: _asGroup,
+                      activeThumbColor: Palette.taka,
+                      onChanged: (bool value) =>
+                          setState(() => _asGroup = value),
+                    ),
+                    Text(
+                      'Make it a group',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.muted(context),
+                      ),
+                    ),
+                  ],
+                ),
+                if (!_asGroup) ...<Widget>[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: <Widget>[
+                      AppChip(
+                        label: 'Top level',
+                        selected: _parentId == null,
+                        onTap: () => setState(() => _parentId = null),
+                      ),
+                      for (final AppCategory group
+                          in AppState.instance.expenseGroups)
+                        AppChip(
+                          label: group.label,
+                          icon: group.iconData,
+                          tint: group.color,
+                          selected: _parentId == group.id,
+                          onTap: () => setState(() {
+                            _parentId = group.id;
+                            if (_isNew) _color = group.colorHex;
+                          }),
+                        ),
+                    ],
+                  ),
+                ],
+              ],
               const SizedBox(height: 18),
               _Label('Icon'),
               const SizedBox(height: 8),
