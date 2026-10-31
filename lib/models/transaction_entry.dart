@@ -1,3 +1,5 @@
+import 'meal_slot.dart';
+
 /// Whether a [TransactionEntry] takes money out or brings money in.
 enum EntryType {
   expense,
@@ -24,6 +26,7 @@ class TransactionEntry {
     required this.occurredAt,
     required this.createdAt,
     required this.updatedAt,
+    this.meal,
   });
 
   final String id;
@@ -35,6 +38,9 @@ class TransactionEntry {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// Breakfast / lunch / dinner, when the entry is a meal. Null is normal.
+  final MealSlot? meal;
+
   bool get isExpense => type == EntryType.expense;
 
   TransactionEntry copyWith({
@@ -44,6 +50,8 @@ class TransactionEntry {
     String? note,
     DateTime? occurredAt,
     DateTime? updatedAt,
+    MealSlot? meal,
+    bool clearMeal = false,
   }) {
     return TransactionEntry(
       id: id,
@@ -54,6 +62,7 @@ class TransactionEntry {
       occurredAt: occurredAt ?? this.occurredAt,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      meal: clearMeal ? null : (meal ?? this.meal),
     );
   }
 
@@ -69,6 +78,7 @@ class TransactionEntry {
       ),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']! as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at']! as int),
+      meal: MealSlot.fromDb(map['meal']),
     );
   }
 
@@ -82,6 +92,7 @@ class TransactionEntry {
       'occurred_at': occurredAt.millisecondsSinceEpoch,
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
+      'meal': meal?.dbValue,
     };
   }
 }
