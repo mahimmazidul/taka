@@ -15,6 +15,9 @@ void main() {
   setUpAll(() async {
     sqfliteFfiInit();
     await loadTestFonts();
+    // The note field blinks its caret while focused; freeze it so screenshots are
+    // byte-identical between runs instead of drifting by a few pixels.
+    EditableText.debugDeterministicCursor = true;
   });
 
   testWidgets('01 home — light', (WidgetTester tester) async {
@@ -81,11 +84,14 @@ Future<void> _render(
   // Shadows must be enabled *before* the frame is painted, otherwise the test
   // binding draws them as flat silhouettes.
   debugDisableShadows = false;
-  final AppDatabase database = AppDatabase.inMemory(factory: databaseFactoryFfi);
+  final AppDatabase database = AppDatabase.inMemory(
+    factory: databaseFactoryFfi,
+  );
   addTearDown(database.close);
 
-  final AppState? seeded =
-      await tester.runAsync(() => buildSeededState(database: database));
+  final AppState? seeded = await tester.runAsync(
+    () => buildSeededState(database: database),
+  );
   if (seeded == null) throw StateError('seeding failed');
   if (darkMode) {
     await tester.runAsync(() => seeded.setDarkMode(true));
