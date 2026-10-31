@@ -6,13 +6,6 @@ import 'app_state.dart';
 
 /// Backup, restore and destructive actions.
 extension DataActions on AppState {
-  String exportBackupJson() => buildBackupJson(
-        settings: settings,
-        categories: categories,
-        transactions: const <TransactionEntry>[],
-        udhar: udharEntries,
-      );
-
   /// Full backup including the ledger — reads every row, not just recent ones.
   Future<String> buildFullBackup() async {
     final List<TransactionEntry> all = await transactions.query(
