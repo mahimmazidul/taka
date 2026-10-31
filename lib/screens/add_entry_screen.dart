@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-import '../components/amount_keypad.dart';
 import '../components/category_picker.dart';
 import '../components/segmented.dart';
 import '../core/app_theme.dart';
+import '../core/motion.dart';
 import '../core/clock.dart';
 import '../models/app_category.dart';
 import '../models/meal_slot.dart';
@@ -33,7 +34,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   late DateTime _occurredAt;
   late TextEditingController _note;
   String _categoryId = '';
-  String _amountText = '';
+  late final TextEditingController _amount;
   MealSlot? _meal;
 
   /// What the last tap on Save actually wrote, shown until the next one.
@@ -42,7 +43,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 
   bool get _isEditing => widget.entry != null;
 
-  int get _amountMinor => keypadTextToMinor(_amountText);
+  int get _amountMinor => keypadTextToMinor(_amount.text);
 
   bool get _isFood => AppState.instance.acceptsMeal(_categoryId);
 
@@ -52,16 +53,28 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
     final TransactionEntry? entry = widget.entry;
     _type = entry?.type ?? EntryType.expense;
     _occurredAt = entry?.occurredAt ?? AppClock.now();
-    _amountText = entry == null ? '' : minorToKeypadText(entry.amountMinor);
+    _amount = TextEditingController(
+      text: entry == null ? '' : minorToKeypadText(entry.amountMinor),
+    );
     _note = TextEditingController(text: entry?.note ?? '');
+    // Save is enabled by the amount, so the screen has to know when the field
+    // changes. Without this listener the button stayed grey until some other
+    // rebuild happened.
+    _amount.addListener(_onAmountChanged);
     _categoryId = entry?.categoryId ?? '';
     _ensureCategory();
     // Only a food category gets a meal, and only if the saved entry had one.
     _meal = entry?.meal ?? (_isFood ? MealSlot.guess(_occurredAt) : null);
   }
 
+  void _onAmountChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    _amount.removeListener(_onAmountChanged);
+    _amount.dispose();
     _note.dispose();
     super.dispose();
   }
@@ -84,25 +97,6 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       // instead of quietly counting money into breakfast.
       if (!category.isFood) _meal = null;
     });
-  }
-
-  void _onDigit(String digit) {
-    setState(() {
-      if (_amountText.replaceAll('.', '').length >= 9) return;
-      _amountText = _amountText == '0' ? digit : _amountText + digit;
-    });
-  }
-
-  void _onDecimal() {
-    if (_amountText.contains('.')) return;
-    setState(() => _amountText = _amountText.isEmpty ? '0.' : '$_amountText.');
-  }
-
-  void _onBackspace() {
-    if (_amountText.isEmpty) return;
-    setState(
-      () => _amountText = _amountText.substring(0, _amountText.length - 1),
-    );
   }
 
   Future<void> _pickDate() async {
@@ -199,7 +193,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       _addedCount++;
       _added =
           '$label · ${formatMoney(addedMinor, symbol: state.currencySymbol)}';
-      _amountText = '';
+      _amount.clear();
       _note.clear();
     });
   }
@@ -231,7 +225,6 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final Screen screen = Screen.of(context);
     final String symbol = AppState.instance.currencySymbol;
 
@@ -294,41 +287,36 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               ),
             );
 
-            final Widget pad = _Pad(
-              amountText: _amountText,
+            final Widget amountBlock = _AmountBlock(
+              controller: _amount,
               symbol: symbol,
               added: _added,
               addedCount: _addedCount,
               isExpense: _type == EntryType.expense,
               saveLabel: _isEditing ? 'Save' : 'Add',
               enabled: _amountMinor > 0 && _categoryId.isNotEmpty,
+              autofocus: !_isEditing,
               onSave: _save,
-              onDigit: _onDigit,
-              onDecimal: _onDecimal,
-              onBackspace: _onBackspace,
-              maxHeight: twoPanes
-                  ? constraints.maxHeight
-                  : constraints.maxHeight * 0.48,
             );
 
             if (twoPanes) {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Expanded(
                       flex: 6,
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                        padding: const EdgeInsets.fromLTRB(4, 4, 8, 12),
                         child: form,
                       ),
                     ),
                     Expanded(
                       flex: 5,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
-                        child: pad,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+                        child: amountBlock,
                       ),
                     ),
                   ],
@@ -336,20 +324,25 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               );
             }
 
-            return Column(
-              children: <Widget>[
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                    child: form,
-                  ),
-                ),
-                if (!keyboardOpen)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
-                    child: pad,
-                  ),
-              ],
+            // One scrolling column: form, then amount and Save. Nothing is
+            // pinned, so a tall phone has no dead space at the bottom, and when
+            // the keyboard opens Flutter scrolls the focused field into view —
+            // Save rides with it, still under the thumb.
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                screen.px(20),
+                4,
+                screen.px(20),
+                screen.px(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  form,
+                  SizedBox(height: screen.px(18)),
+                  amountBlock,
+                ],
+              ),
             );
           },
         ),
@@ -459,53 +452,45 @@ class _Form extends StatelessWidget {
   }
 }
 
-/// The pad half: amount, the last thing you added, the keys and Save.
-class _Pad extends StatelessWidget {
-  const _Pad({
-    required this.amountText,
+/// The amount and the Save button.
+///
+/// The number is a real text field using the phone's own numeric keyboard: the
+/// keys are the size the OS says they should be, the digits are familiar, and
+/// there is nothing to get wrong at 2 a.m. It keeps focus after saving, so a
+/// second entry is type–tap–type–tap.
+class _AmountBlock extends StatelessWidget {
+  const _AmountBlock({
+    required this.controller,
     required this.symbol,
     required this.added,
     required this.addedCount,
     required this.isExpense,
     required this.saveLabel,
     required this.enabled,
+    required this.autofocus,
     required this.onSave,
-    required this.onDigit,
-    required this.onDecimal,
-    required this.onBackspace,
-    required this.maxHeight,
   });
 
-  final String amountText;
+  final TextEditingController controller;
   final String symbol;
   final String? added;
   final int addedCount;
   final bool isExpense;
   final String saveLabel;
   final bool enabled;
+  final bool autofocus;
   final VoidCallback onSave;
-  final ValueChanged<String> onDigit;
-  final VoidCallback onDecimal;
-  final VoidCallback onBackspace;
-  final double maxHeight;
 
   @override
   Widget build(BuildContext context) {
-    // Four rows plus the amount and the confirmation strip have to fit the space
-    // we were given — that is what makes this survive a 5" phone and landscape.
-    // The strip (34), the amount (62) and the Save bar (6 + ~50) are fixed
-    // boxes. Give the pad roughly 56 % of the height it was handed, then let the
-    // four rows share what is left — clamped, so a 5" phone shrinks and a tall
-    // phone does not turn the keys into tiles.
-    const double chrome = 34 + 62 + 6 + 50 + 6;
-    final double cell = ((maxHeight * 0.56 - chrome) / 4).clamp(38.0, 62.0);
+    final Screen screen = Screen.of(context);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         SizedBox(
-          height: 34,
+          height: 26,
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 220),
             child: added == null
@@ -537,51 +522,102 @@ class _Pad extends StatelessWidget {
                   ),
           ),
         ),
-        SizedBox(
-          height: 62,
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: Text(
-                    symbol,
-                    style: TextStyle(
-                      fontFamily: kFontFamily,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.muted(context),
-                    ),
-                  ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: screen.px(14)),
+          decoration: BoxDecoration(
+            color: AppColors.surface(context),
+            borderRadius: BorderRadius.circular(screen.px(18)),
+            border: Border.all(color: AppColors.line(context)),
+          ),
+          child: Row(
+            children: <Widget>[
+              Text(
+                symbol,
+                style: TextStyle(
+                  fontFamily: kFontFamily,
+                  fontSize: screen.font(20, context),
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.muted(context),
                 ),
-                Text(
-                  amountText.isEmpty ? '0' : amountText,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  key: const Key('amount'),
+                  controller: controller,
+                  autofocus: autofocus,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => onSave(),
                   style: TextStyle(
                     fontFamily: kFontFamily,
-                    fontSize: 54,
+                    fontSize: screen.font(34, context),
                     fontWeight: FontWeight.w700,
-                    height: 1.1,
-                    color: amountText.isEmpty
-                        ? AppColors.muted(context).withValues(alpha: 0.55)
-                        : isExpense
-                        ? AppColors.ink(context)
-                        : Palette.taka,
+                    height: 1.25,
+                    color: isExpense ? AppColors.ink(context) : Palette.taka,
+                  ),
+                  // The app theme gives every field an outline; inside this
+                  // pill it would draw a box in a box.
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    hintText: '0',
+                  ),
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    LengthLimitingTextInputFormatter(9),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: screen.px(8)),
+        Pressable(
+          onTap: enabled ? onSave : null,
+          scale: 0.98,
+          child: Container(
+            height: screen.px(52).clamp(46.0, 58.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: enabled
+                    ? const <Color>[Color(0xFF14A98B), Palette.takaDeep]
+                    : <Color>[
+                        Palette.taka.withValues(alpha: 0.30),
+                        Palette.takaDeep.withValues(alpha: 0.30),
+                      ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: BorderRadius.circular(screen.px(16)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Icon(
+                  Icons.check_rounded,
+                  size: screen.font(18, context),
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  saveLabel.toUpperCase(),
+                  style: TextStyle(
+                    fontFamily: kFontFamily,
+                    fontSize: screen.font(13, context),
+                    letterSpacing: 1,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
               ],
             ),
           ),
-        ),
-        AmountKeypad(
-          cellHeight: cell,
-          saveLabel: saveLabel,
-          enabled: enabled,
-          onSave: onSave,
-          onDigit: onDigit,
-          onDecimal: onDecimal,
-          onBackspace: onBackspace,
         ),
       ],
     );
