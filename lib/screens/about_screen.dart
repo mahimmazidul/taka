@@ -46,27 +46,27 @@ class AboutScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        '${AppInfo.name} · ${AppInfo.nameBn}',
-                        style: TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.ink(context),
-                        ),
-                      ),
-                      Text(
-                        'Version ${AppInfo.version}',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          color: AppColors.muted(context),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    '${AppInfo.name} · ${AppInfo.nameBn}',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.ink(context),
+                    ),
                   ),
                 ),
+                // Pinned to the right edge of the header, the same way every
+                // other value in the app sits.
+                Text(
+                  'v${AppInfo.version}',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.muted(context),
+                  ),
+                ),
+                const SizedBox(width: 2),
               ],
             ),
           ),

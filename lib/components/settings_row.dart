@@ -68,15 +68,20 @@ class SettingsRow extends StatelessWidget {
               ),
             ),
             if (value != null)
+              // Align inside the flexible space: Flexible alone hands the text a
+              // share of the row and leaves it stranded mid-screen.
               Flexible(
-                child: Text(
-                  value!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.muted(context),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    value!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.muted(context),
+                    ),
                   ),
                 ),
               ),
