@@ -24,7 +24,7 @@ class AppDatabase {
   }) => AppDatabase._internal(factory, path);
 
   static const String _fileName = 'taka.db';
-  static const int _version = 3;
+  static const int _version = 4;
 
   final DatabaseFactory? _factory;
   final String? _path;
@@ -66,7 +66,8 @@ class AppDatabase {
         budget_minor INTEGER,
         sort_order INTEGER NOT NULL DEFAULT 0,
         parent_id TEXT,
-        is_group INTEGER NOT NULL DEFAULT 0
+        is_group INTEGER NOT NULL DEFAULT 0,
+        food INTEGER NOT NULL DEFAULT 0
       )
     ''');
     batch.execute('CREATE INDEX idx_cat_parent ON categories(parent_id)');
@@ -122,6 +123,14 @@ class AppDatabase {
   /// v1 → v2: Bangla labels plus the granular hall-life category set.
   /// Non-destructive: existing rows are relabelled, new ones are inserted.
   Future<void> _upgrade(Database db, int oldVersion, int newVersion) async {
+    // Column additions come before anything that writes a full seed row:
+    // every later step inserts `kDefaultCategories` through `toMap()`, and
+    // that map carries `food` from v4 onwards. Doing this last made a v2 file
+    // try to insert a column that did not exist yet.
+    if (oldVersion < 4) {
+      await _upgradeToFood(db);
+    }
+
     if (oldVersion < 2) {
       final Batch batch = db.batch();
       batch.execute(
@@ -187,6 +196,32 @@ class AppDatabase {
     if (oldVersion < 3) {
       await _upgradeToGroups(db);
     }
+  }
+
+  /// v3 → v4: mark the edible categories.
+  ///
+  /// Meal tags are only offered for food, so the flag has to live on the row
+  /// rather than be guessed from a group name. Seeded food is flagged from the
+  /// seed list; anything the user created stays non-food (no meal tag) until
+  /// they say otherwise.
+  Future<void> _upgradeToFood(Database db) async {
+    await _addColumnIfMissing(
+      db,
+      'categories',
+      'food',
+      'INTEGER NOT NULL DEFAULT 0',
+    );
+    final Batch batch = db.batch();
+    for (final AppCategory category in kDefaultCategories) {
+      if (!category.isFood) continue;
+      batch.update(
+        'categories',
+        <String, Object?>{'food': 1},
+        where: 'id = ?',
+        whereArgs: <Object?>[category.id],
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   /// v2 → v3: two-level categories plus meal tags.

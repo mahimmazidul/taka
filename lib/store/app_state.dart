@@ -204,6 +204,13 @@ class AppState extends ChangeNotifier {
     return rolled;
   }
 
+  /// Whether this category may carry a meal tag. Only food does — a face wash
+  /// logged "at dinner" would otherwise show up in the meals strip.
+  bool acceptsMeal(String? categoryId) {
+    if (categoryId == null) return false;
+    return categoryById(categoryId)?.isFood ?? false;
+  }
+
   /// Today's spend per meal slot, for the "today's meals" strip on Home.
   Map<MealSlot, int> get mealSpendToday {
     final DateTime dayStart = startOfDay(now);
@@ -214,6 +221,7 @@ class AppState extends ChangeNotifier {
     for (final TransactionEntry entry in allEntries) {
       final MealSlot? slot = entry.meal;
       if (slot == null || !entry.isExpense) continue;
+      if (!acceptsMeal(entry.categoryId)) continue;
       if (entry.occurredAt.isBefore(dayStart)) continue;
       if (!entry.occurredAt.isBefore(dayEnd)) continue;
       totals[slot] = totals[slot]! + entry.amountMinor;

@@ -31,6 +31,7 @@ AppCategory _leaf({
   required String color,
   required int order,
   CategoryKind kind = CategoryKind.expense,
+  bool isFood = false,
 }) => AppCategory(
   id: id,
   name: name,
@@ -39,6 +40,7 @@ AppCategory _leaf({
   colorHex: color,
   kind: kind,
   sortOrder: order,
+  isFood: isFood,
 );
 
 /// Expense groups, in the order a hall student thinks about money: food first,
@@ -175,6 +177,7 @@ final List<AppCategory> _standalone = <AppCategory>[
     icon: 'restaurant',
     color: '#E4572E',
     order: 20,
+    isFood: true,
   ),
   _leaf(
     id: 'laundry',

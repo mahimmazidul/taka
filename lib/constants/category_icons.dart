@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 const Map<String, IconData> kCategoryIcons = <String, IconData>{
   // Food & drink
   'rice': Icons.rice_bowl_outlined,
+  'noodles': Icons.ramen_dining_outlined,
   'fish': Icons.set_meal_outlined,
   'meat': Icons.kebab_dining_outlined,
   'veg': Icons.eco_outlined,
@@ -91,6 +92,7 @@ IconData categoryIcon(String key) =>
 /// glyphs is a wall, not a choice.
 const List<String> kIconPickerKeys = <String>[
   'rice',
+  'noodles',
   'fish',
   'meat',
   'veg',

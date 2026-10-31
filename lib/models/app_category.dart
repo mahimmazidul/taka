@@ -33,6 +33,7 @@ class AppCategory {
     this.sortOrder = 0,
     this.parentId,
     this.isGroup = false,
+    this.isFood = false,
   });
 
   final String id;
@@ -56,6 +57,11 @@ class AppCategory {
   /// Groups are containers: they roll up their children's spend and can carry
   /// their own monthly limit, but you do not log an entry against them.
   final bool isGroup;
+
+  /// True for things you eat or drink. Only a food category can carry a meal
+  /// tag — a face wash does not belong to breakfast, and letting it would put
+  /// money into the meals strip that never came from a meal.
+  final bool isFood;
 
   Color get color => colorFromHex(colorHex);
 
@@ -86,6 +92,7 @@ class AppCategory {
     String? parentId,
     bool moveToTopLevel = false,
     bool? isGroup,
+    bool? isFood,
   }) {
     return AppCategory(
       id: id,
@@ -98,6 +105,7 @@ class AppCategory {
       sortOrder: sortOrder ?? this.sortOrder,
       parentId: moveToTopLevel ? null : (parentId ?? this.parentId),
       isGroup: isGroup ?? this.isGroup,
+      isFood: isFood ?? this.isFood,
     );
   }
 
@@ -113,6 +121,7 @@ class AppCategory {
       sortOrder: (map['sort_order'] as int?) ?? 0,
       parentId: map['parent_id'] as String?,
       isGroup: ((map['is_group'] as int?) ?? 0) == 1,
+      isFood: ((map['food'] as int?) ?? 0) == 1,
     );
   }
 
@@ -128,6 +137,7 @@ class AppCategory {
       'sort_order': sortOrder,
       'parent_id': parentId,
       'is_group': isGroup ? 1 : 0,
+      'food': isFood ? 1 : 0,
     };
   }
 }
