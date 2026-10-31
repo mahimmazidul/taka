@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../utils/responsive.dart';
 import '../components/app_sheet.dart';
 import '../components/section_title.dart';
 import '../components/settings_row.dart';
@@ -162,7 +163,12 @@ class SettingsScreen extends StatelessWidget {
           final bool dark = state.settings.darkMode;
 
           return ListView(
-            padding: const EdgeInsets.only(bottom: 110),
+            padding: EdgeInsets.fromLTRB(
+              Screen.of(context).gutter,
+              0,
+              Screen.of(context).gutter,
+              110,
+            ),
             children: <Widget>[
               const SectionTitle(
                 title: 'Appearance',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../utils/responsive.dart';
 import '../components/category_tile.dart';
 import '../components/section_title.dart';
 import '../core/app_theme.dart';
@@ -64,7 +65,12 @@ class CategoriesScreen extends StatelessWidget {
           final String symbol = state.currencySymbol;
 
           return ListView(
-            padding: const EdgeInsets.only(bottom: 32),
+            padding: EdgeInsets.fromLTRB(
+              Screen.of(context).gutter,
+              0,
+              Screen.of(context).gutter,
+              32,
+            ),
             children: <Widget>[
               const SectionTitle(
                 title: 'Expense groups',

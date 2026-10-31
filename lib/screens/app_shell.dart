@@ -1,9 +1,8 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 import '../core/motion.dart';
+import '../utils/responsive.dart';
 import 'add_entry_screen.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
@@ -87,22 +86,31 @@ class _FloatingBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool dark = AppColors.isDark(context);
+    final Screen screen = Screen.of(context);
+
+    // Landscape has half the height, so the bar takes half the vertical space it
+    // does in portrait instead of eating a quarter of the screen.
+    final double barHeight = screen.isLandscape ? 54 : 66;
+    final double barRadius = screen.isLandscape ? 20 : 26;
 
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      minimum: EdgeInsets.fromLTRB(16, 0, 16, screen.isLandscape ? 8 : 12),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        // A blur here looked lovely and cost a real frame every scroll tick on
+        // mid-range phones. A flat translucent surface is indistinguishable once
+        // the content behind it is bright.
+        borderRadius: BorderRadius.circular(barRadius),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(),
           child: Container(
-            height: 66,
+            height: barHeight,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               color: (dark ? Palette.darkSurface : Colors.white).withValues(
-                alpha: dark ? 0.86 : 0.92,
+                alpha: dark ? 0.97 : 0.99,
               ),
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(barRadius),
               border: Border.all(color: AppColors.line(context)),
               boxShadow: <BoxShadow>[
                 BoxShadow(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../utils/responsive.dart';
 import '../components/app_sheet.dart';
 import '../components/budget_line.dart';
 import '../components/category_tile.dart';
@@ -84,7 +85,12 @@ class BudgetsScreen extends StatelessWidget {
           final int? overall = state.settings.monthlyBudgetMinor;
 
           return ListView(
-            padding: const EdgeInsets.only(bottom: 32),
+            padding: EdgeInsets.fromLTRB(
+              Screen.of(context).gutter,
+              0,
+              Screen.of(context).gutter,
+              32,
+            ),
             children: <Widget>[
               const SectionTitle(
                 title: 'Overall',

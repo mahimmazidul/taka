@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../utils/responsive.dart';
 import '../components/app_sheet.dart';
 import '../components/category_tile.dart';
 import '../components/empty_state.dart';
@@ -197,7 +198,12 @@ class _UdharScreenState extends State<UdharScreen> {
                         onAction: _addSheet,
                       )
                     : ListView(
-                        padding: const EdgeInsets.only(bottom: 110),
+                        padding: EdgeInsets.fromLTRB(
+                          Screen.of(context).gutter,
+                          0,
+                          Screen.of(context).gutter,
+                          110,
+                        ),
                         children: <Widget>[
                           for (final UdharEntry entry in open) ...<Widget>[
                             _UdharRow(entry: entry, symbol: symbol),

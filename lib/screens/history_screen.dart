@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../utils/responsive.dart';
 import '../components/empty_state.dart';
 import '../components/entry_row.dart';
 import '../components/segmented.dart';
@@ -96,6 +97,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
     if (picked == null) return;
     setState(() => _categoryId = picked.isEmpty ? null : picked);
+  }
+
+  void _openEntry(TransactionEntry entry) {
+    Navigator.of(context)
+        .push(slideFadeRoute<void>(AddEntryScreen(entry: entry)));
   }
 
   Future<void> _confirmDelete(TransactionEntry entry) async {
@@ -277,43 +283,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ? const EmptyState(
                         icon: Icons.search_off_rounded,
                         title: 'Nothing here',
-                        message: 'Try a different filter, or add an entry with the + button.',
+                        message:
+                            'Try a different filter, or add an entry with the '
+                            '+ button.',
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 110),
-                        itemCount: groups.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          final DayGroup<TransactionEntry> group =
-                              groups[index];
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              _DayHeader(group: group, symbol: symbol),
-                              for (
-                                int i = 0;
-                                i < group.items.length;
-                                i++
-                              ) ...<Widget>[
-                                EntryRow(
-                                  entry: group.items[i],
-                                  category: state.categoryById(
-                                    group.items[i].categoryId,
-                                  ),
-                                  symbol: symbol,
-                                  onTap: () => Navigator.of(context).push(
-                                    slideFadeRoute<void>(
-                                      AddEntryScreen(entry: group.items[i]),
-                                    ),
-                                  ),
-                                  onLongPress: () =>
-                                      _confirmDelete(group.items[i]),
-                                ),
-                                if (i != group.items.length - 1)
-                                  const Hairline(indent: 76),
-                              ],
-                            ],
-                          );
-                        },
+                    : _EntryList(
+                        groups: groups,
+                        state: state,
+                        symbol: symbol,
+                        onOpen: _openEntry,
+                        onDelete: _confirmDelete,
                       ),
               ),
             ],
@@ -410,6 +389,66 @@ class _FilterRow extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Flat, lazily-built list. Grouping used to be rendered as one `Column` per
+/// day, so scrolling a long history built every row of every visible day at
+/// once — that is the stutter the report is about. One list item per row keeps
+/// the work proportional to what is actually on screen.
+class _EntryList extends StatelessWidget {
+  const _EntryList({
+    required this.groups,
+    required this.state,
+    required this.symbol,
+    required this.onOpen,
+    required this.onDelete,
+  });
+
+  final List<DayGroup<TransactionEntry>> groups;
+  final AppState state;
+  final String symbol;
+  final void Function(TransactionEntry) onOpen;
+  final void Function(TransactionEntry) onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    // header (1) + its rows + hairline after each row except the day's last.
+    final List<Widget Function()> rows = <Widget Function()>[];
+    for (final DayGroup<TransactionEntry> group in groups) {
+      rows.add(() => _DayHeader(group: group, symbol: symbol));
+      for (int i = 0; i < group.items.length; i++) {
+        final TransactionEntry entry = group.items[i];
+        final bool last = i == group.items.length - 1;
+        rows.add(
+          () => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              EntryRow(
+                entry: entry,
+                category: state.categoryById(entry.categoryId),
+                symbol: symbol,
+                onTap: () => onOpen(entry),
+                onLongPress: () => onDelete(entry),
+              ),
+              if (!last) const Hairline(indent: 76),
+            ],
+          ),
+        );
+      }
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.fromLTRB(
+        Screen.of(context).gutter,
+        0,
+        Screen.of(context).gutter,
+        110,
+      ),
+      itemCount: rows.length,
+      itemBuilder: (BuildContext context, int index) =>
+          RepaintBoundary(child: rows[index]()),
     );
   }
 }
