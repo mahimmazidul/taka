@@ -151,8 +151,8 @@ class _AnimatedMoneyState extends State<AnimatedMoney> {
 /// Page transition used everywhere: quick fade with a small upward slide.
 Route<T> slideFadeRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
-    transitionDuration: const Duration(milliseconds: 260),
-    reverseTransitionDuration: const Duration(milliseconds: 200),
+    transitionDuration: const Duration(milliseconds: 320),
+    reverseTransitionDuration: const Duration(milliseconds: 240),
     pageBuilder: (_, _, _) => page,
     transitionsBuilder:
         (
@@ -161,18 +161,22 @@ Route<T> slideFadeRoute<T>(Widget page) {
           Animation<double> secondary,
           Widget child,
         ) {
-          final CurvedAnimation curved = CurvedAnimation(
+          final CurvedAnimation enter = CurvedAnimation(
             parent: animation,
             curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
           );
           return FadeTransition(
-            opacity: curved,
+            opacity: enter,
             child: SlideTransition(
               position: Tween<Offset>(
-                begin: const Offset(0, 0.035),
+                begin: const Offset(0, 0.055),
                 end: Offset.zero,
-              ).animate(curved),
-              child: child,
+              ).animate(enter),
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.985, end: 1).animate(enter),
+                child: child,
+              ),
             ),
           );
         },

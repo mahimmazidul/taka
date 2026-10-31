@@ -21,8 +21,25 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
+  late final PageController _pages = PageController();
 
-  void _select(int index) => setState(() => _index = index);
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  /// Tabs glide instead of snapping. Swiping is off on purpose: History has
+  /// horizontal chip rows, and stealing those drags would feel broken.
+  void _select(int index) {
+    if (index == _index) return;
+    setState(() => _index = index);
+    _pages.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   void _addEntry() {
     Navigator.of(context).push(slideFadeRoute<void>(const AddEntryScreen()));
@@ -42,7 +59,11 @@ class _AppShellState extends State<AppShell> {
 
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: _index, children: tabs),
+      body: PageView(
+        controller: _pages,
+        physics: const NeverScrollableScrollPhysics(),
+        children: tabs,
+      ),
       bottomNavigationBar: _FloatingBar(
         index: _index,
         onSelect: _select,
