@@ -6,15 +6,18 @@
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Platform](https://img.shields.io/badge/Android-offline%20first-0E9F6E)
-![Tests](https://img.shields.io/badge/tests-41%20passing-0E9F6E)
+![Tests](https://img.shields.io/badge/tests-43%20passing-0E9F6E)
+![Android](https://img.shields.io/badge/minSdk-21%2B-3DDC84?logo=android&logoColor=white)
+[![Download APK](https://img.shields.io/badge/download-v1.0.1%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
 
 ## Screenshots
 
-Everything below is rendered from the real app by the golden test suite
-(`flutter test test/golden_test.dart --update-goldens`), refreshed with every UI change.
+Every screen, rendered from the real widgets by the golden test suite
+(`flutter test test/golden_test.dart --update-goldens` → `docs/screenshots/`), and
+refreshed whenever the UI changes. No mockups.
 
 | Home | Home (dark) |
 |---|---|
@@ -24,11 +27,16 @@ Everything below is rendered from the real app by the golden test suite
 |---|---|
 | ![Add entry](docs/screenshots/add_entry.png) | ![History](docs/screenshots/history.png) |
 
-| Udhar | Settings |
+| Udhar | Budgets |
 |---|---|
-| ![Udhar](docs/screenshots/udhar.png) | ![Settings](docs/screenshots/settings.png) |
+| ![Udhar](docs/screenshots/udhar.png) | ![Budgets](docs/screenshots/budgets.png) |
 
-Small phone (320 × 568), same layout, nothing clipped:
+| Categories | Settings |
+|---|---|
+| ![Categories](docs/screenshots/categories.png) | ![Settings](docs/screenshots/settings.png) |
+
+Small phone (320 × 568) — same layout, same information, nothing clipped or
+scrolled off the side:
 
 ![Small phone](docs/screenshots/home_small.png)
 
@@ -84,7 +92,7 @@ Quality gates used in CI:
 
 ```bash
 flutter analyze                               # 0 issues
-flutter test --concurrency=1                  # 41 tests
+flutter test --concurrency=1                  # 43 tests
 dart format --output=none --set-exit-if-changed lib test
 ```
 
@@ -109,7 +117,8 @@ lib/
 ├── app.dart                   MaterialApp, theme mode, system UI
 ├── core/
 │   ├── app_theme.dart         palette, Hind Siliguri text theme, light/dark
-│   └── motion.dart            Pressable, Reveal, AnimatedMoney, page route
+│   ├── motion.dart            Pressable, Reveal, AnimatedMoney, page route
+│   └── clock.dart             the one place DateTime.now() lives
 ├── constants/
 │   ├── default_categories.dart  the 22 seeded categories (Bangla + English)
 │   └── category_icons.dart      icon keys, icon picker list, colour swatches
@@ -131,9 +140,11 @@ lib/
                                category_editor_sheet
 ```
 
-Only four runtime dependencies: `sqflite`, `path`, `path_provider`, `share_plus`
-(plus `file_picker` for restore). No state-management package, no chart package,
-no HTTP client.
+Five runtime dependencies, all of them boring: `sqflite` (local SQLite), `path`,
+`path_provider` (where to write the backup), `share_plus` 13 (hand the backup to
+Android's share sheet) and `file_picker` 13 (pick a JSON file to restore). No
+state-management package, no chart package, no HTTP client, no analytics.
+The Android module compiles against API 36 (plugins require it) and runs on API 21+.
 
 ### Data model (SQLite `taka.db`, schema v2)
 
@@ -153,19 +164,21 @@ settings(key, value)
 - **Income sources are categories** with `kind = 'income'`, which is what the
   "source" field needs without a second table.
 - **Weeks start Sunday** (Bangladesh convention) — one constant in `date_helpers.dart`.
+- **"Now" comes from `AppClock`**, never from `DateTime.now()` directly. Tests point
+  it at a frozen instant, which is the only reason the screenshots are byte-stable.
 - Schema v1 → v2 migrates in place: adds `name_bn`, maps old emoji icons to icon
   keys and inserts the new granular categories. No data loss.
 
 ### Tests
 
-41 tests, all offline (28 logic + database, 6 screen, 7 golden):
+43 tests, all offline (28 logic + database, 6 screen, 9 golden):
 
 | File | Covers |
 |---|---|
 | `test/logic_test.dart` | money formatting, exact keypad→paisa conversion, date helpers, budget thresholds, labels |
 | `test/database_test.dart` | the real schema and SQL on an in-memory SQLite: seeds, CRUD, totals, per-day buckets, filters, category reassignment, udhar settlement, settings, backup round-trip, CSV |
 | `test/screens_test.dart` | whole app at 320 / 360 / 414 / 768 widths, 1.3× text scale, tab switching, adding an entry end-to-end, dark-mode toggle |
-| `test/golden_test.dart` | the screenshots in this README |
+| `test/golden_test.dart` | every screenshot in this README — home (light, dark, small phone), add entry, history, udhar, budgets, categories, settings |
 
 ---
 
@@ -178,5 +191,8 @@ settings(key, value)
 
 ## Changelog
 
+- **v1.0.1** — budget rows no longer printed the category twice; the budgets and
+  categories screens joined the screenshot suite; time is read through `AppClock` so
+  the goldens stopped drifting; release builds compile against API 36.
 - **v1.0.0** — first full build: dashboard, add/edit, history with filters, udhar,
   budgets, category manager, JSON/CSV backup, dark mode, CI release pipeline.
