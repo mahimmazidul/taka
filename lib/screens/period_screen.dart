@@ -572,103 +572,111 @@ class _DaySheet extends StatelessWidget {
       (int sum, TransactionEntry e) => sum + (e.isExpense ? 0 : e.amountMinor),
     );
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.line(context),
-                borderRadius: BorderRadius.circular(2),
+    // A day can hold thirty entries (a mess bill, a trip). The sheet is capped
+    // at most of the screen and the list scrolls inside it, instead of growing
+    // past the bottom edge and overflowing.
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.72,
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.line(context),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Text(
-                      formatDayHeading(day),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        formatDayHeading(day),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.ink(context),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      formatMoney(spent, symbol: state.currencySymbol),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.ink(context),
+                        color: AppColors.expense(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (earned > 0)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${formatMoney(earned, symbol: state.currencySymbol)} came in',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.income(context),
                       ),
                     ),
                   ),
-                  Text(
-                    formatMoney(spent, symbol: state.currencySymbol),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.expense(context),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (earned > 0)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-                child: Align(
-                  alignment: Alignment.centerLeft,
+                ),
+              if (entries.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
                   child: Text(
-                    '${formatMoney(earned, symbol: state.currencySymbol)} came in',
+                    'Nothing logged on this day.',
                     style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.income(context),
+                      fontSize: 13,
+                      color: AppColors.muted(context),
                     ),
                   ),
-                ),
-              ),
-            if (entries.isEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-                child: Text(
-                  'Nothing logged on this day.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.muted(context),
+                )
+              else
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.only(top: 8),
+                    itemCount: entries.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final TransactionEntry entry = entries[index];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          EntryRow(
+                            entry: entry,
+                            category: state.categoryById(entry.categoryId),
+                            symbol: state.currencySymbol,
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              Navigator.of(context).push(
+                                slideFadeRoute<void>(
+                                  AddEntryScreen(entry: entry),
+                                ),
+                              );
+                            },
+                          ),
+                          if (index != entries.length - 1)
+                            const Hairline(indent: 76),
+                        ],
+                      );
+                    },
                   ),
                 ),
-              )
-            else
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.only(top: 8),
-                  itemCount: entries.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final TransactionEntry entry = entries[index];
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        EntryRow(
-                          entry: entry,
-                          category: state.categoryById(entry.categoryId),
-                          symbol: state.currencySymbol,
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            Navigator.of(context).push(
-                              slideFadeRoute<void>(
-                                AddEntryScreen(entry: entry),
-                              ),
-                            );
-                          },
-                        ),
-                        if (index != entries.length - 1)
-                          const Hairline(indent: 76),
-                      ],
-                    );
-                  },
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:taka/app.dart';
 import 'package:taka/core/clock.dart';
 import 'package:taka/db/database.dart';
+import 'package:taka/models/transaction_entry.dart';
 import 'package:taka/store/app_state.dart';
 
 import 'support/seed.dart';
@@ -211,6 +212,32 @@ void main() {
     expect(find.textContaining('Hall dinner'), findsOneWidget);
     expect(find.text('৳ 575'), findsWidgets);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a day with a crowd of entries scrolls instead of overflowing', (
+    WidgetTester tester,
+  ) async {
+    final AppState state = AppState.instance;
+    await tester.runAsync(() async {
+      for (int i = 0; i < 25; i++) {
+        await state.addTransaction(
+          type: EntryType.expense,
+          amountMinor: 1000 + i,
+          categoryId: 'rice',
+          note: 'extra $i',
+          occurredAt: DateTime(2026, 10, 31, 9),
+        );
+      }
+    });
+    await pumpAt(tester, const Size(390, 844));
+
+    await tester.tap(find.text('This month'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('31'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull, reason: 'no overflow');
+    expect(find.textContaining('extra'), findsWidgets);
   });
 
   testWidgets('dark mode toggle persists and repaints', (

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
+import '../core/clock.dart';
 import '../utils/date_helpers.dart';
 import '../utils/format_currency.dart';
 import '../utils/responsive.dart';
@@ -35,7 +36,10 @@ class MonthCalendar extends StatelessWidget {
     final int leading = (first.weekday - kWeekStartsOnWeekday) % 7;
     final int cells = leading + daysInMonth;
     final int rows = (cells / 7).ceil();
-    final DateTime today = startOfDay(DateTime.now());
+    // AppClock, never DateTime.now(): the ring on "today" is part of the
+    // screenshot tests, and a real clock makes those goldens change overnight
+    // for no reason at all.
+    final DateTime today = startOfDay(AppClock.now());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
