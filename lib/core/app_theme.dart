@@ -21,6 +21,11 @@ abstract final class Palette {
   static const Color darkInk = Color(0xFFECF2EE);
   static const Color darkMuted = Color(0xFF8C9A93);
   static const Color darkLine = Color(0xFF232D28);
+
+  /// Same values as `res/values/colors.xml` `launch_background`, so the native
+  /// splash and Flutter's first frame are the same rectangle of colour.
+  static const Color launchLight = Color(0xFFEAF4EF);
+  static const Color launchDark = Color(0xFF0B100E);
 }
 
 /// Brightness-aware colour lookups. Screens never hard-code a grey again.
@@ -46,6 +51,10 @@ abstract final class AppColors {
   static Color expense(BuildContext c) => Palette.expense;
 
   static Color income(BuildContext c) => Palette.income;
+
+  /// The colour the window already shows before Flutter paints anything.
+  static Color launch(Brightness b) =>
+      b == Brightness.dark ? Palette.launchDark : Palette.launchLight;
 }
 
 /// Hind Siliguri carries Latin, Bengali and the ৳ sign, so one family covers
