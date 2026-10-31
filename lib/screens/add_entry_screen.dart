@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../components/amount_keypad.dart';
+import '../components/category_picker.dart';
 import '../components/primary_button.dart';
 import '../components/segmented.dart';
 import '../core/app_theme.dart';
 import '../models/app_category.dart';
+import '../models/meal_slot.dart';
 import '../models/transaction_entry.dart';
 import '../store/app_state.dart';
 import '../utils/date_helpers.dart';
@@ -29,14 +31,11 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   late TextEditingController _note;
   String _categoryId = '';
   String _amountText = '';
+  MealSlot? _meal;
 
   bool get _isEditing => widget.entry != null;
 
   int get _amountMinor => keypadTextToMinor(_amountText);
-
-  List<AppCategory> get _categories => AppState.instance.categoriesForKind(
-    _type == EntryType.expense ? CategoryKind.expense : CategoryKind.income,
-  );
 
   @override
   void initState() {
@@ -47,6 +46,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
     _amountText = entry == null ? '' : minorToKeypadText(entry.amountMinor);
     _note = TextEditingController(text: entry?.note ?? '');
     _categoryId = entry?.categoryId ?? '';
+    _meal = entry?.meal ?? MealSlot.guess(_occurredAt);
     _ensureCategory();
   }
 
@@ -57,14 +57,14 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   }
 
   void _ensureCategory() {
-    final List<AppCategory> list = _categories;
-    if (list.isEmpty) {
-      _categoryId = '';
+    final AppState state = AppState.instance;
+    if (_categoryId.isNotEmpty && state.categoryById(_categoryId) != null) {
       return;
     }
-    if (!list.any((AppCategory c) => c.id == _categoryId)) {
-      _categoryId = list.first.id;
-    }
+    final CategoryKind kind = _type == EntryType.expense
+        ? CategoryKind.expense
+        : CategoryKind.income;
+    _categoryId = defaultCategoryFor(state, kind)?.id ?? '';
   }
 
   void _onDigit(String digit) {
@@ -149,6 +149,8 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
           categoryId: _categoryId,
           note: _note.text,
           occurredAt: _occurredAt,
+          meal: _meal,
+          clearMeal: _meal == null,
         ),
       );
     } else {
@@ -158,6 +160,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
         categoryId: _categoryId,
         note: _note.text,
         occurredAt: _occurredAt,
+        meal: _meal,
       );
     }
     if (!mounted) return;
@@ -254,37 +257,45 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(
-                          'CATEGORY',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            letterSpacing: 1.2,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.muted(context),
-                          ),
+                        _SectionLabel(
+                          text: _type == EntryType.expense
+                              ? 'CATEGORY'
+                              : 'SOURCE',
                         ),
                         const SizedBox(height: 8),
-                        SizedBox(
-                          height: 42,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _categories.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(width: 8),
-                            itemBuilder: (BuildContext context, int index) {
-                              final AppCategory category = _categories[index];
-                              return AppChip(
-                                label: category.label,
-                                icon: category.iconData,
-                                tint: category.color,
-                                selected: category.id == _categoryId,
-                                onTap: () =>
-                                    setState(() => _categoryId = category.id),
-                              );
-                            },
-                          ),
+                        CategoryPicker(
+                          kind: _type == EntryType.expense
+                              ? CategoryKind.expense
+                              : CategoryKind.income,
+                          selectedId: _categoryId.isEmpty ? null : _categoryId,
+                          onSelected: (AppCategory category) =>
+                              setState(() => _categoryId = category.id),
                         ),
-                        const SizedBox(height: 16),
+                        if (_type == EntryType.expense) ...<Widget>[
+                          const SizedBox(height: 10),
+                          const _SectionLabel(text: 'MEAL'),
+                          const SizedBox(height: 6),
+                          SizedBox(
+                            height: 36,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: <Widget>[
+                                for (final MealSlot slot
+                                    in MealSlot.values) ...[
+                                  AppChip(
+                                    label: slot.label,
+                                    selected: _meal == slot,
+                                    onTap: () => setState(
+                                      () => _meal = _meal == slot ? null : slot,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 10),
                         TextField(
                           controller: _note,
                           textInputAction: TextInputAction.done,
@@ -389,6 +400,26 @@ class _AmountDisplay extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Small uppercase label used above the category and meal rows.
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 10.5,
+        letterSpacing: 1.2,
+        fontWeight: FontWeight.w600,
+        color: AppColors.muted(context),
       ),
     );
   }
