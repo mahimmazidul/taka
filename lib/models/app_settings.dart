@@ -8,6 +8,7 @@ class AppSettings {
     this.monthlyBudgetMinor,
     this.udharEnabled = true,
     this.budgetsEnabled = true,
+    this.lastCategoryId,
   });
 
   final String currencyCode;
@@ -19,6 +20,10 @@ class AppSettings {
   final bool udharEnabled;
   final bool budgetsEnabled;
 
+  /// Last item logged, so the add-entry screen can open on the group you used
+  /// last instead of making you scroll to it again.
+  final String? lastCategoryId;
+
   AppSettings copyWith({
     String? currencyCode,
     String? currencySymbol,
@@ -27,6 +32,7 @@ class AppSettings {
     bool clearMonthlyBudget = false,
     bool? udharEnabled,
     bool? budgetsEnabled,
+    String? lastCategoryId,
   }) {
     return AppSettings(
       currencyCode: currencyCode ?? this.currencyCode,
@@ -37,6 +43,7 @@ class AppSettings {
           : (monthlyBudgetMinor ?? this.monthlyBudgetMinor),
       udharEnabled: udharEnabled ?? this.udharEnabled,
       budgetsEnabled: budgetsEnabled ?? this.budgetsEnabled,
+      lastCategoryId: lastCategoryId ?? this.lastCategoryId,
     );
   }
 
@@ -48,6 +55,7 @@ class AppSettings {
       'monthly_budget_minor': monthlyBudgetMinor?.toString() ?? '',
       'udhar_enabled': udharEnabled ? '1' : '0',
       'budgets_enabled': budgetsEnabled ? '1' : '0',
+      'last_category_id': lastCategoryId ?? '',
     };
   }
 
@@ -60,6 +68,9 @@ class AppSettings {
       monthlyBudgetMinor: (budget ?? 0) > 0 ? budget : null,
       udharEnabled: (map['udhar_enabled'] ?? '1') == '1',
       budgetsEnabled: (map['budgets_enabled'] ?? '1') == '1',
+      lastCategoryId: (map['last_category_id'] ?? '').trim().isEmpty
+          ? null
+          : map['last_category_id'],
     );
   }
 }
