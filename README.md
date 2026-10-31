@@ -147,9 +147,9 @@ binary), the same app with the same features and UI is:
 
 | File | Size | What is inside |
 |---|---|---|
-| `taka-1.1.0-arm64.apk` | 17.8 MB | one CPU build, 1.2 MB of it Hind Siliguri |
-| `taka-1.1.0-arm32.apk` | 15.0 MB | the same for very old phones |
-| `taka-1.1.0.aab` | 48.9 MB | all three plus what a store needs — Google Play serves ~18 MB from it |
+| `taka-1.3.0-arm64.apk` | 17.0 MB | one CPU build, 1.2 MB of it Hind Siliguri |
+| `taka-1.3.0-arm32.apk` | 14.4 MB | the same for very old phones |
+| `taka-1.3.0.aab` | 46.7 MB | all three plus what a store needs — Google Play serves ~17 MB from it |
 
 What is left is mostly the Flutter engine itself (11.8 MB `libflutter.so`) and the
 compiled Dart (`libapp.so`, ~5 MB). Regular R8 resource shrinking would win a few
@@ -175,7 +175,7 @@ dart format --output=none --set-exit-if-changed lib test
 
 ## Release flow
 
-`git tag v1.1.0 && git push origin v1.1.0` →
+`git tag v1.3.0 && git push origin v1.3.0` →
 [`.github/workflows/release.yml`](.github/workflows/release.yml) runs formatting,
 analysis and the tests, builds one APK per CPU plus an app bundle, keeps them as
 workflow artifacts and attaches them to a GitHub Release. Pushes to `main` build
