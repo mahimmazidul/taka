@@ -168,6 +168,23 @@ Same features, same UI, same code — the APKs only differ in which CPU build th
 carry. Android will ask you to allow installs from unknown sources; that is
 expected for an app that isn't on the Play Store.
 
+**Updating an installed copy.** Two rules, and the phone will take every later
+release in place, keeping your ledger:
+
+1. **Use the same file every time.** Pick `arm64` (or `arm32` if that is what you
+   installed) and keep using it. The split APKs carry different internal version
+   numbers, so installing the 32-bit build over the 64-bit one is seen as a
+   *downgrade* and refused — that is the "package conflict" message.
+2. **Same signature.** Releases up to v1.4.0 were signed with a throwaway debug
+   key; from v1.5.0 they are signed with one fixed release key kept outside the
+   repository. Android will not replace an app signed by a different key, so this
+   is the one time an update needs an uninstall first — **export a backup
+   (Settings → Export) before you do, and import it afterwards.** Every release
+   after that installs straight over the top.
+
+Nothing else is needed: the database lives in the app's own storage and an
+in-place update leaves it alone — no re-login, no re-import, no lost month.
+
 ### About the download size
 
 One universal APK bundles three CPU builds — arm64, arm32 and x86 — so v1.0 was
