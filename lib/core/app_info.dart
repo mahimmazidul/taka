@@ -6,7 +6,7 @@ class AppInfo {
   static const String name = 'Taka';
   static const String nameBn = 'টাকা';
   static const String tagline = 'Amar taka gelota koi?';
-  static const String version = '1.5.0';
+  static const String version = '1.5.1';
 
   /// The person this was built for, and by.
   static const String author = 'Mazidul Islam Mahim';
@@ -25,13 +25,13 @@ class AppInfo {
     SocialLink(
       id: 'telegram',
       label: 'Telegram',
-      url: '',
+      url: 'https://t.me/dumbhuman',
       iconName: 'telegram',
     ),
     SocialLink(
       id: 'facebook',
       label: 'Facebook',
-      url: '',
+      url: 'https://www.facebook.com/notgreatnotterrible',
       iconName: 'facebook',
     ),
     SocialLink(id: 'github', label: 'GitHub', url: repoUrl, iconName: 'github'),

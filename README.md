@@ -13,7 +13,7 @@ much of the month is left.
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-77%20passing-0E9F6E)
-[![Download APK](https://img.shields.io/badge/download-v1.5.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+[![Download APK](https://img.shields.io/badge/download-v1.5.1%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -359,6 +359,9 @@ plus the fast-food and carry-over rules):
 - Icons: Material Symbols via `flutter/material`.
 
 ## Changelog
+
+- **v1.5.1** — Settings → *Elsewhere* now actually points somewhere: Telegram
+  (@dumbhuman), Facebook and GitHub. Nothing else changed.
 
 - **v1.5.0** — the month starts where the last one ended. Leftover money carries
   into the new month and the per-day nudge divides what is really left. Search
