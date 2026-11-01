@@ -201,6 +201,26 @@ void main() {
     await _shot(tester, 'settings_updates');
   });
 
+  testWidgets('22 licences', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+    final Finder list = find.byWidgetPredicate(
+      (Widget widget) =>
+          widget is ListView && widget.scrollDirection == Axis.vertical,
+    );
+    await tester.drag(list.first, const Offset(0, -700));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Licences'));
+    await tester.pumpAndSettle();
+    // The page reads the bundled NOTICES asset, which needs real time.
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
+    await tester.pumpAndSettle();
+    await _shot(tester, 'licences');
+  });
+
   testWidgets('19 categories', (WidgetTester tester) async {
     await _render(tester, darkMode: false);
     await tester.tap(find.byIcon(Icons.tune_rounded));

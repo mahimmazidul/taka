@@ -270,6 +270,40 @@ void main() {
     expect(find.textContaining('extra'), findsWidgets);
   });
 
+  testWidgets('the licences page opens with this app and its dependencies', (
+    WidgetTester tester,
+  ) async {
+    await pumpAt(tester, const Size(390, 844));
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+
+    final Finder vertical = find.byWidgetPredicate(
+      (Widget widget) =>
+          widget is ListView && widget.scrollDirection == Axis.vertical,
+    );
+    await tester.drag(vertical.first, const Offset(0, -700));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Licences'));
+    await tester.pumpAndSettle();
+
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    // The actual terms are on screen, read from the bundle — not an empty page.
+    expect(find.textContaining('PolyForm Noncommercial'), findsWidgets);
+
+    // The font's licence is further down the same page.
+    await tester.scrollUntilVisible(
+      find.textContaining('SIL Open Font License'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.textContaining('SIL Open Font License'), findsWidgets);
+  });
+
   testWidgets('dark mode toggle persists and repaints', (
     WidgetTester tester,
   ) async {

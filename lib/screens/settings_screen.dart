@@ -17,6 +17,7 @@ import '../store/settings_actions.dart';
 import '../utils/currency_catalog.dart';
 import '../utils/export_data.dart';
 import 'budgets_screen.dart';
+import 'licenses_screen.dart';
 import 'about_screen.dart';
 import 'categories_screen.dart';
 import '../core/clock.dart';
@@ -298,6 +299,14 @@ class SettingsScreen extends StatelessWidget {
               const SectionTitle(title: 'About'),
               SettingsGroup(
                 children: <Widget>[
+                  SettingsRow(
+                    icon: Icons.description_outlined,
+                    title: 'Licences',
+                    subtitle: 'This app, and everything it is built on',
+                    onTap: () =>
+                        Navigator.of(context)
+                            .push(slideFadeRoute<void>(const LicensesScreen())),
+                  ),
                   SettingsRow(
                     icon: Icons.info_outline_rounded,
                     title: '${AppInfo.name} · ${AppInfo.nameBn}',

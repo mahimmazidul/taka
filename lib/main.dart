@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app.dart';
+import 'core/licenses.dart';
 import 'store/app_state.dart';
 
 /// Entry point. Everything is local: the SQLite file lives in the app's private
@@ -17,5 +18,6 @@ void main() {
   // Not awaited on purpose; [TakaApp] listens and swaps itself in.
   AppState.instance.load();
 
+  registerAppLicenses();
   runApp(const TakaApp());
 }
