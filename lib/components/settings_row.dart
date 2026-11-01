@@ -14,6 +14,7 @@ class SettingsRow extends StatelessWidget {
     this.onTap,
     this.trailing,
     this.danger = false,
+    this.valueTint,
   });
 
   final IconData icon;
@@ -23,6 +24,10 @@ class SettingsRow extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget? trailing;
   final bool danger;
+
+  /// Colour for the value text, when the value is telling you something (an
+  /// update is waiting, for instance). Distinct from the row's own text tint.
+  final Color? valueTint;
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +85,10 @@ class SettingsRow extends StatelessWidget {
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.muted(context),
+                      fontWeight: valueTint == null
+                          ? FontWeight.w400
+                          : FontWeight.w600,
+                      color: valueTint ?? AppColors.muted(context),
                     ),
                   ),
                 ),

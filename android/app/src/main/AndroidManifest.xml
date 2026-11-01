@@ -1,9 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Only the update check talks to the network, and only when tapped. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="Taka"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round">
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:allowBackup="true"
+        android:fullBackupContent="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

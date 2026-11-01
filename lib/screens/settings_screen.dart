@@ -7,6 +7,7 @@ import '../utils/responsive.dart';
 import '../components/app_sheet.dart';
 import '../components/section_title.dart';
 import '../components/settings_row.dart';
+import '../components/update_row.dart';
 import '../core/app_info.dart';
 import '../core/app_theme.dart';
 import '../core/motion.dart';
@@ -19,6 +20,7 @@ import 'budgets_screen.dart';
 import 'about_screen.dart';
 import 'categories_screen.dart';
 import '../core/clock.dart';
+import '../core/external_links.dart';
 
 /// Preferences, category management, backup and the destructive button.
 class SettingsScreen extends StatelessWidget {
@@ -229,6 +231,7 @@ class SettingsScreen extends StatelessWidget {
               const SectionTitle(title: 'Categories'),
               SettingsGroup(
                 children: <Widget>[
+                  const UpdateRow(),
                   SettingsRow(
                     icon: Icons.category_outlined,
                     title: 'Manage categories',
@@ -268,6 +271,29 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ],
               ),
+              if (AppInfo.visibleSocials.isNotEmpty) ...<Widget>[
+                const SectionTitle(title: 'Elsewhere'),
+                SettingsGroup(
+                  children: <Widget>[
+                    for (final SocialLink link in AppInfo.visibleSocials)
+                      SettingsRow(
+                        icon: socialIcon(link.iconName),
+                        title: link.label,
+                        subtitle: Uri.parse(link.url).host,
+                        onTap: () async {
+                          final bool opened = await openExternal(link.url);
+                          if (!opened && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Could not open ${link.url}'),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                  ],
+                ),
+              ],
               const SectionTitle(title: 'About'),
               SettingsGroup(
                 children: <Widget>[
