@@ -1,3 +1,47 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+// ── release signing ─────────────────────────────────────────────────────────
+// The key lives outside the repository, always. Two sources, in this order:
+//   1. android/key.properties  (local builds; git-ignored)
+//   2. environment variables   (GitHub Actions secrets)
+// Without either, we fall back to the debug key and say so loudly — a release
+// signed with the debug key cannot replace a release signed with the real key,
+// which is exactly the "app package conflicts" error users were seeing.
+val keystoreProps = Properties()
+val keystorePropsFile = rootProject.file("key.properties")
+if (keystorePropsFile.exists()) {
+    FileInputStream(keystorePropsFile).use { keystoreProps.load(it) }
+}
+
+fun signingValue(propName: String, envName: String): String? {
+    val fromProps = keystoreProps.getProperty(propName)?.trim()
+    if (!fromProps.isNullOrEmpty()) return fromProps
+    val fromEnv = System.getenv(envName)?.trim()
+    return if (fromEnv.isNullOrEmpty()) null else fromEnv
+}
+
+val releaseStorePath = signingValue("storeFile", "TAKA_KEYSTORE_PATH")
+val releaseStorePassword = signingValue("storePassword", "TAKA_STORE_PASSWORD")
+val releaseKeyAlias = signingValue("keyAlias", "TAKA_KEY_ALIAS")
+val releaseKeyPassword = signingValue("keyPassword", "TAKA_KEY_PASSWORD")
+
+val releaseKeystoreFile: File? = releaseStorePath?.let {
+    // Relative paths in key.properties are relative to android/app/.
+    val direct = file(it)
+    if (direct.exists()) direct else rootProject.file(it)
+}
+val hasReleaseKey = releaseKeystoreFile?.exists() == true &&
+    !releaseStorePassword.isNullOrEmpty() &&
+    !releaseKeyAlias.isNullOrEmpty()
+
+if (!hasReleaseKey) {
+    logger.warn(
+        "[taka] No release keystore found (android/key.properties or TAKA_* env vars). " +
+            "Building with the debug key — do not publish this artifact."
+    )
+}
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -31,11 +75,29 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKey) {
+            create("release") {
+                storeFile = releaseKeystoreFile
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword ?: releaseStorePassword
+                // v1/v2/v3 all on: v2+ is required from Android 11 for clean
+                // in-place updates, and v1 keeps very old phones happy.
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseKey) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

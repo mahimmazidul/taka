@@ -60,6 +60,29 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # The release key never lives in the repository. The workflow reconstructs
+      # it from four secrets; if they are missing the build still runs, but with
+      # the debug key, which no future release can upgrade over the top of.
+      - name: Restore release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.TAKA_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.TAKA_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.TAKA_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.TAKA_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning title=Unsigned::TAKA_KEYSTORE_BASE64 is not set — this APK is signed with the debug key and must not be released."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/taka-release.jks
+          {
+            echo "storeFile=app/taka-release.jks"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > android/key.properties
+          echo "Release keystore restored."
+
       - name: Resolve version
         id: version
         run: |
@@ -70,8 +93,14 @@ jobs:
           fi
           echo "code=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
 
-      # Signed with the debug key so every push produces an installable APK.
-      # Add a keystore + key.properties as secrets to ship a proper release key.
+      # Signed with the repository's release key when the four TAKA_* secrets
+      # are set (the keystore is written just above, never committed), otherwise
+      # with the debug key so every push still produces an installable APK.
+      #
+      # Every APK here now carries the same signature, which is what makes an
+      # in-place update possible: Android refuses to install over an app signed
+      # by someone else. The version code rises with every run, so the phone
+      # accepts it as an update and keeps its database.
       #
       # --split-per-abi matters for size: one universal APK carries three CPU
       # builds (arm64 + arm32 + x86), which is most of the download. Split, each
@@ -80,6 +109,10 @@ jobs:
       # uploaded as its own artifact, so crash reports stay readable) and the
       # obfuscated symbol names cost nothing in features or UI.
       - name: Build release APKs (one per CPU)
+        env:
+          TAKA_STORE_PASSWORD: ${{ secrets.TAKA_STORE_PASSWORD }}
+          TAKA_KEY_ALIAS: ${{ secrets.TAKA_KEY_ALIAS }}
+          TAKA_KEY_PASSWORD: ${{ secrets.TAKA_KEY_PASSWORD }}
         run: |
           flutter build apk --release --split-per-abi \
             --build-name ${{ steps.version.outputs.name }} \
@@ -87,11 +120,31 @@ jobs:
             --obfuscate --split-debug-info=build/symbols
 
       - name: Build app bundle
+        env:
+          TAKA_STORE_PASSWORD: ${{ secrets.TAKA_STORE_PASSWORD }}
+          TAKA_KEY_ALIAS: ${{ secrets.TAKA_KEY_ALIAS }}
+          TAKA_KEY_PASSWORD: ${{ secrets.TAKA_KEY_PASSWORD }}
         run: |
           flutter build appbundle --release \
             --build-name ${{ steps.version.outputs.name }} \
             --build-number ${{ steps.version.outputs.code }} \
             --obfuscate --split-debug-info=build/symbols
+
+      - name: Verify every APK carries the same signature
+        run: |
+          APKS=$(ls build/app/outputs/flutter-apk/app-*-release.apk)
+          for apk in $APKS; do
+            echo "$apk"
+            "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$apk" \
+              | grep -E "Signer #1 certificate (DN|SHA-256)" || true
+          done
+          # Every ABI must agree, or two phones get two different apps.
+          COUNT=$(for apk in $APKS; do
+            "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$apk" \
+              | grep "certificate SHA-256" | head -1
+          done | sort -u | wc -l)
+          echo "distinct signer fingerprints: $COUNT"
+          test "$COUNT" -le 1
 
       - name: Collect artifacts
         run: |
