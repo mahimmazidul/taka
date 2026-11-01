@@ -132,15 +132,17 @@ jobs:
 
       - name: Verify every APK carries the same signature
         run: |
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          echo "using $APKSIGNER"
           APKS=$(ls build/app/outputs/flutter-apk/app-*-release.apk)
           for apk in $APKS; do
             echo "$apk"
-            "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$apk" \
+            "$APKSIGNER" verify --print-certs "$apk" \
               | grep -E "Signer #1 certificate (DN|SHA-256)" || true
           done
           # Every ABI must agree, or two phones get two different apps.
           COUNT=$(for apk in $APKS; do
-            "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$apk" \
+            "$APKSIGNER" verify --print-certs "$apk" \
               | grep "certificate SHA-256" | head -1
           done | sort -u | wc -l)
           echo "distinct signer fingerprints: $COUNT"
