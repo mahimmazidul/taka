@@ -3,6 +3,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:taka/core/clock.dart';
 import 'package:taka/db/database.dart';
 import 'package:taka/models/transaction_entry.dart';
+import 'package:taka/models/udhar_entry.dart';
+import 'package:taka/store/udhar_actions.dart';
 import 'package:taka/store/app_state.dart';
 import 'package:taka/store/data_actions.dart';
 
@@ -177,6 +179,83 @@ void main() {
             DateTime(2026, 12),
           )).expenseMinor;
       expect(available, 330000, reason: '3,800 carried minus 500 spent');
+    });
+
+    test('udhar moves the money on hand, and settling puts it back', () async {
+      // Salary in, then 2,000 lent to a friend and 500 borrowed from another.
+      await pocket.transactions.insert(
+        TransactionEntry(
+          id: 'income',
+          type: EntryType.income,
+          amountMinor: 500000,
+          categoryId: 'home_money',
+          note: 'Allowance',
+          occurredAt: DateTime(2026, 10, 30, 11),
+          createdAt: DateTime(2026, 10, 30, 11),
+          updatedAt: DateTime(2026, 10, 30, 11),
+        ),
+      );
+      await pocket.addUdhar(
+        type: UdharType.lent,
+        person: 'Rifat',
+        amountMinor: 200000,
+        note: 'Lent for his book',
+        occurredAt: DateTime(2026, 10, 30, 12),
+      );
+      await pocket.addUdhar(
+        type: UdharType.borrowed,
+        person: 'Sabbir',
+        amountMinor: 50000,
+        note: 'Borrowed for bus',
+        occurredAt: DateTime(2026, 10, 30, 13),
+      );
+
+      // 5,000 in, 2,000 out on loan, 500 in on a borrow: 3,500 is in the pocket.
+      expect(pocket.moneyOnHand, 350000);
+      // The month's own arithmetic is unchanged — udhar is not spending.
+      expect(pocket.availableThisMonth, 500000);
+
+      // Rifat pays it back: 500 of that comes home, and the ledger still says
+      // the same thing about income and spending.
+      final String rifat = pocket.udharEntries
+          .firstWhere((UdharEntry entry) => entry.person == 'Rifat')
+          .id;
+      await pocket.setUdharReturned(rifat, returned: true);
+
+      expect(pocket.moneyOnHand, 550000);
+      expect(pocket.availableThisMonth, 500000);
+      expect(pocket.udharTotals.lentMinor, 0);
+      expect(pocket.udharTotals.borrowedMinor, 50000);
+    });
+
+    test('an old loan keeps reducing the pocket in the next month', () async {
+      await pocket.transactions.insert(
+        TransactionEntry(
+          id: 'income',
+          type: EntryType.income,
+          amountMinor: 500000,
+          categoryId: 'home_money',
+          note: 'Allowance',
+          occurredAt: DateTime(2026, 10, 30, 11),
+          createdAt: DateTime(2026, 10, 30, 11),
+          updatedAt: DateTime(2026, 10, 30, 11),
+        ),
+      );
+      await pocket.addUdhar(
+        type: UdharType.lent,
+        person: 'Rifat',
+        amountMinor: 200000,
+        note: '',
+        occurredAt: DateTime(2026, 10, 30, 12),
+      );
+
+      AppClock.now = () => DateTime(2026, 11, 1, 9);
+      addTearDown(() => AppClock.now = () => kTestNow);
+      await pocket.refreshIfDayChanged();
+
+      // November has no income of its own, and the loan from October is still out.
+      expect(pocket.availableThisMonth, 500000);
+      expect(pocket.moneyOnHand, 300000);
     });
 
     test('two months of leftovers both carry, and a month with no money kept', () async {

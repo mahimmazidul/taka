@@ -21,6 +21,7 @@ class HeroBalance extends StatelessWidget {
     required this.symbol,
     this.carriedMinor = 0,
     this.carriedLabel,
+    this.udharNote,
   });
 
   final int balanceMinor;
@@ -35,6 +36,10 @@ class HeroBalance extends StatelessWidget {
 
   /// "carried from October", when it applies.
   final String? carriedLabel;
+
+  /// "−৳ 1,500 lent out · +৳ 500 borrowed", when udhar is open. The big number
+  /// already includes both; this says so rather than leaving it a mystery.
+  final String? udharNote;
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +96,17 @@ class HeroBalance extends StatelessWidget {
                 '${carriedMinor > 0 ? '+' : ''}'
                 '${formatMoney(carriedMinor, symbol: symbol)} '
                 '${carriedLabel!}',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.80),
+                ),
+              ),
+            ],
+            if (udharNote != null) ...<Widget>[
+              const SizedBox(height: 2),
+              Text(
+                udharNote!,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,

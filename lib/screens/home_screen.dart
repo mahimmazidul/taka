@@ -61,13 +61,14 @@ class HomeScreen extends StatelessWidget {
             child: HeroBalance(
               // The money you have, not the month's net: leftover from the
               // previous month is spendable today, so it belongs in this number.
-              balanceMinor: state.availableThisMonth,
+              balanceMinor: state.moneyOnHand,
               incomeMinor: state.month.incomeMinor,
               expenseMinor: state.month.expenseMinor,
               monthLabel: 'Money on hand · ${monthName(now.month)}',
               symbol: symbol,
               carriedMinor: state.carryIntoMonth(now),
               carriedLabel: previousMonthLabel(now),
+              udharNote: _udharNote(state),
             ),
           ),
           Reveal(
@@ -318,6 +319,17 @@ class _MealsStrip extends StatelessWidget {
   }
 }
 
+/// "−৳ 1,500 lent out · +৳ 500 borrowed", or null when nothing is open.
+String? _udharNote(AppState state) {
+  final List<String> parts = <String>[
+    if (state.udharTotals.lentMinor > 0)
+      '−${formatMoney(state.udharTotals.lentMinor, symbol: state.currencySymbol)} lent out',
+    if (state.udharTotals.borrowedMinor > 0)
+      '+${formatMoney(state.udharTotals.borrowedMinor, symbol: state.currencySymbol)} borrowed',
+  ];
+  return parts.isEmpty ? null : parts.join(' · ');
+}
+
 /// Two figures from Patterns, so the section is worth having on Home without
 /// being a dashboard. Tapping anywhere in it opens the full screen.
 class _PatternsTeaser extends StatelessWidget {
@@ -449,7 +461,9 @@ class _Nudge extends StatelessWidget {
     final int daysInMonth = DateTime(now.year, now.month + 1, 0).day;
     final int daysLeft = (daysInMonth - now.day + 1).clamp(1, 31);
     final int carried = state.carryIntoMonth(now);
-    final int available = state.availableThisMonth;
+    // What is left to spend is money on hand, udhar included: money lent out is
+    // not available to a canteen, and money borrowed is.
+    final int available = state.moneyOnHand;
 
     // Nothing has come in this month and nothing rolled over: there is no
     // "left" to divide. Saying "nothing left of this month's income" on the 1st

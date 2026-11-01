@@ -66,6 +66,10 @@ void main() {
     // the pocket holds 7,510 — the hero says so, and says where it came from.
     expect(find.textContaining('MONEY ON HAND · NOVEMBER'), findsOneWidget);
     expect(find.textContaining('carried from October'), findsOneWidget);
+    // The seeded ledger has ৳1,500 lent out and ৳500 borrowed, so the pocket is
+    // 7,510 − 1,500 + 500, and the card says why it is not 7,510.
+    expect(find.textContaining('lent out'), findsOneWidget);
+    expect(find.textContaining('borrowed'), findsOneWidget);
     // Nothing has been logged this month, so there is no per-day figure to
     // invent and the nudge stays about the week.
     expect(find.textContaining('left for today'), findsNothing);

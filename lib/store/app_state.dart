@@ -228,10 +228,22 @@ class AppState extends ChangeNotifier {
     return net;
   }
 
-  /// What is actually available this month: what rolled over, plus what came in,
-  /// minus what went out.
+  /// What this month's own money adds up to: what rolled over, plus what came
+  /// in, minus what went out. Udhar is not in here — see [moneyOnHand].
   int get availableThisMonth =>
       carryIntoMonth(now) + month.incomeMinor - month.expenseMinor;
+
+  /// The effect of open udhar on the pocket.
+  ///
+  /// Money lent out is not in your pocket any more, and money borrowed is — even
+  /// though neither is a transaction. This is the correction, not an expense:
+  /// settling either one moves the same amount back.
+  int get udharAdjustmentMinor =>
+      udharTotals.borrowedMinor - udharTotals.lentMinor;
+
+  /// The number on Home: everything earned, minus everything spent, corrected
+  /// for udhar that is still open. This is what you could actually spend today.
+  int get moneyOnHand => availableThisMonth + udharAdjustmentMinor;
 
   /// `monthSpend` with a row per group, so budgets and totals can show a group
   /// in one number.
