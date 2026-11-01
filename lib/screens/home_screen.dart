@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../utils/responsive.dart';
+import '../components/day_sheet.dart';
 import '../components/empty_state.dart';
 import '../components/entry_row.dart';
 import '../components/hero_balance.dart';
@@ -15,7 +16,9 @@ import '../store/app_state.dart';
 import '../store/settings_actions.dart';
 import '../utils/date_helpers.dart';
 import '../utils/format_currency.dart';
+import '../utils/insights.dart';
 import 'add_entry_screen.dart';
+import 'insights_screen.dart';
 import 'period_screen.dart';
 import '../core/clock.dart';
 
@@ -91,8 +94,22 @@ class HomeScreen extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Reveal(index: 2, child: WeekBars(days: state.lastSevenDays)),
+            child: Reveal(
+              index: 2,
+              child: WeekBars(
+                days: state.lastSevenDays,
+                onTapDay: (DateTime day) => showDaySheet(context, day),
+              ),
+            ),
           ),
+          SectionTitle(
+            title: 'Patterns',
+            actionLabel: 'Open',
+            onAction: () =>
+                Navigator.of(context)
+                    .push(slideFadeRoute<void>(const InsightsScreen())),
+          ),
+          _PatternsTeaser(state: state),
           if (state.settings.udharEnabled) ...<Widget>[
             SectionTitle(
               title: 'Udhar',
@@ -298,8 +315,117 @@ class _MealsStrip extends StatelessWidget {
   }
 }
 
+/// Two figures from Patterns, so the section is worth having on Home without
+/// being a dashboard. Tapping anywhere in it opens the full screen.
+class _PatternsTeaser extends StatelessWidget {
+  const _PatternsTeaser({required this.state});
+
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final DateTime now = AppClock.now();
+    final List<CategorySpend> top = topSpending(
+      state.allEntries,
+      state.categories,
+      from: startOfMonth(now),
+      toExclusive: startOfNextMonth(now),
+    );
+    final List<MealGap> gaps = missedMeals(
+      state.allEntries,
+      state.categories,
+      from: startOfMonth(now),
+      toExclusive: startOfNextMonth(now),
+      now: now,
+    );
+
+    final bool anyMealTagged = gaps.any((MealGap gap) => gap.loggedDays > 0);
+    final MealGap? worst = anyMealTagged
+        ? (gaps.toList()..sort(
+                (MealGap a, MealGap b) => b.missedDays.compareTo(a.missedDays),
+              ))
+              .first
+        : null;
+    final MonthRhythm rhythm = monthRhythm(
+      state.allEntries,
+      from: startOfMonth(now),
+      toExclusive: startOfNextMonth(now),
+      now: now,
+    );
+
+    final String most = top.isEmpty ? 'nothing' : top.first.category.label;
+    final String mostAmount = top.isEmpty
+        ? 'no spending yet'
+        : formatMoney(top.first.amountMinor, symbol: state.currencySymbol);
+
+    // The right-hand figure is only about meals when meals are actually being
+    // tagged; otherwise it would accuse the user of missing breakfast 30 times
+    // in a month when they never tagged a meal at all.
+    final String second = worst == null
+        ? '${rhythm.noSpendDays} no-spend days'
+        : '${worst.slot.label} unlogged ${worst.missedDays} '
+              '${worst.missedDays == 1 ? 'day' : 'days'}';
+
+    return Pressable(
+      onTap: () =>
+          Navigator.of(context)
+              .push(slideFadeRoute<void>(const InsightsScreen())),
+      scale: 0.99,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Most on $most',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.ink(context),
+                    ),
+                  ),
+                  Text(
+                    mostAmount,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.muted(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Flexible, not bare: a long meal name at a big text scale has to
+            // wrap inside its half instead of pushing the row off the screen.
+            Flexible(
+              child: Text(
+                second,
+                textAlign: TextAlign.right,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink(context),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// One line, no charts: what this week has cost, and what is left to spend per
-/// remaining day if the month's income were the ceiling.
+/// remaining day — counting last month's leftovers, because a month does not
+/// reset the money in your pocket, only the calendar.
 class _Nudge extends StatelessWidget {
   const _Nudge({required this.state});
 
@@ -308,27 +434,47 @@ class _Nudge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final DateTime now = AppClock.now();
-    final int spentWeek = state.week.expenseMinor;
+    final String symbol = state.currencySymbol;
+    final String spentWeek = formatMoney(
+      state.week.expenseMinor,
+      symbol: symbol,
+    );
+
     final int daysInMonth = DateTime(now.year, now.month + 1, 0).day;
     final int daysLeft = (daysInMonth - now.day + 1).clamp(1, 31);
-    final int left = state.month.incomeMinor - state.month.expenseMinor;
-    final String perDay = left > 0
-        ? formatMoney(left ~/ daysLeft, symbol: state.currencySymbol)
-        : formatMoney(0, symbol: state.currencySymbol);
+    final int carried = state.carryIntoMonth(now);
+    final int available = state.availableThisMonth;
 
-    final String spent = formatMoney(spentWeek, symbol: state.currencySymbol);
-    final String line = left <= 0
-        ? '$spent this week · nothing left of this month\'s income'
-        : daysLeft == 1
-        ? '$spent this week · $perDay left for today'
-        : '$spent this week · $perDay a day left';
+    // Nothing has come in this month and nothing rolled over: there is no
+    // "left" to divide. Saying "nothing left of this month's income" on the 1st
+    // before the allowance is logged is simply wrong, so the line stays about
+    // the week alone.
+    final bool noMoneyKnown = state.month.incomeMinor == 0 && carried <= 0;
+
+    final String line;
+    if (noMoneyKnown) {
+      line = '$spentWeek this week';
+    } else if (available <= 0) {
+      line = '$spentWeek this week · nothing left for this month';
+    } else {
+      final String perDay = formatMoney(available ~/ daysLeft, symbol: symbol);
+      final String tail = daysLeft == 1
+          ? '$perDay left for today'
+          : '$perDay a day left';
+      final String carriedNote = carried > 0
+          ? ' · ${formatMoney(carried, symbol: symbol)} carried over'
+          : '';
+      line = '$spentWeek this week · $tail$carriedNote';
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
       child: Row(
         children: <Widget>[
           Icon(
-            left > 0 ? Icons.trending_flat_rounded : Icons.info_outline_rounded,
+            available > 0 || noMoneyKnown
+                ? Icons.trending_flat_rounded
+                : Icons.info_outline_rounded,
             size: 15,
             color: AppColors.muted(context),
           ),
