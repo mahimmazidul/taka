@@ -142,7 +142,17 @@ final List<AppCategory> _food = <AppCategory>[
     4,
     food: true,
   ),
-  _item('g_main', 'veg', 'Vegetables', 'সবজি', 'veg', '#4CAF50', 5, food: true),
+  _item(
+    'g_main',
+    'murighonto',
+    'Murighonto',
+    'মুরিঘণ্টা',
+    'rice',
+    '#D98E2B',
+    5,
+    food: true,
+  ),
+  _item('g_main', 'veg', 'Vegetables', 'সবজি', 'veg', '#4CAF50', 6, food: true),
   _item('g_main', 'dal', 'Dal', 'ডাল', 'dal', '#8CBF3F', 6, food: true),
   _item(
     'g_main',
