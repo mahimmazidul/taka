@@ -196,6 +196,26 @@ class AppState extends ChangeNotifier {
     return total;
   }
 
+  /// Everything earned before [month] minus everything spent before it.
+  ///
+  /// This is the carry-over: a month does not wipe the slate clean. If ৳2,000 of
+  /// last month's allowance was never spent, it is still in the pocket on the
+  /// 1st and the app must say so rather than starting from zero.
+  int carryIntoMonth(DateTime month) {
+    final DateTime start = startOfMonth(month);
+    int net = 0;
+    for (final TransactionEntry entry in allEntries) {
+      if (!entry.occurredAt.isBefore(start)) continue;
+      net += entry.isExpense ? -entry.amountMinor : entry.amountMinor;
+    }
+    return net;
+  }
+
+  /// What is actually available this month: what rolled over, plus what came in,
+  /// minus what went out.
+  int get availableThisMonth =>
+      carryIntoMonth(now) + month.incomeMinor - month.expenseMinor;
+
   /// `monthSpend` with a row per group, so budgets and totals can show a group
   /// in one number.
   Map<String, int> get monthSpendWithGroups {
@@ -289,6 +309,13 @@ class AppState extends ChangeNotifier {
     DateTime? toExclusive,
   }) {
     final String needle = search.trim().toLowerCase();
+    // Searching "rice" has to find ভাত, and searching "ভাত" has to find the
+    // entry whose note says "canteen". One needle, checked against the note and
+    // both labels of the category.
+    final Map<String, AppCategory> byId = <String, AppCategory>{
+      for (final AppCategory category in categories)
+        if (needle.isNotEmpty) category.id: category,
+    };
     return allEntries
         .where((TransactionEntry entry) {
           if (type != null && entry.type != type) {
@@ -302,8 +329,13 @@ class AppState extends ChangeNotifier {
               !categoryIds.contains(entry.categoryId)) {
             return false;
           }
-          if (needle.isNotEmpty && !entry.note.toLowerCase().contains(needle)) {
-            return false;
+          if (needle.isNotEmpty) {
+            final AppCategory? category = byId[entry.categoryId];
+            final bool hit =
+                entry.note.toLowerCase().contains(needle) ||
+                (category?.name.toLowerCase().contains(needle) ?? false) ||
+                (category?.nameBn.toLowerCase().contains(needle) ?? false);
+            if (!hit) return false;
           }
           if (from != null && entry.occurredAt.isBefore(from)) {
             return false;
