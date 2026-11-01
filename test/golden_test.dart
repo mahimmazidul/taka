@@ -178,6 +178,19 @@ void main() {
     await _shot(tester, 'dining_out');
   });
 
+  testWidgets('20 settings — updates and links', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+    final Finder list = find.byWidgetPredicate(
+      (Widget widget) =>
+          widget is ListView && widget.scrollDirection == Axis.vertical,
+    );
+    await tester.drag(list.first, const Offset(0, -700));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'settings_updates');
+  });
+
   testWidgets('19 categories', (WidgetTester tester) async {
     await _render(tester, darkMode: false);
     await tester.tap(find.byIcon(Icons.tune_rounded));

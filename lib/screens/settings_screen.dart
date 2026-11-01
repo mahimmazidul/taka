@@ -231,7 +231,6 @@ class SettingsScreen extends StatelessWidget {
               const SectionTitle(title: 'Categories'),
               SettingsGroup(
                 children: <Widget>[
-                  const UpdateRow(),
                   SettingsRow(
                     icon: Icons.category_outlined,
                     title: 'Manage categories',
@@ -271,6 +270,8 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ],
               ),
+              const SectionTitle(title: 'Updates'),
+              SettingsGroup(children: <Widget>[const UpdateRow()]),
               if (AppInfo.visibleSocials.isNotEmpty) ...<Widget>[
                 const SectionTitle(title: 'Elsewhere'),
                 SettingsGroup(

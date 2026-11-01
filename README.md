@@ -52,6 +52,10 @@ refreshed whenever the UI changes. No mockups.
 |---|---|
 | ![Patterns](docs/screenshots/patterns.png) | ![Fast food](docs/screenshots/dining_out.png) |
 
+| Settings, updates and links |
+|---|
+| ![Settings, updates](docs/screenshots/settings_updates.png) |
+
 | Add entry (landscape) | Home (landscape) |
 |---|---|
 | ![Add entry in landscape](docs/screenshots/add_entry_landscape.png) | ![Home in landscape](docs/screenshots/home_landscape.png) |
@@ -330,7 +334,7 @@ through four upgrades, v2 → v6.
 
 ### Tests
 
-94 tests, all offline (32 logic and insight rules, 25 database, 10 screen, 18 golden,
+95 tests, all offline (32 logic and insight rules, 25 database, 10 screen, 19 golden,
 plus the fast-food and carry-over rules):
 
 | File | Covers |
