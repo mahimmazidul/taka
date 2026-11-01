@@ -138,11 +138,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
         final String symbol = state.currencySymbol;
         final DateTime now = AppClock.now();
 
+        // A search means "find this, wherever it is": the range is dropped while
+        // there is a query, otherwise last month's entry could never be found
+        // and the box would look broken.
+        final bool searching = _search.text.trim().isNotEmpty;
         DateTime? from;
         if (_range == _Range.thisMonth) from = startOfMonth(now);
         if (_range == _Range.last7) {
           from = startOfDay(now).subtract(const Duration(days: 6));
         }
+        if (searching) from = null;
 
         // A group filter covers everything inside it; a leaf filters to itself.
         final Set<String>? categoryIds = _categoryId == null
@@ -201,7 +206,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   controller: _search,
                   onChanged: (String _) => setState(() {}),
                   decoration: InputDecoration(
-                    hintText: 'Search notes',
+                    hintText: 'Search notes and categories',
                     prefixIcon: Icon(
                       Icons.search_rounded,
                       size: 20,
@@ -219,6 +224,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ),
               ),
+              if (searching)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  child: Text(
+                    'Searching everything, in English or Bangla',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.muted(context),
+                    ),
+                  ),
+                ),
               SizedBox(
                 height: 54,
                 child: ListView(

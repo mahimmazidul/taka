@@ -30,6 +30,93 @@ AppCategory _item(
   alsoGroups: also,
 );
 
+/// Eating out: fast food, because "বাইরের খাবার ৳200" taught nobody anything.
+///
+/// `eatout` keeps its id and label from when it was a top-level leaf, so entries
+/// logged before v1.5.0 still read the same; it is simply the general item now.
+final List<AppCategory> _eatout = <AppCategory>[
+  _item(
+    'g_eatout',
+    'eatout',
+    'Eating out (general)',
+    'বাইরের খাবার',
+    'restaurant',
+    '#E4572E',
+    0,
+    food: true,
+  ),
+  _item(
+    'g_eatout',
+    'burger',
+    'Burger',
+    'বার্গার',
+    'fastfood',
+    '#E9A23B',
+    1,
+    food: true,
+  ),
+  _item(
+    'g_eatout',
+    'pizza',
+    'Pizza',
+    'পিজ্জা',
+    'pizza',
+    '#E8575D',
+    2,
+    food: true,
+  ),
+  _item(
+    'g_eatout',
+    'fries',
+    'Fries',
+    'ফ্রাই',
+    'fries',
+    '#D98E2B',
+    3,
+    food: true,
+  ),
+  _item(
+    'g_eatout',
+    'shawarma',
+    'Shawarma',
+    'শর্মা',
+    'shawarma',
+    '#E4572E',
+    4,
+    food: true,
+  ),
+  _item(
+    'g_eatout',
+    'fried_chicken',
+    'Fried chicken',
+    'ফ্রায়েড চিকেন',
+    'chicken',
+    '#B4552B',
+    5,
+    food: true,
+  ),
+  _item(
+    'g_eatout',
+    'biryani',
+    'Biryani',
+    'বিরিয়ানি',
+    'rice',
+    '#E9A23B',
+    6,
+    food: true,
+  ),
+  _item(
+    'g_eatout',
+    'street_food',
+    'Street food',
+    'স্ট্রিট ফুড',
+    'streetfood',
+    '#D98E2B',
+    7,
+    food: true,
+  ),
+];
+
 /// Everything inside the food groups — the messy part of hall life.
 final List<AppCategory> _food = <AppCategory>[
   _item(
@@ -546,6 +633,7 @@ final List<AppCategory> _life = <AppCategory>[
 /// All seeded items, grouped for readability above and flattened here.
 final List<AppCategory> kDefaultSubcategories = <AppCategory>[
   ..._food,
+  ..._eatout,
   ..._self,
   ..._life,
 ];

@@ -45,6 +45,11 @@ AppCategory _leaf({
 
 /// Expense groups, in the order a hall student thinks about money: food first,
 /// then body, then books, then the boring bills.
+///
+/// `g_eatout` was a single leaf until v1.5.0 ("Dining out"); it is a group now,
+/// because "dining out" is burgers and shawarma and a biryani run, and one lump
+/// answered nothing. The old `eatout` row is kept as its general item so every
+/// entry already pointing at it still means what it meant.
 final List<AppCategory> _expenseGroups = <AppCategory>[
   _group(
     id: 'g_main',
@@ -159,6 +164,14 @@ final List<AppCategory> _expenseGroups = <AppCategory>[
     order: 13,
   ),
   _group(
+    id: 'g_eatout',
+    name: 'Dining out',
+    nameBn: 'বাইরের খাবার',
+    icon: 'restaurant',
+    color: '#E4572E',
+    order: 20,
+  ),
+  _group(
     id: 'g_fees',
     name: 'Fees & fines',
     nameBn: 'ফি ও জরিমানা',
@@ -170,15 +183,6 @@ final List<AppCategory> _expenseGroups = <AppCategory>[
 
 /// Items that sit on the top row themselves — no sub-list, one tap.
 final List<AppCategory> _standalone = <AppCategory>[
-  _leaf(
-    id: 'eatout',
-    name: 'Dining out',
-    nameBn: 'বাইরের খাবার',
-    icon: 'restaurant',
-    color: '#E4572E',
-    order: 20,
-    isFood: true,
-  ),
   _leaf(
     id: 'laundry',
     name: 'Laundry',

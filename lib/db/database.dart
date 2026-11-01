@@ -24,7 +24,7 @@ class AppDatabase {
   }) => AppDatabase._internal(factory, path);
 
   static const String _fileName = 'taka.db';
-  static const int _version = 5;
+  static const int _version = 6;
 
   final DatabaseFactory? _factory;
   final String? _path;
@@ -214,6 +214,24 @@ class AppDatabase {
     if (oldVersion < 5) {
       await _upgradeToAlsoGroups(db);
     }
+
+    if (oldVersion < 6) {
+      await _upgradeToEatoutGroup(db);
+    }
+  }
+
+  /// v5 → v6: "Dining out" becomes a group with fast food inside it.
+  ///
+  /// The old top-level row keeps its id and label and simply gains a parent, so
+  /// every entry logged before this version still reads the way it did. The new
+  /// group and its items are inserted by the usual additive seeding on open.
+  Future<void> _upgradeToEatoutGroup(Database db) async {
+    await db.update(
+      'categories',
+      <String, Object?>{'parent_id': 'g_eatout'},
+      where: 'id = ? AND parent_id IS NULL',
+      whereArgs: <Object?>['eatout'],
+    );
   }
 
   /// v4 → v5: an item can be listed under more than one group.
