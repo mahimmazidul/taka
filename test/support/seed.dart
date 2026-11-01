@@ -1,3 +1,4 @@
+import 'package:taka/core/clock.dart';
 import 'package:taka/db/category_repository.dart';
 import 'package:taka/db/database.dart';
 import 'package:taka/db/settings_repository.dart';
@@ -173,7 +174,7 @@ Future<AppState> buildSeededState({required AppDatabase database}) async {
     categories: categories,
     udhar: udhar,
     settings: settings,
-    clock: () => kTestNow,
+    clock: () => AppClock.now(),
   );
   await state.load();
   return state;

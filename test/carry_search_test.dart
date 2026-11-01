@@ -4,6 +4,7 @@ import 'package:taka/core/clock.dart';
 import 'package:taka/db/database.dart';
 import 'package:taka/models/transaction_entry.dart';
 import 'package:taka/store/app_state.dart';
+import 'package:taka/store/data_actions.dart';
 
 import 'support/seed.dart';
 
@@ -92,6 +93,171 @@ void main() {
       );
       await state.refresh();
       expect(state.carryIntoMonth(kTestNow), -100000);
+    });
+  });
+
+  // A separate, empty ledger: the story below is about one allowance arriving at
+  // the end of a month, and it should read as itself rather than as a delta
+  // against the seeded month.
+  group('the real case', () {
+    // An empty pocket: the seeded month is wiped, so the numbers below are the
+    // story itself rather than a delta against someone else's spending.
+    late AppState pocket;
+
+    setUp(() async {
+      await state.clearAllData();
+      pocket = AppState.instance;
+    });
+
+    test('money that arrived on 30 October is still there on 1 November', () async {
+      // Allowance lands late in the month, some of it is spent the same day,
+      // and the rest has to survive the calendar.
+      await pocket.transactions.insert(
+        TransactionEntry(
+          id: 'oct-allowance',
+          type: EntryType.income,
+          amountMinor: 500000,
+          categoryId: 'home_money',
+          note: 'Bari theke, 30 October',
+          occurredAt: DateTime(2026, 10, 30, 11),
+          createdAt: DateTime(2026, 10, 30, 11),
+          updatedAt: DateTime(2026, 10, 30, 11),
+        ),
+      );
+      await pocket.transactions.insert(
+        TransactionEntry(
+          id: 'oct-spend',
+          type: EntryType.expense,
+          amountMinor: 120000,
+          categoryId: 'rice',
+          note: 'Canteen, 30 October',
+          occurredAt: DateTime(2026, 10, 30, 13),
+          createdAt: DateTime(2026, 10, 30, 13),
+          updatedAt: DateTime(2026, 10, 30, 13),
+        ),
+      );
+      await pocket.refresh();
+
+      // On 1 November nothing has come in yet this month, but the pocket is not
+      // empty: 5,000 in, 1,200 out on the 30th, so 3,800 is carried.
+      final DateTime nov1 = DateTime(2026, 11, 1, 9);
+      expect(pocket.carryIntoMonth(nov1), 380000);
+
+      // The old mistake: the month's own net is zero, so a "balance" built from
+      // it would read ৳0 on the 1st. The number on Home is built from the
+      // carry-over instead.
+      final int novemberNet = -(await pocket.transactions.totals(
+        DateTime(2026, 11),
+        DateTime(2026, 12),
+      )).netMinor;
+      expect(novemberNet, 0, reason: 'nothing logged in November yet');
+
+      // And once November starts spending, it comes out of the carried money.
+      await pocket.transactions.insert(
+        TransactionEntry(
+          id: 'nov-spend',
+          type: EntryType.expense,
+          amountMinor: 50000,
+          categoryId: 'rice',
+          note: 'Canteen, 1 November',
+          occurredAt: DateTime(2026, 11, 1, 10),
+          createdAt: DateTime(2026, 11, 1, 10),
+          updatedAt: DateTime(2026, 11, 1, 10),
+        ),
+      );
+      await state.refresh();
+      final int available =
+          state.carryIntoMonth(nov1) +
+          (await state.transactions.totals(
+            DateTime(2026, 11),
+            DateTime(2026, 12),
+          )).incomeMinor -
+          (await state.transactions.totals(
+            DateTime(2026, 11),
+            DateTime(2026, 12),
+          )).expenseMinor;
+      expect(available, 330000, reason: '3,800 carried minus 500 spent');
+    });
+
+    test('two months of leftovers both carry, and a month with no money kept', () async {
+      // September leaves 1,000; October brings 2,000 and spends 500.
+      await pocket.transactions.insert(
+        TransactionEntry(
+          id: 'sep-in',
+          type: EntryType.income,
+          amountMinor: 100000,
+          categoryId: 'home_money',
+          note: 'September',
+          occurredAt: DateTime(2026, 9, 3, 11),
+          createdAt: DateTime(2026, 9, 3, 11),
+          updatedAt: DateTime(2026, 9, 3, 11),
+        ),
+      );
+      await pocket.transactions.insert(
+        TransactionEntry(
+          id: 'oct-in',
+          type: EntryType.income,
+          amountMinor: 200000,
+          categoryId: 'home_money',
+          note: 'October',
+          occurredAt: DateTime(2026, 10, 30, 11),
+          createdAt: DateTime(2026, 10, 30, 11),
+          updatedAt: DateTime(2026, 10, 30, 11),
+        ),
+      );
+      await pocket.transactions.insert(
+        TransactionEntry(
+          id: 'oct-out',
+          type: EntryType.expense,
+          amountMinor: 50000,
+          categoryId: 'rice',
+          note: 'October',
+          occurredAt: DateTime(2026, 10, 31, 13),
+          createdAt: DateTime(2026, 10, 31, 13),
+          updatedAt: DateTime(2026, 10, 31, 13),
+        ),
+      );
+      await pocket.refresh();
+
+      // November inherits everything not spent before it: 1,000 + 2,000 − 500.
+      expect(pocket.carryIntoMonth(DateTime(2026, 11, 1)), 250000);
+      // December inherits nothing extra if November neither earns nor spends.
+      expect(pocket.carryIntoMonth(DateTime(2026, 12, 1)), 250000);
+    });
+  });
+
+  group('the clock', () {
+    test('a new day reloads, the same day does not touch the database', () async {
+      // The stored numbers belong to 31 October.
+      expect(state.today.expenseMinor, 57500);
+
+      // Same day: a resume must not re-read the ledger, and totals stay as they
+      // were even if the file changed behind our back.
+      await state.transactions.insert(
+        TransactionEntry(
+          id: 'sneaky',
+          type: EntryType.expense,
+          amountMinor: 100,
+          categoryId: 'rice',
+          note: 'not loaded yet',
+          occurredAt: kTestNow,
+          createdAt: kTestNow,
+          updatedAt: kTestNow,
+        ),
+      );
+      await state.refreshIfDayChanged();
+      expect(state.today.expenseMinor, 57500);
+
+      // Next day: the app is opened on 1 November and the totals move with it.
+      AppClock.now = () => DateTime(2026, 11, 1, 9);
+      addTearDown(() => AppClock.now = () => kTestNow);
+      await state.refreshIfDayChanged();
+      expect(
+        state.today.expenseMinor,
+        0,
+        reason: 'nothing spent on 1 November',
+      );
+      expect(state.month.expenseMinor, 0);
     });
   });
 

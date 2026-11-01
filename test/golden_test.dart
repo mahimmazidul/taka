@@ -178,6 +178,16 @@ void main() {
     await _shot(tester, 'dining_out');
   });
 
+  testWidgets('21 home — money carried from last month', (
+    WidgetTester tester,
+  ) async {
+    // The first of the month, with October's leftover still in the pocket.
+    AppClock.now = () => DateTime(2026, 11, 1, 9);
+    addTearDown(() => AppClock.now = () => kTestNow);
+    await _render(tester, darkMode: false);
+    await _shot(tester, 'home_carried');
+  });
+
   testWidgets('20 settings — updates and links', (WidgetTester tester) async {
     await _render(tester, darkMode: false);
     await tester.tap(find.byIcon(Icons.tune_rounded));

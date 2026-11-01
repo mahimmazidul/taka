@@ -13,7 +13,7 @@ much of the month is left.
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-77%20passing-0E9F6E)
-[![Download APK](https://img.shields.io/badge/download-v1.5.1%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+[![Download APK](https://img.shields.io/badge/download-v1.6.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -24,9 +24,13 @@ Every screen, rendered from the real widgets by the golden test suite
 (`flutter test test/golden_test.dart --update-goldens` → `docs/screenshots/`), and
 refreshed whenever the UI changes. No mockups.
 
-| Home | Home (dark) |
+| Home | Home, the 1st — October's leftover still counted |
 |---|---|
-| ![Home](docs/screenshots/home_light.png) | ![Home dark](docs/screenshots/home_dark.png) |
+| ![Home](docs/screenshots/home_light.png) | ![Money carried over](docs/screenshots/home_carried.png) |
+
+| Home (dark) |
+|---|
+| ![Home dark](docs/screenshots/home_dark.png) |
 
 | Add entry | History |
 |---|---|
@@ -97,7 +101,7 @@ you can add your own groups or park a new item at the top level.
 
 | Group | Items |
 |---|---|
-| মেইন কোর্স · Main course | ভাত, মাছ, মাংস, পোলাও, খিচুড়ি, সবজি, ডাল, ডিম |
+| মেইন কোর্স · Main course | ভাত, মাছ, মাংস, পোলাও, খিচুড়ি, মুরিঘণ্টা, সবজি, ডাল, ডিম |
 | ড্রিংকস · Drinks | ড্রিংকো, স্পিড, মোজো, কোক / পেপসি, জুস, পানি, কফি |
 | বাইরের খাবার · Dining out | বার্গার, পিজ্জা, ফ্রাই, শর্মা, ফ্রায়েড চিকেন, বিরিয়ানি, স্ট্রিট ফুড, সাধারণ |
 | নাস্তা · Snacks | পরোটা, সমুচা, সিঙ্গারা, টোস্ট, বিস্কুট, চিপস, চা |
@@ -137,9 +141,16 @@ this month (biggest category first, as a share), how many days a meal went
 unlogged — counted for food only, and worded as "not logged", never "you
 skipped" — plus no-spend days, the average day, and the most expensive one.
 
-**A month that ends does not wipe the slate.** Money left over rolls into the new
-month: `availableThisMonth` is last month's leftover plus this month's income
-minus this month's spending, and the per-day nudge divides what is really left.
+**A month that ends does not wipe the slate — because the money is still in your
+pocket.** Allowance arrives on the 30th, some of it is spent the same day, and on
+the 1st the app used to show nothing left, as if the calendar had taken it. The
+big number on Home is now *money on hand*: everything not yet spent, with a line
+saying how much of it (`+৳ 7,510 carried from October`). The per-day nudge divides
+that, the month breakdown shows what carried in, and a month with no income at all
+still starts with last month's remainder.
+
+Limits are a separate idea and stay separate: a budget caps a category for the
+month and never eats the money you already have.
 
 **History that answers questions.** Grouped by day with per-day totals, live note
 search, expense/income filter, a group filter that covers everything inside it,
@@ -334,7 +345,7 @@ through four upgrades, v2 → v6.
 
 ### Tests
 
-95 tests, all offline (32 logic and insight rules, 25 database, 10 screen, 19 golden,
+100 tests, all offline (36 logic, insight and store rules, 25 database, 11 screen, 20 golden,
 plus the fast-food and carry-over rules):
 
 | File | Covers |
@@ -344,7 +355,7 @@ plus the fast-food and carry-over rules):
 | `test/period_stats_test.dart` | the day / week / month / year maths behind the breakdowns: empty days kept, income kept apart from spending, the month list starting where the history starts, a day's entries newest first |
 | `test/food_logic_test.dart` | the meal rule: which categories may take a meal, that a non-food entry never lands in a meal total even if an old row stored one, why noodles and egg exist twice, and that `today` really resets at midnight |
 | `test/insights_test.dart` | the Patterns maths: a meal day is missed only when nothing was logged for it, today counts only for meals already past, a non-food entry never counts, ranking, rhythm, and that 1.10.0 is newer than 1.9.0 |
-| `test/carry_search_test.dart` | the month carry-over (leftover in, overspend negative, available = net) and search: by note in any month, by English category name, by Bangla category name |
+| `test/carry_search_test.dart` | the real case — money in on 30 October, spent the same day, still there on 1 November; two months of leftovers both carrying; that a resume on the same day does not reload but a new day does; and search: by note in any month, by English category name, by Bangla category name |
 | `test/screens_test.dart` | the whole app at 320 / 360 / 414 / 768 widths **and in landscape**, 1.3× text scale, tab switching, adding an entry end-to-end, the meal row disappearing for a face wash, the period breakdowns and their day sheet, dark-mode toggle |
 | `test/golden_test.dart` | every screenshot in this README |
 
@@ -359,6 +370,13 @@ plus the fast-food and carry-over rules):
 - Icons: Material Symbols via `flutter/material`.
 
 ## Changelog
+
+- **v1.6.0** — the money follows you across the month boundary. Home's big number
+  is **money on hand** (last month's remainder + this month's income − this month's
+  spending) with a line saying what carried, the month breakdown shows what carried
+  in, and the per-day nudge uses all of it. The app also reloads itself just after
+  midnight and when it comes back to the foreground, so "today" is never yesterday.
+  All of it uses one clock (`AppClock`), not two. Plus মুরিঘণ্টা in the main course.
 
 - **v1.5.1** — Settings → *Elsewhere* now actually points somewhere: Telegram
   (@dumbhuman), Facebook and GitHub. Nothing else changed.

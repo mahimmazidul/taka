@@ -45,6 +45,32 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // The report from the phone: allowance arrived on 30 October, part of it was
+  // spent the same day, and on 1 November the app showed nothing left because it
+  // was adding up November alone. Money in a pocket does not reset on the 1st.
+  testWidgets('money from 30 October still shows on 1 November', (
+    WidgetTester tester,
+  ) async {
+    final DateTime november = DateTime(2026, 11, 1, 9);
+    AppClock.now = () => november;
+    addTearDown(() => AppClock.now = () => kTestNow);
+    // A phone that was last used in October and is opened on the 1st: the state
+    // reloads, exactly as it does on resume or just after midnight. `runAsync`
+    // because the reload touches the real database outside the fake clock.
+    await tester.runAsync(() => AppState.instance.refresh());
+
+    await pumpAt(tester, const Size(390, 844));
+
+    expect(tester.takeException(), isNull);
+    // October left 8,500 in and 990 out, so nothing arrived in November and yet
+    // the pocket holds 7,510 — the hero says so, and says where it came from.
+    expect(find.textContaining('MONEY ON HAND · NOVEMBER'), findsOneWidget);
+    expect(find.textContaining('carried from October'), findsOneWidget);
+    // Nothing has been logged this month, so there is no per-day figure to
+    // invent and the nudge stays about the week.
+    expect(find.textContaining('left for today'), findsNothing);
+  });
+
   testWidgets('home renders the seeded month', (WidgetTester tester) async {
     await pumpAt(tester, const Size(390, 844));
 
