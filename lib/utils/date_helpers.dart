@@ -68,6 +68,17 @@ bool isSameDay(DateTime a, DateTime b) =>
 
 String monthName(int month) => _monthNames[(month - 1).clamp(0, 11)];
 
+/// "carried from October" / "carried from December 2025" — the month before
+/// [moment], with the year only when it is a different one, because
+/// "carried from December" in January would be ambiguous.
+String previousMonthLabel(DateTime moment) {
+  final DateTime previous = DateTime(moment.year, moment.month - 1);
+  final String name = monthName(previous.month);
+  return previous.year == moment.year
+      ? 'carried from $name'
+      : 'carried from $name ${previous.year}';
+}
+
 String monthShort(int month) => _monthShort[(month - 1).clamp(0, 11)];
 
 String formatMonthYear(DateTime moment) =>

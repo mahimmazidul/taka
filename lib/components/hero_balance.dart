@@ -4,9 +4,13 @@ import '../core/app_theme.dart';
 import '../core/motion.dart';
 import '../utils/format_currency.dart';
 
-/// The one big surface in the app: this month's balance, with money in/out.
-/// A soft gradient with two translucent circles as decoration — no image,
-/// no blur pass, so it stays cheap to paint.
+/// The one big surface in the app: the money you actually have, with this
+/// month's in and out beside it.
+///
+/// The big number is **not** "income minus spending this month" — that would
+/// read as a loss on the 1st of every month even though the leftover from last
+/// month is still in the pocket. It is last month's remainder, plus what came
+/// in, minus what went out, and the caption says how much of it is carried.
 class HeroBalance extends StatelessWidget {
   const HeroBalance({
     super.key,
@@ -15,6 +19,8 @@ class HeroBalance extends StatelessWidget {
     required this.expenseMinor,
     required this.monthLabel,
     required this.symbol,
+    this.carriedMinor = 0,
+    this.carriedLabel,
   });
 
   final int balanceMinor;
@@ -22,6 +28,13 @@ class HeroBalance extends StatelessWidget {
   final int expenseMinor;
   final String monthLabel;
   final String symbol;
+
+  /// What rolled in from the months before this one. Zero when there is none,
+  /// and then the caption is not drawn at all.
+  final int carriedMinor;
+
+  /// "carried from October", when it applies.
+  final String? carriedLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +85,19 @@ class HeroBalance extends StatelessWidget {
                 ),
               ),
             ),
+            if (carriedMinor != 0 && carriedLabel != null) ...<Widget>[
+              const SizedBox(height: 4),
+              Text(
+                '${carriedMinor > 0 ? '+' : ''}'
+                '${formatMoney(carriedMinor, symbol: symbol)} '
+                '${carriedLabel!}',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.80),
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
             Row(
               children: <Widget>[

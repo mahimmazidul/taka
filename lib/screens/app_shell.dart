@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
+import '../store/app_state.dart';
 import '../core/motion.dart';
 import '../utils/responsive.dart';
 import 'add_entry_screen.dart';
@@ -18,14 +21,48 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _index = 0;
   late final PageController _pages = PageController();
+  Timer? _midnight;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _scheduleMidnightRefresh();
+  }
 
   @override
   void dispose() {
+    _midnight?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _pages.dispose();
     super.dispose();
+  }
+
+  /// The totals on Home are computed when the state loads. Left open overnight,
+  /// "today" would still be yesterday — an allowance arriving at midnight would
+  /// land in the wrong day — so the numbers are rebuilt just after midnight.
+  void _scheduleMidnightRefresh() {
+    _midnight?.cancel();
+    final DateTime now = AppState.instance.now;
+    final DateTime nextDay = DateTime(now.year, now.month, now.day + 1);
+    final Duration wait = nextDay.difference(now) + const Duration(seconds: 1);
+    _midnight = Timer(wait, () {
+      AppState.instance.refreshIfDayChanged();
+      _scheduleMidnightRefresh();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState lifecycle) {
+    // Coming back from the background is also a good moment: the day may have
+    // changed while the phone was asleep.
+    if (lifecycle == AppLifecycleState.resumed) {
+      AppState.instance.refreshIfDayChanged();
+      _scheduleMidnightRefresh();
+    }
   }
 
   /// Tabs glide instead of snapping. Swiping is off on purpose: History has

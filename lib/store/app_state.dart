@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../db/category_repository.dart';
 import '../db/settings_repository.dart';
+import '../core/clock.dart';
 import '../db/transaction_repository.dart';
 import '../db/udhar_repository.dart';
 import '../models/app_category.dart';
@@ -33,7 +34,7 @@ class AppState extends ChangeNotifier {
        categoryRepo = categories ?? CategoryRepository(),
        udharRepo = udhar ?? UdharRepository(),
        settingsRepo = settings ?? SettingsRepository(),
-       _clock = clock ?? DateTime.now;
+       _clock = clock ?? (() => AppClock.now());
 
   /// Swappable so widget tests can point the UI at a throwaway database.
   static AppState instance = AppState();
@@ -59,6 +60,10 @@ class AppState extends ChangeNotifier {
   UdharTotals udharTotals = const UdharTotals.empty();
   bool isLoading = true;
 
+  /// The moment the derived numbers were last computed. Used to decide whether
+  /// a resume or a midnight tick needs to touch the database at all.
+  DateTime? _loadedAt;
+
   DateTime get now => _clock();
 
   String get currencySymbol => settings.currencySymbol;
@@ -73,6 +78,17 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reloads only if the calendar day has moved since the last load.
+  ///
+  /// Called when the app comes back to the foreground and by the tick just after
+  /// midnight, so "today" is never yesterday and a repeating wake-up does not
+  /// re-read the whole ledger for nothing.
+  Future<void> refreshIfDayChanged() async {
+    final DateTime? loaded = _loadedAt;
+    if (loaded != null && isSameDay(loaded, now)) return;
+    await refresh();
+  }
+
   Future<void> refresh() async {
     await _reload();
     notifyListeners();
@@ -80,6 +96,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _reload() async {
     final DateTime now = _clock();
+    _loadedAt = now;
 
     settings = await settingsRepo.read();
     categories = await categoryRepo.all();

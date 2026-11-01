@@ -355,6 +355,30 @@ class _MonthBody extends StatelessWidget {
             onSelect: onOpenDay,
           ),
         ),
+        if (state.carryIntoMonth(month) != 0)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  Icons.savings_outlined,
+                  size: 15,
+                  color: AppColors.muted(context),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${formatMoney(state.carryIntoMonth(month), symbol: state.currencySymbol)} '
+                    '${previousMonthLabel(month).replaceFirst('carried from', 'carried in from')}',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.muted(context),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         const SizedBox(height: 10),
         const SectionTitle(title: 'Months'),
         for (final MonthTotal entry in months) ...<Widget>[

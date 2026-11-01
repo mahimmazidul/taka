@@ -20,7 +20,6 @@ import '../utils/insights.dart';
 import 'add_entry_screen.dart';
 import 'insights_screen.dart';
 import 'period_screen.dart';
-import '../core/clock.dart';
 
 /// Dashboard. One hero, then open sections separated by hairlines — no stacks
 /// of rounded boxes.
@@ -47,7 +46,7 @@ class HomeScreen extends StatelessWidget {
         }
 
         final String symbol = state.currencySymbol;
-        final DateTime now = AppClock.now();
+        final DateTime now = state.now;
 
         // Two groups of sections. Portrait stacks them into one list; landscape
         // puts money on the left and the rest on the right, the way a page
@@ -60,11 +59,15 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 14),
           Reveal(
             child: HeroBalance(
-              balanceMinor: state.month.netMinor,
+              // The money you have, not the month's net: leftover from the
+              // previous month is spendable today, so it belongs in this number.
+              balanceMinor: state.availableThisMonth,
               incomeMinor: state.month.incomeMinor,
               expenseMinor: state.month.expenseMinor,
-              monthLabel: 'Balance · ${monthName(now.month)}',
+              monthLabel: 'Money on hand · ${monthName(now.month)}',
               symbol: symbol,
+              carriedMinor: state.carryIntoMonth(now),
+              carriedLabel: previousMonthLabel(now),
             ),
           ),
           Reveal(
@@ -324,7 +327,7 @@ class _PatternsTeaser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DateTime now = AppClock.now();
+    final DateTime now = state.now;
     final List<CategorySpend> top = topSpending(
       state.allEntries,
       state.categories,
@@ -353,16 +356,19 @@ class _PatternsTeaser extends StatelessWidget {
       now: now,
     );
 
-    final String most = top.isEmpty ? 'nothing' : top.first.category.label;
+    final String mostTitle = top.isEmpty
+        ? 'Nothing spent yet'
+        : 'Most on ${top.first.category.label}';
     final String mostAmount = top.isEmpty
-        ? 'no spending yet'
+        ? 'this month'
         : formatMoney(top.first.amountMinor, symbol: state.currencySymbol);
 
     // The right-hand figure is only about meals when meals are actually being
     // tagged; otherwise it would accuse the user of missing breakfast 30 times
     // in a month when they never tagged a meal at all.
     final String second = worst == null
-        ? '${rhythm.noSpendDays} no-spend days'
+        ? '${rhythm.noSpendDays} '
+              '${rhythm.noSpendDays == 1 ? 'no-spend day' : 'no-spend days'}'
         : '${worst.slot.label} unlogged ${worst.missedDays} '
               '${worst.missedDays == 1 ? 'day' : 'days'}';
 
@@ -381,7 +387,7 @@ class _PatternsTeaser extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'Most on $most',
+                    mostTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -433,7 +439,7 @@ class _Nudge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DateTime now = AppClock.now();
+    final DateTime now = state.now;
     final String symbol = state.currencySymbol;
     final String spentWeek = formatMoney(
       state.week.expenseMinor,
