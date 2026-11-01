@@ -13,7 +13,7 @@ much of the month is left.
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-77%20passing-0E9F6E)
-[![Download APK](https://img.shields.io/badge/download-v1.4.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+[![Download APK](https://img.shields.io/badge/download-v1.5.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -47,6 +47,10 @@ refreshed whenever the UI changes. No mockups.
 | Month breakdown | Year breakdown |
 |---|---|
 | ![Month](docs/screenshots/period_month.png) | ![Year](docs/screenshots/period_year.png) |
+
+| Patterns | Dining out |
+|---|---|
+| ![Patterns](docs/screenshots/patterns.png) | ![Fast food](docs/screenshots/dining_out.png) |
 
 | Add entry (landscape) | Home (landscape) |
 |---|---|
@@ -91,6 +95,7 @@ you can add your own groups or park a new item at the top level.
 |---|---|
 | মেইন কোর্স · Main course | ভাত, মাছ, মাংস, পোলাও, খিচুড়ি, সবজি, ডাল, ডিম |
 | ড্রিংকস · Drinks | ড্রিংকো, স্পিড, মোজো, কোক / পেপসি, জুস, পানি, কফি |
+| বাইরের খাবার · Dining out | বার্গার, পিজ্জা, ফ্রাই, শর্মা, ফ্রায়েড চিকেন, বিরিয়ানি, স্ট্রিট ফুড, সাধারণ |
 | নাস্তা · Snacks | পরোটা, সমুচা, সিঙ্গারা, টোস্ট, বিস্কুট, চিপস, চা |
 | মিষ্টি · Sweets | মিষ্টি, দই, আইসক্রিম, চকলেট |
 | ফল · Fruits | কলা, আপেল, আম, পেয়ারা, পেঁপে, কমলা, তরমুজ |
@@ -105,21 +110,41 @@ you can add your own groups or park a new item at the top level.
 | উপহার ও পরিবার · Gifts & family | উপহার দেওয়া, দান, পরিবার |
 | ফি ও জরিমানা · Fees & fines | পরীক্ষা ফি, লাইব্রেরি ফি, জরিমানা |
 
-Plus three that sit on the top row themselves — **বাইরের খাবার · Dining out**,
-**লন্ড্রি · Laundry**, **অন্যান্য · Other** — and six income sources (বাসা থেকে,
-টিউশন, বৃত্তি, ফ্রিল্যান্স, উপহার, অন্যান্য).
+Plus two that sit on the top row themselves — **লন্ড্রি · Laundry**, **অন্যান্য ·
+Other** — and six income sources (বাসা থেকে, টিউশন, বৃত্তি, ফ্রিল্যান্স, উপহার,
+অন্যান্য).
+
+**Search the whole ledger, in either script.** Type a note, or a category name in
+English or Bangla — "rice" finds ভাত, and "ভাত" finds the entry whose note says
+"canteen". While a search is open the date range steps aside, so nothing hides
+behind a filter you forgot about.
 
 **See where the month went.** A hero balance, **spent today** / week / month, a
 one-line nudge (`৳ 990 this week · ৳ 250 a day left`), today's meals, a 7-day
-chart, udhar and the last five entries. No limit, no progress bar — opening the
+chart that opens any of its days on tap, a Patterns teaser, udhar and the last
+five entries. No limit, no progress bar — opening the
 app should not feel like being told off.
 
 **Budgets that roll up — in Settings, not on the way in.** Cap a whole group (food: ৳ 5,000) or a single item
 (shampoo: ৳ 200). Amber at 80%, red and "over by ৳ x" past the limit.
 
+**Patterns.** Built only from what has already been logged: where the money went
+this month (biggest category first, as a share), how many days a meal went
+unlogged — counted for food only, and worded as "not logged", never "you
+skipped" — plus no-spend days, the average day, and the most expensive one.
+
+**A month that ends does not wipe the slate.** Money left over rolls into the new
+month: `availableThisMonth` is last month's leftover plus this month's income
+minus this month's spending, and the per-day nudge divides what is really left.
+
 **History that answers questions.** Grouped by day with per-day totals, live note
 search, expense/income filter, a group filter that covers everything inside it,
 and date ranges. Tap to edit, long-press to delete.
+
+**One row that checks for a new release.** Settings → *Check for updates* asks
+GitHub once, when you tap it, and compares versions numerically. Tap again on a
+newer version to open the download page. Offline it says it could not check and
+leaves you alone.
 
 **Udhar.** Money lent and borrowed per person, one tap to settle.
 
@@ -209,27 +234,34 @@ lib/
 ├── models/                    transaction_entry (+meal), app_category (+parent),
 │                              udhar_entry, app_settings, meal_slot,
 │                              period_totals, budget_progress, day_group
-├── db/                        database.dart (schema v3, migrations, additive
+├── db/                        database.dart (schema v6, migrations, additive
 │                              seeding) and one repository per table
 ├── store/                     app_state.dart (ChangeNotifier) plus extensions:
 │                              settings_actions, category_actions, udhar_actions,
 │                              data_actions
 ├── utils/                     format_currency, date_helpers, budget_calculator,
-│                              currency_catalog, export_data, color_hex, id
+│                              currency_catalog, export_data, color_hex, id,
+│                              insights, money_input_formatter
+├── services/                  update_checker (one request to the releases API)
 ├── components/                category_picker, hero_balance, stat_strip, week_bars,
 │                              budget_line, entry_row, category_tile, segmented,
 │                              amount_keypad, app_sheet, primary_button,
 │                              settings_row, section_title, empty_state
 └── screens/                   app_shell, home, add_entry, history, udhar, budgets,
-                               categories, category_editor_sheet, settings, about
+                               categories, category_editor_sheet, insights,
+                               settings, about
 ```
 
-Five runtime dependencies, all of them boring: `sqflite` (local SQLite), `path`,
+Seven runtime dependencies, all of them boring: `sqflite` (local SQLite), `path`,
 `path_provider` (where the backup is written), `share_plus` 13 (hand a file to
-Android's share sheet) and `file_picker` 13 (pick a JSON file to restore). No
-state-management package, no chart package, no HTTP client, no analytics.
+Android's share sheet), `file_picker` 13 (pick a JSON file to restore), `http`
+(the one update check) and `url_launcher` (hand a link to the browser). No
+state-management package, no chart package, no analytics.
 
-### Data model (SQLite `taka.db`, schema v5)
+The app needs the network for exactly one thing — *Check for updates* — and never
+on its own. Nothing is uploaded, and every screen works with the radio off.
+
+### Data model (SQLite `taka.db`, schema v6)
 
 ```sql
 categories(id, name, name_bn, icon, color, kind, budget_minor,
@@ -267,16 +299,22 @@ be unforgivable:
 3. **Seeding is additive and runs on every open.** Any seeded category missing from
    the database is inserted; nothing that already exists is ever overwritten — your
    names, colours and limits win.
-4. **Migrations are idempotent.** Columns are added only if absent, so an
+4. **Only signatures decide whether an update installs.** Release builds are
+   signed with one key kept outside the repository (`android/key.properties`
+   locally, `TAKA_*` secrets in CI, see `tool/signing/SIGNING.md`), so a new APK
+   replaces the old one in place and the database in app storage is untouched. A
+   build signed with a different key is the one thing Android will refuse.
+5. **Migrations are idempotent.** Columns are added only if absent, so an
    interrupted upgrade cannot leave a database that refuses to open.
 
 `test/database_test.dart` builds a v2 database by hand, reopens it with the current
 code and asserts the old entry, its category and its budget all survived — now
-through two upgrades, v2 → v4.
+through four upgrades, v2 → v6.
 
 ### Tests
 
-77 tests, all offline (26 logic, 25 database and rules, 10 screen, 16 golden):
+94 tests, all offline (32 logic and insight rules, 25 database, 10 screen, 18 golden,
+plus the fast-food and carry-over rules):
 
 | File | Covers |
 |---|---|
@@ -284,6 +322,8 @@ through two upgrades, v2 → v4.
 | `test/database_test.dart` | the real schema and SQL on SQLite: seeds and the category tree, CRUD, totals, per-day buckets, filters, category reassignment and group deletion, udhar settlement, settings, backup round-trip, CSV, and both migrations (v2 → v4, and the v4 duplicate merge) |
 | `test/period_stats_test.dart` | the day / week / month / year maths behind the breakdowns: empty days kept, income kept apart from spending, the month list starting where the history starts, a day's entries newest first |
 | `test/food_logic_test.dart` | the meal rule: which categories may take a meal, that a non-food entry never lands in a meal total even if an old row stored one, why noodles and egg exist twice, and that `today` really resets at midnight |
+| `test/insights_test.dart` | the Patterns maths: a meal day is missed only when nothing was logged for it, today counts only for meals already past, a non-food entry never counts, ranking, rhythm, and that 1.10.0 is newer than 1.9.0 |
+| `test/carry_search_test.dart` | the month carry-over (leftover in, overspend negative, available = net) and search: by note in any month, by English category name, by Bangla category name |
 | `test/screens_test.dart` | the whole app at 320 / 360 / 414 / 768 widths **and in landscape**, 1.3× text scale, tab switching, adding an entry end-to-end, the meal row disappearing for a face wash, the period breakdowns and their day sheet, dark-mode toggle |
 | `test/golden_test.dart` | every screenshot in this README |
 
@@ -298,6 +338,17 @@ through two upgrades, v2 → v4.
 - Icons: Material Symbols via `flutter/material`.
 
 ## Changelog
+
+- **v1.5.0** — the month starts where the last one ended. Leftover money carries
+  into the new month and the per-day nudge divides what is really left. Search
+  now reaches every entry, by note or by category name in English or Bangla.
+  **Patterns** answers the questions the ledger already holds: where the money
+  went, which meals went unlogged, how many days cost nothing. **Dining out** is a
+  group of fast food instead of one lump. Tapping any day in the 7-day chart opens
+  that day. The meal tag follows the clock again. Settings gains a one-tap
+  **Check for updates** against GitHub releases, and links to the author. Release
+  builds are signed with a key kept outside the repository, so an update installs
+  over the old app and your data stays.
 
 - **v1.4.0** — the numbers have somewhere to go. Tapping **Spent today / This
   week / This month** on Home opens a breakdown: week gives all seven days with

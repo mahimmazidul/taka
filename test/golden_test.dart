@@ -151,7 +151,34 @@ void main() {
     await _shot(tester, 'period_year');
   });
 
-  testWidgets('09 categories', (WidgetTester tester) async {
+  testWidgets('17 patterns', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    // Home is a scrolling list; the Patterns section sits below the chart.
+    // The vertical list, not one of the horizontal chip rows.
+    final Finder vertical = find.byWidgetPredicate(
+      (Widget widget) =>
+          widget is ListView && widget.scrollDirection == Axis.vertical,
+    );
+    await tester.drag(vertical.first, const Offset(0, -420));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('PATTERNS'));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'patterns');
+  });
+
+  testWidgets('18 dining out items', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    // Logging a burger once means the picker opens on Dining out next time —
+    // the last-used group is pinned, so this is the real path, not a shortcut
+    // for the screenshot.
+    await tester.runAsync(() => AppState.instance.rememberCategory('burger'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.add_rounded));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'dining_out');
+  });
+
+  testWidgets('19 categories', (WidgetTester tester) async {
     await _render(tester, darkMode: false);
     await tester.tap(find.byIcon(Icons.tune_rounded));
     await tester.pumpAndSettle();
