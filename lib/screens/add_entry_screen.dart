@@ -12,6 +12,7 @@ import '../models/transaction_entry.dart';
 import '../store/app_state.dart';
 import '../utils/date_helpers.dart';
 import '../utils/format_currency.dart';
+import '../utils/money_input_formatter.dart';
 import '../utils/responsive.dart';
 
 /// Add or edit one entry.
@@ -36,6 +37,10 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   String _categoryId = '';
   late final TextEditingController _amount;
   MealSlot? _meal;
+
+  /// True once the user picks a meal by hand. Until then the meal follows the
+  /// clock and the date, which is what "it should know it's dinner time" means.
+  bool _mealTouched = false;
 
   /// What the last tap on Save actually wrote, shown until the next one.
   String? _added;
@@ -65,6 +70,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
     _ensureCategory();
     // Only a food category gets a meal, and only if the saved entry had one.
     _meal = entry?.meal ?? (_isFood ? MealSlot.guess(_occurredAt) : null);
+    _mealTouched = entry?.meal != null;
   }
 
   void _onAmountChanged() {
@@ -93,9 +99,23 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   void _selectCategory(AppCategory category) {
     setState(() {
       _categoryId = category.id;
-      // Cosmetics are not eaten: switching to a non-food item drops the meal
-      // instead of quietly counting money into breakfast.
-      if (!category.isFood) _meal = null;
+      if (!category.isFood) {
+        // Cosmetics are not eaten: switching to a non-food item drops the meal
+        // instead of quietly counting money into breakfast.
+        _meal = null;
+      } else if (!_mealTouched) {
+        // Back on food with nothing chosen by hand: follow the clock again.
+        _meal = MealSlot.guess(_occurredAt);
+      }
+    });
+  }
+
+  /// Called when the day changes. A meal picked by hand is kept; an automatic
+  /// one follows the new day.
+  void _setDay(DateTime day) {
+    setState(() {
+      _occurredAt = day;
+      if (_isFood && !_mealTouched) _meal = MealSlot.guess(day);
     });
   }
 
@@ -114,7 +134,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       ),
     );
     if (picked != null) {
-      setState(() => _occurredAt = withCurrentTime(picked));
+      _setDay(withCurrentTime(picked));
     }
   }
 
@@ -275,13 +295,16 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               onCategorySelected: _selectCategory,
               showMeal: _type == EntryType.expense && _isFood,
               meal: _meal,
-              onMealChanged: (MealSlot? slot) => setState(() => _meal = slot),
+              onMealChanged: (MealSlot? slot) => setState(() {
+                _meal = slot;
+                _mealTouched = true;
+              }),
               note: _note,
               occurredAt: _occurredAt,
               onPickDate: _pickDate,
               onPickTime: _pickTime,
-              onQuickDay: (int daysAgo) => setState(
-                () => _occurredAt = withCurrentTime(
+              onQuickDay: (int daysAgo) => _setDay(
+                withCurrentTime(
                   AppClock.now().subtract(Duration(days: daysAgo)),
                 ),
               ),
@@ -560,17 +583,25 @@ class _AmountBlock extends StatelessWidget {
                   ),
                   // The app theme gives every field an outline; inside this
                   // pill it would draw a box in a box.
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     isDense: true,
                     filled: false,
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
                     hintText: '0',
+                    // Same size as the digits: a 14 px hint in a 34 px field
+                    // read as a stray dot rather than an empty amount.
+                    hintStyle: TextStyle(
+                      fontFamily: kFontFamily,
+                      fontSize: screen.font(34, context),
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                      color: AppColors.muted(context).withValues(alpha: 0.5),
+                    ),
                   ),
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    LengthLimitingTextInputFormatter(9),
+                  inputFormatters: const <TextInputFormatter>[
+                    MoneyInputFormatter(),
                   ],
                 ),
               ),

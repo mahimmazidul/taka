@@ -30,13 +30,15 @@ enum MealSlot {
     return null;
   }
 
-  /// 5–10 → breakfast, 11–16 → lunch, 17–23 → dinner. Outside those hours we
-  /// return `null` rather than guess wrong at 2 am.
-  static MealSlot? guess(DateTime at) {
+  /// 5–10 → breakfast, 11–16 → lunch, everything else → dinner.
+  ///
+  /// Always returns a slot. Leaving it null between midnight and 5 am meant the
+  /// meal row opened with nothing selected — which read as "the guessing is
+  /// broken" — and a 1 am plate of rice really is the night's dinner.
+  static MealSlot guess(DateTime at) {
     final int hour = at.hour;
     if (hour >= 5 && hour < 11) return MealSlot.breakfast;
     if (hour >= 11 && hour < 17) return MealSlot.lunch;
-    if (hour >= 17 && hour < 24) return MealSlot.dinner;
-    return null;
+    return MealSlot.dinner;
   }
 }
