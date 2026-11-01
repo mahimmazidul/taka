@@ -13,7 +13,7 @@ much of the month is left.
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-77%20passing-0E9F6E)
-[![Download APK](https://img.shields.io/badge/download-v1.7.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+[![Download APK](https://img.shields.io/badge/download-v1.8.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -56,9 +56,9 @@ refreshed whenever the UI changes. No mockups.
 |---|---|
 | ![Patterns](docs/screenshots/patterns.png) | ![Fast food](docs/screenshots/dining_out.png) |
 
-| Settings, updates and links |
-|---|
-| ![Settings, updates](docs/screenshots/settings_updates.png) |
+| Settings, updates and links | Licences |
+|---|---|
+| ![Settings, updates](docs/screenshots/settings_updates.png) | ![Licences](docs/screenshots/licences.png) |
 
 | Add entry (landscape) | Home (landscape) |
 |---|---|
@@ -351,7 +351,7 @@ through four upgrades, v2 → v6.
 
 ### Tests
 
-102 tests, all offline (38 logic, insight and store rules, 25 database, 11 screen, 20 golden,
+104 tests, all offline (38 logic, insight and store rules, 25 database, 12 screen, 21 golden,
 plus the fast-food and carry-over rules):
 
 | File | Covers |
@@ -367,6 +367,29 @@ plus the fast-food and carry-over rules):
 
 ---
 
+## Licence
+
+**Use the app.** Free, for anyone, forever — no account, no ads, no payment.
+
+**Use the code.** Also free, for anything noncommercial: read it, learn from it,
+change it, fork it, ship your own build to your friends, put it on a shelf. You do
+not have to ask.
+
+**Commercial use needs a licence from me.** Selling the app, bundling it, using its
+code in something you sell, or shipping it in a commercial product: open an issue
+on the repo and we will talk. I am not against it; I want to be asked.
+
+This is the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0),
+full text in [`LICENSE`](LICENSE). It is **not** an OSI "open source" licence, and
+that is deliberate: open source by that definition includes selling it. What you get
+here is source-available, noncommercial — the code is public, the commercial rights
+are not.
+
+Inside the app, Settings → **Licences** prints those terms and the font's SIL Open
+Font License, and links to the BSD-style licences of Flutter, sqflite, http and
+url_launcher. The Hind Siliguri font ships under the SIL OFL 1.1 and keeps that
+licence regardless of the code's.
+
 ## Credits
 
 - **Mazidul Islam Mahim** (মাজিদুল ইসলাম মাহিম) — idea, requirements, and the refusal
@@ -376,6 +399,11 @@ plus the fast-food and carry-over rules):
 - Icons: Material Symbols via `flutter/material`.
 
 ## Changelog
+
+- **v1.8.0** — the project gets a licence. PolyForm Noncommercial 1.0.0: free to
+  use, read, change and share for anything noncommercial; commercial use or reuse
+  of the code needs a separate licence from the author. Settings → **Licences**
+  prints the terms, the font's OFL and a link to the dependency licences.
 
 - **v1.7.0** — udhar now counts in **money on hand**: lent money is money that has
   left the pocket, borrowed money is money that has arrived, and settling either
