@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../components/day_sheet.dart';
 import '../components/entry_row.dart';
 import '../components/month_calendar.dart';
 import '../components/section_title.dart';
@@ -13,7 +14,6 @@ import '../utils/date_helpers.dart';
 import '../utils/format_currency.dart';
 import '../utils/period_stats.dart';
 import '../utils/responsive.dart';
-import 'add_entry_screen.dart';
 
 /// Where the money went, one period at a time.
 ///
@@ -192,15 +192,7 @@ class _PeriodScreenState extends State<PeriodScreen> {
 
   Future<void> _openDay(DateTime day) async {
     if (day.isAfter(startOfNextDay(AppClock.now()))) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (BuildContext context) => _DaySheet(day: day),
-    );
+    await showDaySheet(context, day);
   }
 }
 
@@ -549,136 +541,6 @@ class _Figure extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// One day, opened. The same rows as History, because a day is a day.
-class _DaySheet extends StatelessWidget {
-  const _DaySheet({required this.day});
-
-  final DateTime day;
-
-  @override
-  Widget build(BuildContext context) {
-    final AppState state = AppState.instance;
-    final List<TransactionEntry> entries = entriesOnDay(state.allEntries, day);
-    final int spent = entries.fold<int>(
-      0,
-      (int sum, TransactionEntry e) => sum + (e.isExpense ? e.amountMinor : 0),
-    );
-    final int earned = entries.fold<int>(
-      0,
-      (int sum, TransactionEntry e) => sum + (e.isExpense ? 0 : e.amountMinor),
-    );
-
-    // A day can hold thirty entries (a mess bill, a trip). The sheet is capped
-    // at most of the screen and the list scrolls inside it, instead of growing
-    // past the bottom edge and overflowing.
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.72,
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.line(context),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Text(
-                        formatDayHeading(day),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.ink(context),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      formatMoney(spent, symbol: state.currencySymbol),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.expense(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (earned > 0)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '${formatMoney(earned, symbol: state.currencySymbol)} came in',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.income(context),
-                      ),
-                    ),
-                  ),
-                ),
-              if (entries.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-                  child: Text(
-                    'Nothing logged on this day.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.muted(context),
-                    ),
-                  ),
-                )
-              else
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    padding: const EdgeInsets.only(top: 8),
-                    itemCount: entries.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final TransactionEntry entry = entries[index];
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          EntryRow(
-                            entry: entry,
-                            category: state.categoryById(entry.categoryId),
-                            symbol: state.currencySymbol,
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              Navigator.of(context).push(
-                                slideFadeRoute<void>(
-                                  AddEntryScreen(entry: entry),
-                                ),
-                              );
-                            },
-                          ),
-                          if (index != entries.length - 1)
-                            const Hairline(indent: 76),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
