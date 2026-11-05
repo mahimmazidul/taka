@@ -83,6 +83,11 @@ A sage-to-eucalyptus gradient with the taka sign, rendered by
 the adaptive icon and its monochrome layer, so the icon can never drift out of sync
 with the app.
 
+The **social preview** (`docs/social-preview.png`, 1280 × 640) comes from
+[`tool/make_social_preview.py`](tool/make_social_preview.py), built from the same
+palette and the same real screenshots — it is uploaded by hand under
+*Settings → Social preview*, because GitHub has no API for that one field.
+
 ## Motion
 
 Nothing snaps. Tabs glide between each other over 280 ms, pages fade and rise into
@@ -427,6 +432,29 @@ licence regardless of the code's.
 
 ## Changelog
 
+- **v1.10.2** — the hero shows all three numbers, because they are three
+  different facts. ৳ 1,000 in the wallet with ৳ 200 set aside reads **৳ 800** big,
+  `SET ASIDE ৳ 200` beside it at the same level, and `of ৳ 1,000 in your wallet`
+  underneath — so the spendable figure, the pot and the wallet total are on one
+  card and add up without mental arithmetic. Saving is still not spending: In/Out,
+  budgets, today's meals and the carry-over never move. What does move is what is
+  left to spend, which is the point of setting money aside.
+
+- **v1.10.1** — the pot briefly stopped touching the hero at all, reading the
+  wallet as untouched money. Superseded within the hour by 1.10.2, which keeps the
+  deduction and shows all three figures instead of hiding one.
+
+- **v1.10.0** — **the savings pot**, and **মুদি**. Saved money is money you have
+  decided not to spend, so it is a pot and never a category: its own screen with
+  *set money aside* / *take money back*, a history of both, and an optional target
+  (`৳ 5,300 of ৳ 12,000 · Laptop`) drawn as a thin bar. Off until you switch it on
+  in Settings and starting at ৳ 0 — anything saved before it existed was never
+  recorded as savings, and the app does not invent a history. Schema v8.
+  Separately, a bottle of sauce for the room had nowhere honest to go: it is not a
+  dish, not a snack, not a bill. **মুদি · Groceries** now sits on the top row as one
+  item, `food: false`, so it counts in the month and in *Where it went* but never
+  asks for a breakfast/lunch/dinner tag.
+
 - **v1.9.0** — ভর্তা joins the main course, and items you add yourself finally
   count as meals. A category created under Main course (or Snacks, Drinks, Sweets,
   Fruit, Dining out) used to be stored as *not food*: no meal chips on the Add
@@ -475,6 +503,7 @@ licence regardless of the code's.
   row, one total, listed under both groups (`also_groups`, schema v5), with the
   duplicates from 1.3.0 merged back on upgrade. Two migration-order bugs found and
   fixed by the tests, again.
+
 - **v1.3.0** — the correctness release. Meal tags are now a property of the
   category (`food`), not a guess: a face wash can no longer be logged as
   breakfast, and the meal strip only counts food money. Added noodles and egg to
@@ -489,13 +518,17 @@ licence regardless of the code's.
   is gone and History builds one list item per row instead of one per day.
   Settings and About values sit flush right. Ten new logic tests, including a
   v2 → v4 migration test.
+
 - **v1.2.0** — new launcher icon (rendered from `tool/make_icon.py`), animated tab
   changes and richer page transitions, credit corrected to Mazidul Islam Mahim.
+
 - **v1.1.0** — two-level categories (groups + items, 90+ seeded items), meal tags
   with a "today's meals" strip, group budgets and group filters, additive seeding
   and a safe v2 → v3 migration, About screen with the author credit, and CI now
   ships one APK per CPU plus an app bundle instead of one 50 MB universal APK.
+
 - **v1.0.1** — budget rows no longer printed the category twice; budgets and
   categories joined the screenshot suite; time routed through `AppClock`.
+
 - **v1.0.0** — first full build: dashboard, add/edit, history with filters, udhar,
   budgets, category manager, JSON/CSV backup, dark mode, CI release pipeline.
