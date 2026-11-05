@@ -197,6 +197,17 @@ final List<AppCategory> _expenseGroups = <AppCategory>[
 /// Items that sit on the top row themselves — no sub-list, one tap.
 final List<AppCategory> _standalone = <AppCategory>[
   _leaf(
+    // Pantry purchases — sauce, oil, salt, noodles for the room. One tap from
+    // the top row, because buying a bottle is a purchase, not a dish to cook or
+    // a meal eaten, so it does not belong inside a food group.
+    id: 'groceries',
+    name: 'Groceries',
+    nameBn: 'মুদি',
+    icon: 'grocery',
+    color: '#7BA05B',
+    order: 19,
+  ),
+  _leaf(
     id: 'laundry',
     name: 'Laundry',
     nameBn: 'লন্ড্রি',

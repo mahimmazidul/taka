@@ -19,6 +19,7 @@ const Map<String, IconData> kCategoryIcons = <String, IconData>{
   'shawarma': Icons.kebab_dining_outlined,
   'chicken': Icons.set_meal_outlined,
   'streetfood': Icons.storefront_outlined,
+  'grocery': Icons.shopping_basket_outlined,
   'drink': Icons.local_drink_outlined,
   'soda': Icons.emoji_food_beverage_outlined,
   'juice': Icons.local_bar_outlined,
