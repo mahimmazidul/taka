@@ -38,22 +38,28 @@ void main() {
   });
 
   group('the pot', () {
-    test('starts empty and moves money out of the pocket', () async {
-      expect(state.savingsMinor, 0);
-      final int before = state.moneyOnHand;
+    test(
+      'starts empty, and setting money aside leaves the pocket alone',
+      () async {
+        expect(state.savingsMinor, 0);
+        final int before = state.moneyOnHand;
 
-      await state.addSavings(
-        direction: SavingsDirection.aside,
-        amountMinor: 200000,
-        note: 'October leftover',
-      );
+        await state.addSavings(
+          direction: SavingsDirection.aside,
+          amountMinor: 200000,
+          note: 'October leftover',
+        );
 
-      expect(state.savingsMinor, 200000);
-      expect(state.moneyOnHand, before - 200000);
-      // The month's own arithmetic is untouched: this was not a purchase.
-      expect(state.month.expenseMinor, 99000);
-      expect(state.availableThisMonth, 751000);
-    });
+        expect(state.savingsMinor, 200000);
+        // ৳ 1,000 in the wallet with ৳ 200 marked aside is still ৳ 1,000 in the
+        // wallet. The pot is a note to yourself, not a second pocket.
+        expect(state.moneyOnHand, before);
+        expect(state.moneyOnHand, 651000);
+        // The month's own arithmetic is untouched: this was not a purchase.
+        expect(state.month.expenseMinor, 99000);
+        expect(state.availableThisMonth, 751000);
+      },
+    );
 
     test('taking money back puts it in the pocket again', () async {
       await state.addSavings(
@@ -72,20 +78,17 @@ void main() {
       expect(state.savingsEntries.first.direction, SavingsDirection.back);
     });
 
-    test(
-      'a pot bigger than the pocket is allowed but shows as it is',
-      () async {
-        // Spend everything, then set money aside that is not there: the app records
-        // what the user says rather than blocking it, and money on hand goes
-        // negative instead of pretending.
-        await state.addSavings(
-          direction: SavingsDirection.aside,
-          amountMinor: 900000,
-        );
-        expect(state.savingsMinor, 900000);
-        expect(state.moneyOnHand, lessThan(0));
-      },
-    );
+    test('a pot bigger than the pocket never sinks the pocket', () async {
+      // The app records what the user says rather than blocking it, and a pot
+      // larger than the wallet changes nothing about the wallet: the two numbers
+      // are allowed to disagree, because one of them is a decision.
+      await state.addSavings(
+        direction: SavingsDirection.aside,
+        amountMinor: 900000,
+      );
+      expect(state.savingsMinor, 900000);
+      expect(state.moneyOnHand, 651000);
+    });
 
     test('removing a movement reverses it exactly', () async {
       await state.addSavings(
@@ -100,17 +103,17 @@ void main() {
     });
 
     test(
-      'turning the pot off hides it and returns the money to the pocket',
+      'turning the pot off hides it and leaves the pocket where it was',
       () async {
         await state.addSavings(
           direction: SavingsDirection.aside,
           amountMinor: 100000,
         );
-        expect(state.moneyOnHand, 551000);
+        expect(state.moneyOnHand, 651000);
 
         await state.setSavingsEnabled(false);
-        expect(state.savingsMinor, 0, reason: 'not shown, not subtracted');
-        expect(state.moneyOnHand, 651000);
+        expect(state.savingsMinor, 0, reason: 'not shown, not counted');
+        expect(state.moneyOnHand, 651000, reason: 'the wallet never moved');
 
         // The rows are still in the database; turning it back on restores them.
         await state.setSavingsEnabled(true);
@@ -118,16 +121,41 @@ void main() {
       },
     );
 
-    test('savings and udhar both correct the pocket, independently', () async {
+    test('udhar corrects the pocket; savings does not', () async {
       await state.addSavings(
         direction: SavingsDirection.aside,
         amountMinor: 100000,
       );
-      // Seed: 8,500 in − 990 out − 1,500 lent + 500 borrowed − 1,000 saved.
-      expect(state.moneyOnHand, 551000);
+      // Seed: 8,500 in − 990 out − 1,500 lent + 500 borrowed = 6,510 in the
+      // pocket, with 1,000 of it marked as set aside.
+      expect(state.moneyOnHand, 651000);
       expect(state.udharAdjustmentMinor, -100000);
       expect(state.savingsMinor, 100000);
+      expect(state.availableThisMonth, 751000);
     });
+
+    test(
+      'the daily nudge, the meals and the carry-over ignore the pot',
+      () async {
+        final int nudgeBefore = _nudge(state);
+        final Map<MealSlot, int> mealsBefore = Map<MealSlot, int>.of(
+          state.mealSpendToday,
+        );
+        final int carriedBefore = state.carryIntoMonth(state.now);
+
+        await state.addSavings(
+          direction: SavingsDirection.aside,
+          amountMinor: 250000,
+          note: 'Eid money',
+        );
+
+        expect(state.savingsMinor, 250000);
+        expect(_nudge(state), nudgeBefore, reason: 'nothing to spend less of');
+        expect(state.mealSpendToday, mealsBefore);
+        expect(state.carryIntoMonth(state.now), carriedBefore);
+        expect(state.month.expenseMinor, 99000, reason: 'saving is not Out');
+      },
+    );
   });
 
   group('the goal', () {
@@ -180,4 +208,12 @@ void main() {
       expect(state.mealSpendToday, mealsBefore);
     });
   });
+}
+
+/// The Home nudge: money on hand spread over the days left in the month.
+int _nudge(AppState state) {
+  final DateTime now = state.now;
+  final int daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+  final int daysLeft = (daysInMonth - now.day + 1).clamp(1, 31);
+  return state.moneyOnHand ~/ daysLeft;
 }

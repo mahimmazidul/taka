@@ -13,7 +13,7 @@ working tree.
 | Udhar lent (open) | no — pending ledger | no | − |
 | Udhar borrowed (open) | no — pending ledger | no | + |
 | Carried over from last month | no — derived | no | + (it is the same money) |
-| Savings set aside (pot) | no | no | − |
+| Savings set aside (pot) | no | no | **no** — it is still in the wallet |
 
 The rule that keeps this honest: **a transaction describes money earned or
 consumed; everything else is a correction to the pocket.** Udhar follows it, and
@@ -152,3 +152,29 @@ spending".
 - **Groceries is a leaf, not a group**, so the picker shows it on the first row
   next to লন্ড্রি and অন্যান্য: one tap, and the item still has an id of its own, so
   *Where it went* can name it.
+
+## Corrected after v1.10.0: the pot does not leave the pocket
+
+The first build subtracted the pot from money on hand, the way an open udhar is
+subtracted. The user's own example killed it:
+
+> ৳ 1,000 in the wallet, ৳ 200 set aside. The app showed ৳ 800 big and ৳ 200 in
+> the pot. I still have ৳ 1,000 in my hand.
+
+They are right, and the difference from udhar is real: money lent out physically
+leaves your hand, so subtracting it is a fact. Money set aside does not leave your
+hand — it leaves your *intentions*. The app is not a bank and does not move notes
+between pockets, so taking it off the wallet created two numbers for one wad and
+made the daily nudge panic in a tight week (see
+`savings-nudge-concern.md`, Days 2–4).
+
+The rule now: **the pot is a label, never a subtraction.**
+
+- `moneyOnHand` is back to `availableThisMonth + udharAdjustmentMinor`.
+- The hero reads `৳ 6,510` with `৳ 5,300 set aside` beside the udhar note — both
+  numbers, no arithmetic between them.
+- Meals, budgets, In/Out, the per-day nudge and the carry-over to next month are
+  untouched, which is what the user asked for in the first place: *"Savings amount
+  does not calculate to go to meal, daily usage, or anywhere."*
+- The pot keeps its own screen, its own balance, and its own history, and survives
+  the switch being turned off.

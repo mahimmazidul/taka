@@ -374,7 +374,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(state.moneyOnHand, pocket - 100000);
+    // ৳ 1,000 in the wallet with ৳ 200 set aside is still ৳ 1,000 in the wallet.
+    expect(state.moneyOnHand, pocket);
+    expect(state.savingsMinor, 100000);
+    // The hero says both, without arithmetic between them: the pocket, then
+    // "৳ 1,000 set aside" as a label.
+    expect(find.textContaining('set aside'), findsWidgets);
     // The month's Out is a fact about purchases and does not move.
     expect(find.textContaining('990'), findsWidgets);
   });

@@ -256,15 +256,22 @@ class AppState extends ChangeNotifier {
   int get udharAdjustmentMinor =>
       udharTotals.borrowedMinor - udharTotals.lentMinor;
 
-  /// Money in the savings pot. It is yours, but it is not in your pocket, so it
-  /// comes off the number on Home — exactly like an open udhar, and unlike an
-  /// expense, which is money that is gone.
+  /// Money in the savings pot: what you have decided not to spend.
+  ///
+  /// It is **not** subtracted from [moneyOnHand]. The money is still in the
+  /// wallet — the app does not move it anywhere — so taking it off the pocket
+  /// would leave you with two numbers for one wad of notes: ৳ 800 in the hero
+  /// and ৳ 200 in the pot, for a wallet holding ৳ 1,000. Instead the pot is
+  /// shown on its own, and the hero stays the truth about the wallet.
+  ///
+  /// The pot also never touches In/Out, budgets, meals, the carry-over or the
+  /// per-day nudge: it is a note to yourself, not a transaction.
   int get savingsMinor => settings.savingsEnabled ? savingsBalanceMinor : 0;
 
   /// The number on Home: everything earned, minus everything spent, corrected
-  /// for udhar that is still open, minus what has been set aside as savings.
-  int get moneyOnHand =>
-      availableThisMonth + udharAdjustmentMinor - savingsMinor;
+  /// for udhar that is still open. Savings is deliberately absent — see
+  /// [savingsMinor].
+  int get moneyOnHand => availableThisMonth + udharAdjustmentMinor;
 
   /// `monthSpend` with a row per group, so budgets and totals can show a group
   /// in one number.
