@@ -39,6 +39,9 @@ extension CategoryActions on AppState {
       sortOrder: await categoryRepo.nextSortOrder(kind),
       parentId: asGroup ? null : parentId,
       isGroup: asGroup,
+      // A new item is as edible as the branch it is dropped into. A new group is
+      // a container and takes its colour from nothing.
+      isFood: !asGroup && (parent?.isFood ?? false),
     );
     await saveCategory(category);
     return category;

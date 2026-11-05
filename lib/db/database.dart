@@ -24,7 +24,7 @@ class AppDatabase {
   }) => AppDatabase._internal(factory, path);
 
   static const String _fileName = 'taka.db';
-  static const int _version = 6;
+  static const int _version = 7;
 
   final DatabaseFactory? _factory;
   final String? _path;
@@ -218,6 +218,45 @@ class AppDatabase {
     if (oldVersion < 6) {
       await _upgradeToEatoutGroup(db);
     }
+
+    if (oldVersion < 7) {
+      await _upgradeFoodGroups(db);
+    }
+  }
+
+  /// v6 → v7: the edible groups are marked edible.
+  ///
+  /// `food` used to be set per item only, so a category added under Main course by
+  /// hand was born non-food: no meal chips on the Add screen, and no line in
+  /// today's meals. The groups are flagged now and new items inherit the flag;
+  /// this marks the seeded ones so an existing database behaves the same way as a
+  /// fresh install.
+  Future<void> _upgradeFoodGroups(Database db) async {
+    const List<String> foodGroups = <String>[
+      'g_main',
+      'g_drinks',
+      'g_snacks',
+      'g_sweets',
+      'g_fruits',
+      'g_eatout',
+    ];
+    for (final String id in foodGroups) {
+      await db.update(
+        'categories',
+        <String, Object?>{'food': 1},
+        where: 'id = ?',
+        whereArgs: <Object?>[id],
+      );
+    }
+
+    // And repair the items already added by hand inside those groups: they were
+    // stored with food = 0, which is why a home-made "ভর্তা" showed no meal chips
+    // and never appeared in today's meals.
+    await db.rawUpdate(
+      "UPDATE categories SET food = 1 "
+      "WHERE is_group = 0 AND parent_id IN "
+      "('g_main', 'g_drinks', 'g_snacks', 'g_sweets', 'g_fruits', 'g_eatout')",
+    );
   }
 
   /// v5 → v6: "Dining out" becomes a group with fast food inside it.

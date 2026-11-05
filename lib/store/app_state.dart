@@ -259,7 +259,11 @@ class AppState extends ChangeNotifier {
   /// logged "at dinner" would otherwise show up in the meals strip.
   bool acceptsMeal(String? categoryId) {
     if (categoryId == null) return false;
-    return categoryById(categoryId)?.isFood ?? false;
+    final AppCategory? category = categoryById(categoryId);
+    // A group is a container, not a meal, even though the edible groups are
+    // flagged so that new items inside them inherit the flag.
+    if (category == null || category.isGroup) return false;
+    return category.isFood;
   }
 
   /// Today's spend per meal slot, for the "today's meals" strip on Home.

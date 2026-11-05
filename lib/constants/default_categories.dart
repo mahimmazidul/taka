@@ -4,6 +4,11 @@ import 'default_subcategories.dart';
 /// The seeded **groups** — the first row of chips on the add-entry screen.
 /// A group is a container: it rolls up its items' spend and can hold its own
 /// monthly limit, but entries are logged against the items inside it.
+///
+/// `isFood` on a group means "this branch is edible", and it is what a new item
+/// added inside the group inherits. Without it, "চানাচুর" added under Snacks was
+/// born non-food: no meal chips on the Add screen and no line in today's meals,
+/// which looked exactly like a bug in the meal tracker.
 AppCategory _group({
   required String id,
   required String name,
@@ -11,6 +16,7 @@ AppCategory _group({
   required String icon,
   required String color,
   required int order,
+  bool isFood = false,
 }) => AppCategory(
   id: id,
   name: name,
@@ -20,6 +26,7 @@ AppCategory _group({
   kind: CategoryKind.expense,
   sortOrder: order,
   isGroup: true,
+  isFood: isFood,
 );
 
 /// A top-level item with no parent: loggable on its own (Dining out, Other).
@@ -58,6 +65,7 @@ final List<AppCategory> _expenseGroups = <AppCategory>[
     icon: 'rice',
     color: '#E9A23B',
     order: 0,
+    isFood: true,
   ),
   _group(
     id: 'g_drinks',
@@ -66,6 +74,7 @@ final List<AppCategory> _expenseGroups = <AppCategory>[
     icon: 'drink',
     color: '#3C7EDB',
     order: 1,
+    isFood: true,
   ),
   _group(
     id: 'g_snacks',
@@ -74,6 +83,7 @@ final List<AppCategory> _expenseGroups = <AppCategory>[
     icon: 'snacks',
     color: '#E4572E',
     order: 2,
+    isFood: true,
   ),
   _group(
     id: 'g_sweets',
@@ -82,6 +92,7 @@ final List<AppCategory> _expenseGroups = <AppCategory>[
     icon: 'sweets',
     color: '#E86FA8',
     order: 3,
+    isFood: true,
   ),
   _group(
     id: 'g_fruits',
@@ -90,6 +101,7 @@ final List<AppCategory> _expenseGroups = <AppCategory>[
     icon: 'fruit',
     color: '#4CAF50',
     order: 4,
+    isFood: true,
   ),
   _group(
     id: 'g_grooming',
@@ -170,6 +182,7 @@ final List<AppCategory> _expenseGroups = <AppCategory>[
     icon: 'restaurant',
     color: '#E4572E',
     order: 20,
+    isFood: true,
   ),
   _group(
     id: 'g_fees',

@@ -75,6 +75,12 @@ class _CategoryEditorState extends State<_CategoryEditor> {
         asGroup: _asGroup,
       );
     } else {
+      // Moving an item into a food group makes it food (and out of one does not
+      // silently unmake it if it stays top-level): the branch decides, unless the
+      // item has no parent at all, in which case it keeps what it had.
+      final AppCategory? parent = _parentId == null
+          ? null
+          : state.categoryById(_parentId!);
       await state.saveCategory(
         widget.category!.copyWith(
           name: en.isEmpty ? bn : en,
@@ -84,6 +90,9 @@ class _CategoryEditorState extends State<_CategoryEditor> {
           isGroup: _asGroup,
           parentId: _asGroup ? null : _parentId,
           moveToTopLevel: _asGroup || _parentId == null,
+          isFood: _asGroup
+              ? false
+              : (parent?.isFood ?? widget.category!.isFood),
         ),
       );
     }
