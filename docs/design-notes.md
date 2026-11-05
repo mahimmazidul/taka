@@ -178,3 +178,27 @@ The rule now: **the pot is a label, never a subtraction.**
   does not calculate to go to meal, daily usage, or anywhere."*
 - The pot keeps its own screen, its own balance, and its own history, and survives
   the switch being turned off.
+
+## Final rule (v1.10.2)
+
+Two rounds of getting it wrong settled it. The pot **does** come out of the
+spendable number, and the hero shows all three figures:
+
+```
+MONEY ON HAND · OCTOBER          SET ASIDE
+৳ 1,210                          ৳ 5,300
+of ৳ 6,510 in your wallet
+```
+
+- `moneyOnHand = earned − spent + borrowed − lent − savings` — what you can
+  actually spend, and what the nudge divides.
+- `walletMinor = moneyOnHand + savings` — what the wallet holds. Printed under the
+  big number so 800 + 200 = 1,000 is never mental arithmetic.
+- The hero's savings figure is labelled **SET ASIDE**, not SAVINGS: the Home
+  section below is already called Savings, and two headings with one word on one
+  screen reads as a bug.
+- Still not a transaction: In/Out, budgets, meals and the carry-over never move.
+  What moves is only what you may spend, which is the point of setting money
+  aside in the first place.
+- The goal stayed exactly as it was — label plus target, `৳ 5,300 of ৳ 12,000 ·
+  Laptop`, on the Savings screen and in the Home row. Nothing was removed from it.

@@ -364,7 +364,7 @@ void main() {
     // Home now carries a savings row, and the pot takes money off the pocket.
     await tester.tap(find.byIcon(Icons.home_rounded));
     await tester.pumpAndSettle();
-    expect(find.text('SAVINGS'), findsOneWidget);
+    expect(find.text('SAVINGS'), findsOneWidget, reason: 'the Home row');
 
     await tester.runAsync(
       () => state.addSavings(
@@ -374,12 +374,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    // ৳ 1,000 in the wallet with ৳ 200 set aside is still ৳ 1,000 in the wallet.
-    expect(state.moneyOnHand, pocket);
+    // ৳ 1,000 in the wallet with ৳ 200 set aside leaves ৳ 800 spendable, and the
+    // hero names all three: the spendable figure, SAVINGS beside it, and the
+    // wallet total underneath.
+    expect(state.moneyOnHand, pocket - 100000);
+    expect(state.walletMinor, pocket);
     expect(state.savingsMinor, 100000);
-    // The hero says both, without arithmetic between them: the pocket, then
-    // "৳ 1,000 set aside" as a label.
-    expect(find.textContaining('set aside'), findsWidgets);
+    expect(find.text('SET ASIDE'), findsOneWidget);
+    expect(find.textContaining('in your wallet'), findsOneWidget);
     // The month's Out is a fact about purchases and does not move.
     expect(find.textContaining('990'), findsWidgets);
   });

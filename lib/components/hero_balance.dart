@@ -22,6 +22,7 @@ class HeroBalance extends StatelessWidget {
     this.carriedMinor = 0,
     this.carriedLabel,
     this.pocketNote,
+    this.savingsMinor = 0,
   });
 
   final int balanceMinor;
@@ -37,9 +38,15 @@ class HeroBalance extends StatelessWidget {
   /// "carried from October", when it applies.
   final String? carriedLabel;
 
-  /// "−৳ 1,500 lent out · +৳ 500 borrowed · ৳ 200 set aside". The big number
-  /// already includes both; this says so rather than leaving it a mystery.
+  /// "−৳ 1,500 lent out · +৳ 500 borrowed". The big number already includes
+  /// both; this says so rather than leaving it a mystery.
   final String? pocketNote;
+
+  /// What has been set aside. It is already deducted from [balanceMinor], so the
+  /// hero shows it beside the big number — the spendable figure and the reason
+  /// it is smaller, at the same level, and the wallet total underneath so the
+  /// three always add up.
+  final int savingsMinor;
 
   @override
   Widget build(BuildContext context) {
@@ -75,21 +82,73 @@ class HeroBalance extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: AnimatedMoney(
-                balanceMinor,
-                symbol: symbol,
-                style: const TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -1,
-                  color: Colors.white,
-                  height: 1.1,
+            // One row, two figures: what you can spend (bigger), and what you
+            // have set aside out of the same wallet (at the same level, quieter).
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: AnimatedMoney(
+                      balanceMinor,
+                      symbol: symbol,
+                      style: const TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -1,
+                        color: Colors.white,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+                ),
+                if (savingsMinor > 0) ...<Widget>[
+                  const SizedBox(width: 10),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 3),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: <Widget>[
+                        Text(
+                          'SET ASIDE',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.2,
+                            color: Colors.white.withValues(alpha: 0.66),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          formatMoney(savingsMinor, symbol: symbol),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withValues(alpha: 0.92),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (savingsMinor > 0) ...<Widget>[
+              const SizedBox(height: 6),
+              // The total in the wallet, so ৳ 800 + ৳ 200 = ৳ 1,000 is never a
+              // sum the user has to do in their head.
+              Text(
+                'of ${formatMoney(balanceMinor + savingsMinor, symbol: symbol)} '
+                'in your wallet',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.80),
                 ),
               ),
-            ),
+            ],
             if (carriedMinor != 0 && carriedLabel != null) ...<Widget>[
               const SizedBox(height: 4),
               Text(

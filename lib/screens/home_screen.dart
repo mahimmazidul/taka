@@ -70,6 +70,7 @@ class HomeScreen extends StatelessWidget {
               carriedMinor: state.carryIntoMonth(now),
               carriedLabel: previousMonthLabel(now),
               pocketNote: _pocketNote(state),
+              savingsMinor: state.savingsMinor,
             ),
           ),
           Reveal(
@@ -399,20 +400,16 @@ class _SavingsTeaser extends StatelessWidget {
   }
 }
 
-/// What the big number is made of, in one quiet line: money lent out, money
-/// borrowed, and money consciously set aside.
+/// "−৳ 1,500 lent out · +৳ 500 borrowed", or null when nothing is open.
 ///
-/// "−৳ 1,500 lent out · +৳ 500 borrowed · ৳ 200 set aside". The savings part is
-/// a label, not a subtraction: the wallet still holds that ৳ 200, and the hero
-/// says so. Nothing here changes the number above it.
+/// Savings is not in here: it has its own figure inside the hero, and repeating
+/// it in the caption would read as a second deduction.
 String? _pocketNote(AppState state) {
   final List<String> parts = <String>[
     if (state.udharTotals.lentMinor > 0)
       '−${formatMoney(state.udharTotals.lentMinor, symbol: state.currencySymbol)} lent out',
     if (state.udharTotals.borrowedMinor > 0)
       '+${formatMoney(state.udharTotals.borrowedMinor, symbol: state.currencySymbol)} borrowed',
-    if (state.savingsMinor > 0)
-      '${formatMoney(state.savingsMinor, symbol: state.currencySymbol)} set aside',
   ];
   return parts.isEmpty ? null : parts.join(' · ');
 }
