@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:taka/constants/default_categories.dart';
+import 'package:taka/constants/default_subcategories.dart';
 import 'package:taka/core/clock.dart';
 import 'package:taka/db/database.dart';
 import 'package:taka/models/app_category.dart';
@@ -184,33 +185,69 @@ void main() {
   });
 
   group('groceries', () {
-    test('মুদি sits on the top row and is not a meal', () {
+    test('মুদি is a group on the top row, and it is not food', () {
       final AppCategory groceries = kDefaultCategories.firstWhere(
         (AppCategory category) => category.id == 'groceries',
       );
       expect(groceries.nameBn, 'মুদি');
       expect(groceries.parentId, isNull, reason: 'one tap from the top row');
+      expect(groceries.isGroup, isTrue, reason: 'it holds a sub-list');
       expect(groceries.isFood, isFalse);
-      expect(groceries.isGroup, isFalse);
       expect(state.acceptsMeal('groceries'), isFalse);
     });
 
-    test('a sauce bought for the room still shows up in the month', () async {
-      final Map<MealSlot, int> mealsBefore = Map<MealSlot, int>.of(
-        state.mealSpendToday,
+    test('the sub-list is the shopping, and none of it is a meal', () {
+      final List<AppCategory> items = kDefaultSubcategories
+          .where((AppCategory c) => c.parentId == 'groceries')
+          .toList();
+
+      expect(items, isNotEmpty, reason: 'a group with no items is a dead end');
+      expect(
+        items.map((AppCategory c) => c.nameBn),
+        containsAll(<String>['সস', 'তেল', 'লবণ-মসলা', 'চিনি']),
       );
-      await state.addTransaction(
-        type: EntryType.expense,
-        amountMinor: 12000,
-        categoryId: 'groceries',
-        note: 'Tomato sauce',
-        occurredAt: kTestNow,
-      );
-      expect(state.monthSpend['groceries'], 12000);
-      expect(state.month.expenseMinor, 99000 + 12000);
-      // …but nowhere in today's meals.
-      expect(state.mealSpendToday, mealsBefore);
+      for (final AppCategory item in items) {
+        expect(item.isGroup, isFalse, reason: '${item.id} is loggable');
+        expect(item.isFood, isFalse, reason: '${item.id} is a purchase');
+        expect(state.acceptsMeal(item.id), isFalse);
+      }
     });
+
+    test('the items reach the database under their group', () async {
+      final List<AppCategory> stored = await state.categoryRepo.all();
+      final List<AppCategory> items = stored
+          .where((AppCategory c) => c.parentId == 'groceries')
+          .toList();
+
+      expect(items.length, 7);
+      expect(
+        stored.firstWhere((AppCategory c) => c.id == 'groceries').isGroup,
+        isTrue,
+      );
+    });
+
+    test(
+      'a sauce bought for the room shows up in the month, not in meals',
+      () async {
+        final Map<MealSlot, int> mealsBefore = Map<MealSlot, int>.of(
+          state.mealSpendToday,
+        );
+        await state.addTransaction(
+          type: EntryType.expense,
+          amountMinor: 12000,
+          categoryId: 'sauce',
+          note: 'Tomato sauce',
+          occurredAt: kTestNow,
+        );
+
+        expect(state.monthSpend['sauce'], 12000);
+        expect(state.month.expenseMinor, 99000 + 12000);
+        // It rolls up to মুদি, so Where it went can name the group…
+        expect(state.spendOf('groceries'), 12000);
+        // …and nowhere in today's meals.
+        expect(state.mealSpendToday, mealsBefore);
+      },
+    );
   });
 }
 

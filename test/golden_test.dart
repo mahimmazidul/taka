@@ -180,6 +180,17 @@ void main() {
     await _shot(tester, 'dining_out');
   });
 
+  testWidgets('25 groceries items', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    // Same real path as dining out: the last-used group is pinned, so a sauce
+    // logged once is what puts মুদি on the first row next time.
+    await tester.runAsync(() => AppState.instance.rememberCategory('sauce'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.add_rounded));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'groceries');
+  });
+
   testWidgets('21 home — money carried from last month', (
     WidgetTester tester,
   ) async {

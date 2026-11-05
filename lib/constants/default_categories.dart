@@ -192,14 +192,11 @@ final List<AppCategory> _expenseGroups = <AppCategory>[
     color: '#D98E2B',
     order: 14,
   ),
-];
-
-/// Items that sit on the top row themselves — no sub-list, one tap.
-final List<AppCategory> _standalone = <AppCategory>[
-  _leaf(
-    // Pantry purchases — sauce, oil, salt, noodles for the room. One tap from
-    // the top row, because buying a bottle is a purchase, not a dish to cook or
-    // a meal eaten, so it does not belong inside a food group.
+  _group(
+    // Pantry shopping for the room — sauce, oil, salt, noodles. It is a group
+    // because "৳ 120 groceries" is all you would ever know otherwise, and one tap
+    // from the top row is still one tap. Not edible: buying a bottle is not a
+    // meal, so nothing inside it asks for a breakfast/lunch/dinner tag.
     id: 'groceries',
     name: 'Groceries',
     nameBn: 'মুদি',
@@ -207,6 +204,10 @@ final List<AppCategory> _standalone = <AppCategory>[
     color: '#7BA05B',
     order: 19,
   ),
+];
+
+/// Items that sit on the top row themselves — no sub-list, one tap.
+final List<AppCategory> _standalone = <AppCategory>[
   _leaf(
     id: 'laundry',
     name: 'Laundry',

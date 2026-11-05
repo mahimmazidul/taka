@@ -29,10 +29,36 @@ class CategoryPicker extends StatefulWidget {
 class _CategoryPickerState extends State<CategoryPicker> {
   String? _openGroupId;
 
+  /// The top row is a horizontal scroll, and seventeen groups do not fit on a
+  /// phone. Without this, opening the screen on the last-used group left its chip
+  /// off-screen on the right: the items below were visible, the chip that owned
+  /// them was not, and the group read as missing. One key per chip so the open one
+  /// can be brought into view.
+  final Map<String, GlobalKey> _chipKeys = <String, GlobalKey>{};
+  String? _scrolledTo;
+
   @override
   void initState() {
     super.initState();
     _openGroupId = _groupForSelection();
+    _scrollToOpenGroupAfterFrame();
+  }
+
+  /// Brings the open group's chip into view, once per group it opens.
+  void _scrollToOpenGroupAfterFrame() {
+    final String? id = _openGroupId;
+    if (id == null || _scrolledTo == id) return;
+    _scrolledTo = id;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final BuildContext? chip = _chipKeys[id]?.currentContext;
+      if (chip == null || !mounted) return;
+      Scrollable.ensureVisible(
+        chip,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   /// Which group's items should be showing right now.
@@ -57,6 +83,7 @@ class _CategoryPickerState extends State<CategoryPicker> {
 
   void _open(String groupId) {
     setState(() => _openGroupId = groupId);
+    _scrollToOpenGroupAfterFrame();
   }
 
   @override
@@ -80,54 +107,61 @@ class _CategoryPickerState extends State<CategoryPicker> {
           children: <Widget>[
             SizedBox(
               height: 40,
-              child: ListView.separated(
+              // A Row rather than a lazy ListView: ensureVisible cannot scroll to
+              // a chip that has never been built, and seventeen chips are cheap.
+              child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.zero,
-                itemCount: tops.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (BuildContext context, int index) {
-                  final AppCategory group = tops[index];
-                  final bool open = group.id == openGroup;
-                  final bool holdsSelection =
-                      widget.selectedId != null &&
-                      state.idsUnder(group.id).contains(widget.selectedId);
-                  return AppChip(
-                    label: group.label,
-                    icon: group.iconData,
-                    tint: group.color,
-                    selected: open || holdsSelection,
-                    onTap: () {
-                      if (group.isGroup) {
-                        _open(group.id);
-                      } else {
-                        // Leaf group: picking the chip is picking the category.
-                        _open(group.id);
-                        widget.onSelected(group);
-                      }
-                    },
-                  );
-                },
+                child: Row(
+                  children: <Widget>[
+                    for (final AppCategory group in tops) ...<Widget>[
+                      if (group != tops.first) const SizedBox(width: 8),
+                      KeyedSubtree(
+                        key: _chipKeys.putIfAbsent(group.id, () => GlobalKey()),
+                        child: AppChip(
+                          label: group.label,
+                          icon: group.iconData,
+                          tint: group.color,
+                          selected:
+                              group.id == openGroup ||
+                              (widget.selectedId != null &&
+                                  state
+                                      .idsUnder(group.id)
+                                      .contains(widget.selectedId)),
+                          onTap: () {
+                            // A container opens its items; a leaf is the category
+                            // itself, so picking the chip is picking it.
+                            _open(group.id);
+                            if (!group.isGroup) widget.onSelected(group);
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
             if (items.isNotEmpty) ...<Widget>[
               const SizedBox(height: 8),
               SizedBox(
                 height: 40,
-                child: ListView.separated(
+                child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   padding: EdgeInsets.zero,
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (BuildContext context, int index) {
-                    final AppCategory item = items[index];
-                    return AppChip(
-                      label: item.label,
-                      icon: item.iconData,
-                      tint: item.color,
-                      selected: item.id == widget.selectedId,
-                      onTap: () => widget.onSelected(item),
-                    );
-                  },
+                  child: Row(
+                    children: <Widget>[
+                      for (final AppCategory item in items) ...<Widget>[
+                        if (item != items.first) const SizedBox(width: 8),
+                        AppChip(
+                          label: item.label,
+                          icon: item.iconData,
+                          tint: item.color,
+                          selected: item.id == widget.selectedId,
+                          onTap: () => widget.onSelected(item),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ],

@@ -24,7 +24,7 @@ class AppDatabase {
   }) => AppDatabase._internal(factory, path);
 
   static const String _fileName = 'taka.db';
-  static const int _version = 8;
+  static const int _version = 9;
 
   final DatabaseFactory? _factory;
   final String? _path;
@@ -236,6 +236,10 @@ class AppDatabase {
       await _upgradeFoodGroups(db);
     }
 
+    if (oldVersion < 9) {
+      await _upgradeGroceriesGroup(db);
+    }
+
     if (oldVersion < 8) {
       // The savings pot. A separate table on purpose: saved money is not spent
       // money, so it must never enter the transactions ledger.
@@ -254,6 +258,22 @@ class AppDatabase {
         'CREATE INDEX IF NOT EXISTS idx_savings_occurred ON savings(occurred_at)',
       );
     }
+  }
+
+  /// v8 → v9: মুদি grows a sub-list.
+  ///
+  /// v1.10.0 shipped Groceries as a single item, and a single item can only ever
+  /// say "৳ 120 groceries". It is a group now — sauce, oil, salt, noodles — so an
+  /// existing database flips the row from leaf to container. Its own history is
+  /// untouched: entries logged against `groceries` before this still belong to
+  /// that row, and a group rollup picks them up with the items.
+  Future<void> _upgradeGroceriesGroup(Database db) async {
+    await db.update(
+      'categories',
+      <String, Object?>{'is_group': '1', 'food': '0'},
+      where: 'id = ?',
+      whereArgs: <Object?>['groceries'],
+    );
   }
 
   /// v6 → v7: the edible groups are marked edible.

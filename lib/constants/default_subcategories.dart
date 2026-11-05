@@ -641,10 +641,48 @@ final List<AppCategory> _life = <AppCategory>[
   _item('g_fees', 'fine', 'Fine', 'জরিমানা', 'fine', '#E8575D', 2),
 ];
 
+/// Pantry purchases for the room. None of these are `food`: a bottle of sauce
+/// bought for the shelf is a purchase, not a meal, and it must not appear in
+/// today's meals or ask for a tag.
+final List<AppCategory> _groceries = <AppCategory>[
+  _item('groceries', 'sauce', 'Sauce & ketchup', 'সস', 'grocery', '#E8575D', 0),
+  _item('groceries', 'oil', 'Oil', 'তেল', 'grocery', '#D98E2B', 1),
+  _item(
+    'groceries',
+    'spices',
+    'Salt & spices',
+    'লবণ-মসলা',
+    'grocery',
+    '#8C6E4A',
+    2,
+  ),
+  _item('groceries', 'sugar', 'Sugar', 'চিনি', 'grocery', '#4AA3A2', 3),
+  _item(
+    'groceries',
+    'noodlespack',
+    'Noodles packet',
+    'নুডলস প্যাকেট',
+    'grocery',
+    '#E9A23B',
+    4,
+  ),
+  _item('groceries', 'bread', 'Bread', 'ব্রেড', 'grocery', '#B08A5A', 5),
+  _item(
+    'groceries',
+    'pantryother',
+    'Other',
+    'অন্যান্য',
+    'grocery',
+    '#6C7873',
+    6,
+  ),
+];
+
 /// All seeded items, grouped for readability above and flattened here.
 final List<AppCategory> kDefaultSubcategories = <AppCategory>[
   ..._food,
   ..._eatout,
   ..._self,
   ..._life,
+  ..._groceries,
 ];
