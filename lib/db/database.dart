@@ -24,7 +24,7 @@ class AppDatabase {
   }) => AppDatabase._internal(factory, path);
 
   static const String _fileName = 'taka.db';
-  static const int _version = 7;
+  static const int _version = 8;
 
   final DatabaseFactory? _factory;
   final String? _path;
@@ -106,6 +106,19 @@ class AppDatabase {
       )
     ''');
     batch.execute('CREATE INDEX idx_udhar_returned ON udhar_entries(returned)');
+
+    batch.execute('''
+      CREATE TABLE savings (
+        id TEXT PRIMARY KEY,
+        direction TEXT NOT NULL CHECK(direction IN ('aside', 'back')),
+        amount_minor INTEGER NOT NULL CHECK(amount_minor > 0),
+        note TEXT NOT NULL DEFAULT '',
+        occurred_at INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    ''');
+    batch.execute('CREATE INDEX idx_savings_occurred ON savings(occurred_at)');
 
     batch.execute('''
       CREATE TABLE settings (
@@ -221,6 +234,25 @@ class AppDatabase {
 
     if (oldVersion < 7) {
       await _upgradeFoodGroups(db);
+    }
+
+    if (oldVersion < 8) {
+      // The savings pot. A separate table on purpose: saved money is not spent
+      // money, so it must never enter the transactions ledger.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS savings (
+          id TEXT PRIMARY KEY,
+          direction TEXT NOT NULL CHECK(direction IN ('aside', 'back')),
+          amount_minor INTEGER NOT NULL CHECK(amount_minor > 0),
+          note TEXT NOT NULL DEFAULT '',
+          occurred_at INTEGER NOT NULL,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_savings_occurred ON savings(occurred_at)',
+      );
     }
   }
 

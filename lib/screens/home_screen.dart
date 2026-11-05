@@ -19,6 +19,7 @@ import '../utils/format_currency.dart';
 import '../utils/insights.dart';
 import 'add_entry_screen.dart';
 import 'insights_screen.dart';
+import 'savings_screen.dart';
 import 'period_screen.dart';
 
 /// Dashboard. One hero, then open sections separated by hairlines — no stacks
@@ -114,6 +115,16 @@ class HomeScreen extends StatelessWidget {
                     .push(slideFadeRoute<void>(const InsightsScreen())),
           ),
           _PatternsTeaser(state: state),
+          if (state.settings.savingsEnabled) ...<Widget>[
+            SectionTitle(
+              title: 'Savings',
+              actionLabel: 'Open',
+              onAction: () =>
+                  Navigator.of(context)
+                      .push(slideFadeRoute<void>(const SavingsScreen())),
+            ),
+            _SavingsTeaser(state: state),
+          ],
           if (state.settings.udharEnabled) ...<Widget>[
             SectionTitle(
               title: 'Udhar',
@@ -314,6 +325,75 @@ class _MealsStrip extends StatelessWidget {
               ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// The pot in one line: what is in it, and what it is for.
+class _SavingsTeaser extends StatelessWidget {
+  const _SavingsTeaser({required this.state});
+
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final int saved = state.savingsMinor;
+    final int? goal = state.settings.savingsGoalMinor;
+    final String symbol = state.currencySymbol;
+
+    return Pressable(
+      onTap: () =>
+          Navigator.of(context)
+              .push(slideFadeRoute<void>(const SavingsScreen())),
+      scale: 0.99,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    formatMoney(saved, symbol: symbol),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.ink(context),
+                    ),
+                  ),
+                  if (goal != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: goal == 0 ? 0 : (saved / goal).clamp(0.0, 1.0),
+                        minHeight: 4,
+                        backgroundColor: AppColors.line(context),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Palette.taka,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                goal == null
+                    ? (saved == 0 ? 'Nothing set aside' : 'set aside')
+                    : 'of ${formatMoney(goal, symbol: symbol)}'
+                          '${state.settings.savingsGoalLabel == null ? '' : ' · ${state.settings.savingsGoalLabel}'}',
+                textAlign: TextAlign.right,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: AppColors.muted(context)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

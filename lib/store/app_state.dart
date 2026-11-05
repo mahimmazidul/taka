@@ -5,6 +5,7 @@ import '../db/settings_repository.dart';
 import '../core/clock.dart';
 import '../db/transaction_repository.dart';
 import '../db/udhar_repository.dart';
+import '../db/savings_repository.dart';
 import '../models/app_category.dart';
 import '../models/app_settings.dart';
 import '../models/budget_progress.dart';
@@ -12,6 +13,7 @@ import '../models/meal_slot.dart';
 import '../models/period_totals.dart';
 import '../models/transaction_entry.dart';
 import '../models/udhar_entry.dart';
+import '../models/savings_entry.dart';
 import '../utils/budget_calculator.dart';
 import '../utils/date_helpers.dart';
 import '../utils/id.dart';
@@ -28,11 +30,13 @@ class AppState extends ChangeNotifier {
     TransactionRepository? transactions,
     CategoryRepository? categories,
     UdharRepository? udhar,
+    SavingsRepository? savings,
     SettingsRepository? settings,
     DateTime Function()? clock,
   }) : transactions = transactions ?? TransactionRepository(),
        categoryRepo = categories ?? CategoryRepository(),
        udharRepo = udhar ?? UdharRepository(),
+       savingsRepo = savings ?? SavingsRepository(),
        settingsRepo = settings ?? SettingsRepository(),
        _clock = clock ?? (() => AppClock.now());
 
@@ -42,6 +46,7 @@ class AppState extends ChangeNotifier {
   final TransactionRepository transactions;
   final CategoryRepository categoryRepo;
   final UdharRepository udharRepo;
+  final SavingsRepository savingsRepo;
   final SettingsRepository settingsRepo;
   final DateTime Function() _clock;
 
@@ -58,6 +63,8 @@ class AppState extends ChangeNotifier {
   List<TransactionEntry> allEntries = const <TransactionEntry>[];
   List<UdharEntry> udharEntries = const <UdharEntry>[];
   UdharTotals udharTotals = const UdharTotals.empty();
+  List<SavingsEntry> savingsEntries = const <SavingsEntry>[];
+  int savingsBalanceMinor = 0;
   bool isLoading = true;
 
   /// The moment the derived numbers were last computed. Used to decide whether
@@ -135,6 +142,14 @@ class AppState extends ChangeNotifier {
               _sumChildren(group.id, spentThisMonth),
       },
     );
+
+    if (settings.savingsEnabled) {
+      savingsEntries = await savingsRepo.all();
+      savingsBalanceMinor = await savingsRepo.balanceMinor();
+    } else {
+      savingsEntries = const <SavingsEntry>[];
+      savingsBalanceMinor = 0;
+    }
 
     if (settings.udharEnabled) {
       udharEntries = await udharRepo.all();
@@ -241,9 +256,15 @@ class AppState extends ChangeNotifier {
   int get udharAdjustmentMinor =>
       udharTotals.borrowedMinor - udharTotals.lentMinor;
 
+  /// Money in the savings pot. It is yours, but it is not in your pocket, so it
+  /// comes off the number on Home — exactly like an open udhar, and unlike an
+  /// expense, which is money that is gone.
+  int get savingsMinor => settings.savingsEnabled ? savingsBalanceMinor : 0;
+
   /// The number on Home: everything earned, minus everything spent, corrected
-  /// for udhar that is still open. This is what you could actually spend today.
-  int get moneyOnHand => availableThisMonth + udharAdjustmentMinor;
+  /// for udhar that is still open, minus what has been set aside as savings.
+  int get moneyOnHand =>
+      availableThisMonth + udharAdjustmentMinor - savingsMinor;
 
   /// `monthSpend` with a row per group, so budgets and totals can show a group
   /// in one number.

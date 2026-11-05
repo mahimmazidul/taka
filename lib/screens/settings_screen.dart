@@ -18,6 +18,7 @@ import '../utils/currency_catalog.dart';
 import '../utils/export_data.dart';
 import 'budgets_screen.dart';
 import 'licenses_screen.dart';
+import '../store/savings_actions.dart';
 import 'about_screen.dart';
 import 'categories_screen.dart';
 import '../core/clock.dart';
@@ -204,6 +205,19 @@ class SettingsScreen extends StatelessWidget {
                         '${state.settings.currencySymbol} '
                         '${state.settings.currencyCode}',
                     onTap: () => _pickCurrency(context),
+                  ),
+                  SettingsRow(
+                    icon: Icons.savings_outlined,
+                    title: 'Savings pot',
+                    subtitle: state.settings.savingsEnabled
+                        ? 'Shown on Home'
+                        : 'Hidden from Home',
+                    trailing: Switch.adaptive(
+                      value: state.settings.savingsEnabled,
+                      activeTrackColor: Palette.taka.withValues(alpha: 0.5),
+                      activeThumbColor: Palette.taka,
+                      onChanged: (bool value) => state.setSavingsEnabled(value),
+                    ),
                   ),
                   SettingsRow(
                     icon: Icons.flag_outlined,

@@ -8,6 +8,9 @@ class AppSettings {
     this.monthlyBudgetMinor,
     this.udharEnabled = true,
     this.budgetsEnabled = true,
+    this.savingsEnabled = false,
+    this.savingsGoalMinor,
+    this.savingsGoalLabel,
     this.lastCategoryId,
   });
 
@@ -19,6 +22,14 @@ class AppSettings {
   final int? monthlyBudgetMinor;
   final bool udharEnabled;
   final bool budgetsEnabled;
+
+  /// The savings pot: money set aside, still yours, not spent.
+  final bool savingsEnabled;
+
+  /// Optional target and what it is for ("laptop"). Both are free text/number the
+  /// user sets; the pot works without them.
+  final int? savingsGoalMinor;
+  final String? savingsGoalLabel;
 
   /// Last item logged, so the add-entry screen can open on the group you used
   /// last instead of making you scroll to it again.
@@ -32,6 +43,10 @@ class AppSettings {
     bool clearMonthlyBudget = false,
     bool? udharEnabled,
     bool? budgetsEnabled,
+    bool? savingsEnabled,
+    int? savingsGoalMinor,
+    bool clearSavingsGoal = false,
+    String? savingsGoalLabel,
     String? lastCategoryId,
   }) {
     return AppSettings(
@@ -43,6 +58,13 @@ class AppSettings {
           : (monthlyBudgetMinor ?? this.monthlyBudgetMinor),
       udharEnabled: udharEnabled ?? this.udharEnabled,
       budgetsEnabled: budgetsEnabled ?? this.budgetsEnabled,
+      savingsEnabled: savingsEnabled ?? this.savingsEnabled,
+      savingsGoalMinor: clearSavingsGoal
+          ? null
+          : (savingsGoalMinor ?? this.savingsGoalMinor),
+      savingsGoalLabel: clearSavingsGoal
+          ? null
+          : (savingsGoalLabel ?? this.savingsGoalLabel),
       lastCategoryId: lastCategoryId ?? this.lastCategoryId,
     );
   }
@@ -55,8 +77,16 @@ class AppSettings {
       'monthly_budget_minor': monthlyBudgetMinor?.toString() ?? '',
       'udhar_enabled': udharEnabled ? '1' : '0',
       'budgets_enabled': budgetsEnabled ? '1' : '0',
+      'savings_enabled': savingsEnabled ? '1' : '0',
+      'savings_goal_minor': savingsGoalMinor?.toString() ?? '',
+      'savings_goal_label': savingsGoalLabel ?? '',
       'last_category_id': lastCategoryId ?? '',
     };
+  }
+
+  static int? _positive(String? raw) {
+    final int? value = int.tryParse(raw ?? '');
+    return (value ?? 0) > 0 ? value : null;
   }
 
   factory AppSettings.fromMap(Map<String, String> map) {
@@ -68,6 +98,11 @@ class AppSettings {
       monthlyBudgetMinor: (budget ?? 0) > 0 ? budget : null,
       udharEnabled: (map['udhar_enabled'] ?? '1') == '1',
       budgetsEnabled: (map['budgets_enabled'] ?? '1') == '1',
+      savingsEnabled: (map['savings_enabled'] ?? '0') == '1',
+      savingsGoalMinor: _positive(map['savings_goal_minor']),
+      savingsGoalLabel: (map['savings_goal_label'] ?? '').trim().isEmpty
+          ? null
+          : map['savings_goal_label'],
       lastCategoryId: (map['last_category_id'] ?? '').trim().isEmpty
           ? null
           : map['last_category_id'],
