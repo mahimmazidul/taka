@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:taka/app.dart';
+import 'package:taka/components/settings_row.dart';
 import 'package:taka/core/clock.dart';
 import 'package:taka/db/database.dart';
 import 'package:taka/models/transaction_entry.dart';
+import 'package:taka/models/savings_entry.dart';
 import 'package:taka/store/app_state.dart';
+import 'package:taka/store/savings_actions.dart';
 
 import 'support/seed.dart';
 
@@ -317,5 +320,121 @@ void main() {
 
     expect(AppState.instance.settings.darkMode, isTrue);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the savings pot is off until asked for, then moves money', (
+    WidgetTester tester,
+  ) async {
+    final AppState state = AppState.instance;
+    expect(state.settings.savingsEnabled, isFalse);
+    final int pocket = state.moneyOnHand;
+
+    // Settings → Savings pot on.
+    await pumpAt(tester, const Size(390, 844));
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+    final Finder settingsList = find
+        .byWidgetPredicate(
+          (Widget widget) =>
+              widget is ListView && widget.scrollDirection == Axis.vertical,
+        )
+        .first;
+    await tester.dragUntilVisible(
+      find.text('Savings pot'),
+      settingsList,
+      const Offset(0, -120),
+    );
+    await tester.pumpAndSettle();
+    // The switch is the row's trailing widget; the text itself does not toggle.
+    await tester.runAsync(() async {
+      await tester.tap(
+        find.descendant(
+          of: find.ancestor(
+            of: find.text('Savings pot'),
+            matching: find.byType(SettingsRow),
+          ),
+          matching: find.byType(Switch),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
+    await tester.pumpAndSettle();
+    expect(state.settings.savingsEnabled, isTrue);
+
+    // Home now carries a savings row, and the pot takes money off the pocket.
+    await tester.tap(find.byIcon(Icons.home_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('SAVINGS'), findsOneWidget);
+
+    await tester.runAsync(
+      () => state.addSavings(
+        direction: SavingsDirection.aside,
+        amountMinor: 100000,
+        note: 'Leftover',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(state.moneyOnHand, pocket - 100000);
+    // The month's Out is a fact about purchases and does not move.
+    expect(find.textContaining('990'), findsWidgets);
+  });
+
+  testWidgets('the savings screen opens, sets money aside and takes it back', (
+    WidgetTester tester,
+  ) async {
+    final AppState state = AppState.instance;
+    await tester.runAsync(() => state.setSavingsEnabled(true));
+    await pumpAt(tester, const Size(390, 844));
+
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.home_rounded));
+    await tester.pumpAndSettle();
+
+    final Finder homeList = find
+        .byWidgetPredicate(
+          (Widget widget) =>
+              widget is ListView && widget.scrollDirection == Axis.vertical,
+        )
+        .first;
+    await tester.dragUntilVisible(
+      find.text('Nothing set aside'),
+      homeList,
+      const Offset(0, -120),
+    );
+    await tester.pumpAndSettle();
+    // The row itself is the door; "Open" is shared with other sections.
+    await tester.tap(find.text('Nothing set aside'));
+    await tester.pumpAndSettle();
+    expect(find.text('SET ASIDE'), findsOneWidget);
+
+    // Set ৳ 500 aside through the sheet.
+    await tester.tap(find.text('Set money aside'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('savings_amount')), '500');
+    await tester.pumpAndSettle();
+    // The write goes to real SQLite, so it needs real time to finish.
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Set aside'));
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    });
+    await tester.pumpAndSettle();
+
+    expect(state.savingsMinor, 50000);
+    expect(find.textContaining('500'), findsWidgets);
+
+    // Take it all back.
+    await tester.tap(find.text('Take money back'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('savings_amount')), '500');
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Take back'));
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    });
+    await tester.pumpAndSettle();
+
+    expect(state.savingsMinor, 0);
+    expect(find.text('Nothing in the pot yet'), findsOneWidget);
   });
 }

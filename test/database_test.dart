@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:taka/db/category_repository.dart';
 import 'package:taka/db/database.dart';
 import 'package:taka/db/settings_repository.dart';
+import 'package:taka/db/savings_repository.dart';
 import 'package:taka/db/transaction_repository.dart';
 import 'package:taka/db/udhar_repository.dart';
 import 'package:taka/models/app_category.dart';
@@ -224,6 +225,13 @@ void main() {
       isFalse,
       reason: 'hall bills are not food',
     );
+
+    // v7 → v8: the savings pot gets its own empty table. Nothing is migrated
+    // into it — money saved before this version was never recorded as savings,
+    // and guessing at it would invent a history.
+    final SavingsRepository savings = SavingsRepository(database: upgraded);
+    expect(await savings.all(), isEmpty);
+    expect(await savings.balanceMinor(), 0);
 
     final TransactionEntry kept = (await TransactionRepository(
       database: upgraded,

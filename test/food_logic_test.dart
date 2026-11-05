@@ -272,6 +272,7 @@ void main() {
         transactions: state.transactions,
         categories: state.categoryRepo,
         udhar: state.udharRepo,
+        savings: state.savingsRepo,
         settings: state.settingsRepo,
         clock: () => DateTime(2026, 11, 1, 0, 5),
       );

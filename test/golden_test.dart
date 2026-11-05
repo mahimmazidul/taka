@@ -5,6 +5,8 @@ import 'package:taka/app.dart';
 import 'package:taka/core/clock.dart';
 import 'package:taka/db/database.dart';
 import 'package:taka/store/app_state.dart';
+import 'package:taka/models/savings_entry.dart';
+import 'package:taka/store/savings_actions.dart';
 import 'package:taka/store/settings_actions.dart';
 
 import 'support/fonts.dart';
@@ -221,6 +223,48 @@ void main() {
     await _shot(tester, 'licences');
   });
 
+  testWidgets('23 savings', (WidgetTester tester) async {
+    await _render(tester, darkMode: false);
+    // The savings row sits below the fold on a 390×844 screen, so bring it up
+    // before tapping: at rest it would be reached through the bottom nav instead.
+    final Finder homeList = find
+        .byWidgetPredicate(
+          (Widget widget) =>
+              widget is ListView && widget.scrollDirection == Axis.vertical,
+        )
+        .first;
+    await tester.dragUntilVisible(
+      find.textContaining('Laptop'),
+      homeList,
+      const Offset(0, -120),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Laptop'));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'savings');
+  });
+
+  testWidgets('24 savings — dark', (WidgetTester tester) async {
+    await _render(tester, darkMode: true);
+    // The savings row sits below the fold on a 390×844 screen, so bring it up
+    // before tapping: at rest it would be reached through the bottom nav instead.
+    final Finder homeList = find
+        .byWidgetPredicate(
+          (Widget widget) =>
+              widget is ListView && widget.scrollDirection == Axis.vertical,
+        )
+        .first;
+    await tester.dragUntilVisible(
+      find.textContaining('Laptop'),
+      homeList,
+      const Offset(0, -120),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Laptop'));
+    await tester.pumpAndSettle();
+    await _shot(tester, 'savings_dark');
+  });
+
   testWidgets('19 categories', (WidgetTester tester) async {
     await _render(tester, darkMode: false);
     await tester.tap(find.byIcon(Icons.tune_rounded));
@@ -259,6 +303,30 @@ Future<void> _render(
   if (darkMode) {
     await tester.runAsync(() => seeded.setDarkMode(true));
   }
+  // The pot is off by default; the screenshots show what it looks like on, with
+  // a little history and a goal so the row and the bar are both visible.
+  await tester.runAsync(() async {
+    await seeded.setSavingsEnabled(true);
+    await seeded.addSavings(
+      direction: SavingsDirection.aside,
+      amountMinor: 500000,
+      note: 'October leftover',
+      occurredAt: DateTime(2026, 10, 28, 20, 10),
+    );
+    await seeded.addSavings(
+      direction: SavingsDirection.aside,
+      amountMinor: 120000,
+      note: 'Eid money',
+      occurredAt: DateTime(2026, 10, 25, 11, 0),
+    );
+    await seeded.addSavings(
+      direction: SavingsDirection.back,
+      amountMinor: 90000,
+      note: 'Books',
+      occurredAt: DateTime(2026, 10, 30, 16, 40),
+    );
+    await seeded.setSavingsGoal(amountMinor: 1200000, label: 'Laptop');
+  });
   AppState.instance = seeded;
 
   tester.view.physicalSize = size * 3;

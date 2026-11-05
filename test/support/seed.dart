@@ -3,6 +3,7 @@ import 'package:taka/db/category_repository.dart';
 import 'package:taka/db/database.dart';
 import 'package:taka/db/settings_repository.dart';
 import 'package:taka/db/transaction_repository.dart';
+import 'package:taka/db/savings_repository.dart';
 import 'package:taka/db/udhar_repository.dart';
 import 'package:taka/models/meal_slot.dart';
 import 'package:taka/models/transaction_entry.dart';
@@ -20,6 +21,7 @@ Future<AppState> buildSeededState({required AppDatabase database}) async {
   );
   final CategoryRepository categories = CategoryRepository(database: database);
   final UdharRepository udhar = UdharRepository(database: database);
+  final SavingsRepository savings = SavingsRepository(database: database);
   final SettingsRepository settings = SettingsRepository(database: database);
 
   Future<void> add(
@@ -173,6 +175,7 @@ Future<AppState> buildSeededState({required AppDatabase database}) async {
     transactions: transactions,
     categories: categories,
     udhar: udhar,
+    savings: savings,
     settings: settings,
     clock: () => AppClock.now(),
   );
