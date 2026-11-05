@@ -12,8 +12,8 @@ much of the month is left.
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-120%20passing-0E9F6E)
-[![Download APK](https://img.shields.io/badge/download-v1.10.2%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+![Tests](https://img.shields.io/badge/tests-123%20passing-0E9F6E)
+[![Download APK](https://img.shields.io/badge/download-v1.11.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -59,6 +59,10 @@ refreshed whenever the UI changes. No mockups.
 | Patterns | Dining out |
 |---|---|
 | ![Patterns](docs/screenshots/patterns.png) | ![Fast food](docs/screenshots/dining_out.png) |
+
+| মুদি · Groceries |
+|---|
+| ![Groceries](docs/screenshots/groceries.png) |
 
 | Settings, updates and links | Licences |
 |---|---|
@@ -129,14 +133,18 @@ in today's meals; a group itself never takes a meal tag.
 | উপহার ও পরিবার · Gifts & family | উপহার দেওয়া, দান, পরিবার |
 | ফি ও জরিমানা · Fees & fines | পরীক্ষা ফি, লাইব্রেরি ফি, জরিমানা |
 
-Plus three that sit on the top row themselves — **মুদি · Groceries**, **লন্ড্রি ·
+Plus two that sit on the top row themselves with no sub-list — **লন্ড্রি ·
 Laundry**, **অন্যান্য · Other** — and six income sources (বাসা থেকে, টিউশন, বৃত্তি,
 ফ্রিল্যান্স, উপহার, অন্যান্য).
 
-**মুদি is one tap, on purpose.** A bottle of tomato sauce for the room is a
-purchase, not a dish and not a meal: it sits on the top row instead of inside a
-food group, it counts in the month like any other spend, and it never asks for a
-breakfast/lunch/dinner tag.
+| মুদি · Groceries | সস, তেল, লবণ-মসলা, চিনি, নুডলস প্যাকেট, ব্রেড, অন্যান্য |
+
+**মুদি is its own group, on purpose.** A bottle of tomato sauce for the room is a
+purchase, not a dish and not a meal: it gets its own group and a sub-list instead
+of being filed under a food group, it counts in the month and in *Where it went*,
+and nothing inside it asks for a breakfast/lunch/dinner tag. One tap from the top
+row — and the row scrolls itself to the group you used last, so it is never the
+chip you cannot find.
 
 **Search the whole ledger, in either script.** Type a note, or a category name in
 English or Bangla — "rice" finds ভাত, and "ভাত" finds the entry whose note says
@@ -294,7 +302,7 @@ lib/
 │   ├── clock.dart             the one place DateTime.now() lives
 │   └── app_info.dart          name, version, author — read by About
 ├── constants/
-│   ├── default_categories.dart    15 groups, 4 standalone items, 6 income sources
+│   ├── default_categories.dart    16 groups, 2 standalone items, 6 income sources
 │   ├── default_subcategories.dart the 90+ items inside those groups
 │   └── category_icons.dart        70 icon keys, the picker subset, colour swatches
 ├── models/                    transaction_entry (+meal), app_category (+parent),
@@ -328,7 +336,7 @@ state-management package, no chart package, no analytics.
 The app needs the network for exactly one thing — *Check for updates* — and never
 on its own. Nothing is uploaded, and every screen works with the radio off.
 
-### Data model (SQLite `taka.db`, schema v8)
+### Data model (SQLite `taka.db`, schema v9)
 
 ```sql
 categories(id, name, name_bn, icon, color, kind, budget_minor,
@@ -377,13 +385,13 @@ be unforgivable:
 
 `test/database_test.dart` builds a v2 database by hand, reopens it with the current
 code and asserts the old entry, its category and its budget all survived — now
-through six upgrades, v2 → v8.
+through seven upgrades, v2 → v9.
 
 ### Tests
 
-120 tests, all offline (16 format and helper rules, 10 period maths, 13 meal rules,
-13 carry-over and search, 11 savings pot, 6 insights, 14 database, 14 screen,
-23 golden):
+123 tests, all offline (16 format and helper rules, 10 period maths, 13 meal rules,
+13 carry-over and search, 13 savings and groceries, 6 insights, 14 database,
+14 screen, 24 golden):
 
 | File | Covers |
 |---|---|
@@ -392,7 +400,7 @@ through six upgrades, v2 → v8.
 | `test/period_stats_test.dart` | the day / week / month / year maths behind the breakdowns: empty days kept, income kept apart from spending, the month list starting where the history starts, a day's entries newest first |
 | `test/food_logic_test.dart` | the meal rule: which categories may take a meal, that a non-food entry never lands in a meal total even if an old row stored one, why noodles and egg exist twice, and that `today` really resets at midnight |
 | `test/insights_test.dart` | the Patterns maths: a meal day is missed only when nothing was logged for it, today counts only for meals already past, a non-food entry never counts, ranking, rhythm, and that 1.10.0 is newer than 1.9.0 |
-| `test/savings_test.dart` | the pot: ৳ 1,000 in the wallet with ৳ 200 aside leaves ৳ 800 spendable and ৳ 1,000 still in the wallet, the nudge follows the spendable figure, meals and the carry-over do not move, taking it back reverses it exactly, the toggle gives the money back to the pocket, the optional goal is clearable, and মুদি counts as spending but never as a meal |
+| `test/savings_test.dart` | the pot: ৳ 1,000 in the wallet with ৳ 200 aside leaves ৳ 800 spendable and ৳ 1,000 still in the wallet, the nudge follows the spendable figure, meals and the carry-over do not move, taking it back reverses it exactly, the toggle gives the money back to the pocket, the optional goal is clearable, and মুদি is a group on the top row whose seven items are all non-food, reach the database under it, and roll up to it without touching a meal |
 | `test/carry_search_test.dart` | the real case — money in on 30 October, spent the same day, still there on 1 November; two months of leftovers both carrying; that a resume on the same day does not reload but a new day does; udhar moving money on hand and settling reversing it; and search: by note in any month, by English category name, by Bangla category name |
 | `test/screens_test.dart` | the whole app at 320 / 360 / 414 / 768 widths **and in landscape**, 1.3× text scale, tab switching, adding an entry end-to-end, the meal row disappearing for a face wash, the period breakdowns and their day sheet, dark-mode toggle, and the savings pot switched on from Settings and moved through its own screen |
 | `test/golden_test.dart` | every screenshot in this README |
@@ -431,6 +439,16 @@ licence regardless of the code's.
 - Icons: Material Symbols via `flutter/material`.
 
 ## Changelog
+
+- **v1.11.0** — **মুদি gets its sub-list.** 1.10.0 shipped Groceries as a single
+  item, which can only ever say "৳ 120 groceries": it is a group now — সস, তেল,
+  লবণ-মসলা, চিনি, নুডলস প্যাকেট, ব্রেড, অন্যান্য — still one tap from the top row,
+  still not food, so nothing inside it asks for a meal tag. Schema v9 flips the old
+  row from item to container and keeps its history. Also fixed the reason it looked
+  missing: the group chip row is a horizontal scroll and never followed the group
+  you had opened, so the selected group could sit off-screen with its items visible
+  below it. It now scrolls itself to that chip — the row is a plain `Row` so every
+  chip exists to be scrolled to.
 
 - **v1.10.2** — the hero shows all three numbers, because they are three
   different facts. ৳ 1,000 in the wallet with ৳ 200 set aside reads **৳ 800** big,

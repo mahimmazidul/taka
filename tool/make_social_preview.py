@@ -59,26 +59,77 @@ def glow(canvas: Image.Image) -> None:
     canvas.alpha_composite(layer)
 
 
-def phone(path: pathlib.Path, height: int, radius: int) -> Image.Image:
-    """A screenshot in a rounded frame with a soft shadow, the way a phone looks."""
+def phone(path: pathlib.Path, height: int, radius: int = 34) -> Image.Image:
+    """A screenshot inside a phone body: bezel, island, side buttons, shadow.
+
+    A bare rounded screenshot on a green field reads as a picture of a screen; the
+    bezel and the island are what make it read as the handset the app runs on.
+    """
     shot = Image.open(path).convert("RGBA")
+    bezel = max(7, round(height * 0.022))
     width = round(shot.width * height / shot.height)
     shot = shot.resize((width, height), Image.LANCZOS)
 
-    mask = Image.new("L", shot.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, width, height), radius, fill=255)
-    shot.putalpha(mask)
+    body_w, body_h = width + bezel * 2, height + bezel * 2
+    body = Image.new("RGBA", (body_w, body_h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(body)
 
-    pad = 46
-    shadow = Image.new("RGBA", (width + pad * 2, height + pad * 2), (0, 0, 0, 0))
-    ImageDraw.Draw(shadow).rounded_rectangle(
-        (pad, pad + 16, pad + width, pad + height + 16),
-        radius,
-        fill=(4, 40, 32, 120),
+    # The handset: near-black, with a faint highlight along the top edge so the
+    # frame does not look like a flat sticker.
+    draw.rounded_rectangle((0, 0, body_w, body_h), radius, fill=(18, 24, 22, 255))
+    draw.rounded_rectangle(
+        (0, 0, body_w, body_h), radius, outline=(96, 112, 105, 255), width=2
     )
-    shadow = shadow.filter(ImageFilter.GaussianBlur(22))
-    shadow.alpha_composite(shot, (pad, pad))
-    return shadow
+    draw.rounded_rectangle(
+        (3, 3, body_w - 3, body_h * 0.45),
+        radius - 3,
+        fill=(34, 44, 40, 255),
+    )
+    draw.rounded_rectangle(
+        (3, body_h * 0.45, body_w - 3, body_h - 3),
+        radius - 3,
+        fill=(18, 24, 22, 255),
+    )
+
+    # Screen, clipped to its own rounding.
+    mask = Image.new("L", shot.size, 0)
+    screen_radius = max(6, radius - bezel)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (0, 0, width - 1, height - 1), screen_radius, fill=255
+    )
+    body.paste(shot, (bezel, bezel), mask)
+
+    # The island, and the two side buttons that make a phone a phone.
+    island_w, island_h = round(width * 0.30), max(8, round(height * 0.021))
+    island = Image.new("RGBA", (island_w, island_h), (0, 0, 0, 0))
+    ImageDraw.Draw(island).rounded_rectangle(
+        (0, 0, island_w - 1, island_h - 1), island_h // 2, fill=(10, 13, 12, 255)
+    )
+    body.alpha_composite(
+        island, (bezel + (width - island_w) // 2, bezel + round(height * 0.012))
+    )
+    for i, (side, length, offset) in enumerate(
+        (("left", 0.045, 0.16), ("left", 0.045, 0.26), ("right", 0.075, 0.22))
+    ):
+        btn_h = round(body_h * length)
+        btn_w = max(3, round(body_w * 0.012))
+        y = round(body_h * offset)
+        x = -btn_w + 1 if side == "left" else body_w - 1
+        draw.rounded_rectangle(
+            (x, y, x + btn_w, y + btn_h), btn_w // 2, fill=(58, 70, 65, 255)
+        )
+
+    # Soft drop shadow under the whole handset.
+    pad = 44
+    out = Image.new("RGBA", (body_w + pad * 2, body_h + pad * 2), (0, 0, 0, 0))
+    ImageDraw.Draw(out).rounded_rectangle(
+        (pad, pad + 14, pad + body_w, pad + body_h + 14),
+        radius,
+        fill=(3, 30, 24, 130),
+    )
+    out = out.filter(ImageFilter.GaussianBlur(20))
+    out.alpha_composite(body, (pad, pad))
+    return out
 
 
 def main() -> None:
@@ -88,10 +139,12 @@ def main() -> None:
     # ── phones on the right, inside the frame ────────────────────────────────
     # Both fit entirely: a card cropped mid-screen looks like a mistake, not a
     # design. The extra 46 px each side is the shadow's padding.
-    back = phone(SHOTS / "savings.png", height=420, radius=26)
-    front = phone(SHOTS / "home_light.png", height=486, radius=28)
-    canvas.alpha_composite(back, (924, 120))
-    canvas.alpha_composite(front, (694, 40))
+    # Two handsets, two modes: the bright card and the dark one, side by side so
+    # the card shows both without a caption claiming it.
+    dark = phone(SHOTS / "home_dark.png", height=430)
+    light = phone(SHOTS / "home_light.png", height=486)
+    canvas.alpha_composite(dark, (906, 116))
+    canvas.alpha_composite(light, (676, 38))
 
     draw = ImageDraw.Draw(canvas)
 
