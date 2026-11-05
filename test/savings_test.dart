@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:taka/db/category_repository.dart';
 import 'package:taka/constants/default_categories.dart';
 import 'package:taka/constants/default_subcategories.dart';
 import 'package:taka/core/clock.dart';
@@ -223,6 +225,58 @@ void main() {
       expect(
         stored.firstWhere((AppCategory c) => c.id == 'groceries').isGroup,
         isTrue,
+      );
+    });
+
+    test('an existing v1.10 database grows the sub-list on upgrade', () async {
+      // The fresh-install test above is the easy half. A phone that installed
+      // 1.10.x has `groceries` stored as an ITEM with none of the seven items, so
+      // this rebuilds that exact state — real v9 schema, then wound back to what
+      // 1.10 shipped and stamped as version 8 — and reopens it with today's code,
+      // which must run the upgrade the same way a phone will.
+      final String path = p.join(
+        await databaseFactoryFfi.getDatabasesPath(),
+        'groceries-${DateTime.now().microsecondsSinceEpoch}.db',
+      );
+      addTearDown(() => databaseFactoryFfi.deleteDatabase(path));
+
+      final AppDatabase first = AppDatabase.at(
+        factory: databaseFactoryFfi,
+        path: path,
+      );
+      final Database db = await first.database;
+      await db.delete(
+        'categories',
+        where: 'parent_id = ?',
+        whereArgs: <Object?>['groceries'],
+      );
+      await db.update(
+        'categories',
+        <String, Object?>{'is_group': '0'},
+        where: 'id = ?',
+        whereArgs: <Object?>['groceries'],
+      );
+      await db.execute('PRAGMA user_version = 8');
+      await first.close();
+
+      final AppDatabase reopened = AppDatabase.at(
+        factory: databaseFactoryFfi,
+        path: path,
+      );
+      addTearDown(reopened.close);
+      final List<AppCategory> stored = await CategoryRepository(
+        database: reopened,
+      ).all();
+
+      expect(
+        stored.firstWhere((AppCategory c) => c.id == 'groceries').isGroup,
+        isTrue,
+        reason: 'the item became a container',
+      );
+      expect(
+        stored.where((AppCategory c) => c.parentId == 'groceries').length,
+        7,
+        reason: 'the seven items are seeded on open',
       );
     });
 
