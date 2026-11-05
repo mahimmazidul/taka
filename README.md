@@ -12,8 +12,8 @@ much of the month is left.
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-77%20passing-0E9F6E)
-[![Download APK](https://img.shields.io/badge/download-v1.9.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+![Tests](https://img.shields.io/badge/tests-119%20passing-0E9F6E)
+[![Download APK](https://img.shields.io/badge/download-v1.10.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -36,9 +36,13 @@ refreshed whenever the UI changes. No mockups.
 |---|---|
 | ![Add entry](docs/screenshots/add_entry.png) | ![History](docs/screenshots/history.png) |
 
-| Udhar | Budgets |
+| Udhar | Savings |
 |---|---|
-| ![Udhar](docs/screenshots/udhar.png) | ![Budgets](docs/screenshots/budgets.png) |
+| ![Udhar](docs/screenshots/udhar.png) | ![Savings](docs/screenshots/savings.png) |
+
+| Budgets | Savings (dark) |
+|---|---|
+| ![Budgets](docs/screenshots/budgets.png) | ![Savings, dark](docs/screenshots/savings_dark.png) |
 
 | Categories | Settings |
 |---|---|
@@ -120,9 +124,14 @@ in today's meals; a group itself never takes a meal tag.
 | উপহার ও পরিবার · Gifts & family | উপহার দেওয়া, দান, পরিবার |
 | ফি ও জরিমানা · Fees & fines | পরীক্ষা ফি, লাইব্রেরি ফি, জরিমানা |
 
-Plus two that sit on the top row themselves — **লন্ড্রি · Laundry**, **অন্যান্য ·
-Other** — and six income sources (বাসা থেকে, টিউশন, বৃত্তি, ফ্রিল্যান্স, উপহার,
-অন্যান্য).
+Plus three that sit on the top row themselves — **মুদি · Groceries**, **লন্ড্রি ·
+Laundry**, **অন্যান্য · Other** — and six income sources (বাসা থেকে, টিউশন, বৃত্তি,
+ফ্রিল্যান্স, উপহার, অন্যান্য).
+
+**মুদি is one tap, on purpose.** A bottle of tomato sauce for the room is a
+purchase, not a dish and not a meal: it sits on the top row instead of inside a
+food group, it counts in the month like any other spend, and it never asks for a
+breakfast/lunch/dinner tag.
 
 **Search the whole ledger, in either script.** Type a note, or a category name in
 English or Bangla — "rice" finds ভাত, and "ভাত" finds the entry whose note says
@@ -156,6 +165,14 @@ not in your hand any more and money borrowed is, so *money on hand* is corrected
 by both — with a line saying which: `−৳ 1,500 lent out · +৳ 500 borrowed`.
 Settling either one puts the same amount back. This is a correction to the
 pocket, not an expense: income and spending stay what they were.
+
+**Savings is the same idea, deliberately not a category.** Money set aside is
+still yours, it just is not in your pocket, so it comes off that number and
+appears nowhere in In/Out, budgets or Patterns. A pot you open from Home, with
+*set money aside* and *take money back*, a history of both, and an optional
+target (`৳ 5,300 of ৳ 12,000 · Laptop`) drawn as a thin bar. Off until you turn it
+on in Settings, and starting at ৳ 0: anything saved before it existed was never
+recorded as savings, and the app does not invent a past.
 
 Limits are a separate idea and stay separate: a budget caps a category for the
 month and never eats the money you already have.
@@ -268,16 +285,17 @@ lib/
 │   ├── clock.dart             the one place DateTime.now() lives
 │   └── app_info.dart          name, version, author — read by About
 ├── constants/
-│   ├── default_categories.dart    15 groups, 3 standalone items, 6 income sources
+│   ├── default_categories.dart    15 groups, 4 standalone items, 6 income sources
 │   ├── default_subcategories.dart the 90+ items inside those groups
 │   └── category_icons.dart        70 icon keys, the picker subset, colour swatches
 ├── models/                    transaction_entry (+meal), app_category (+parent),
-│                              udhar_entry, app_settings, meal_slot,
+│                              udhar_entry, savings_entry, app_settings, meal_slot,
 │                              period_totals, budget_progress, day_group
 ├── db/                        database.dart (schema v6, migrations, additive
 │                              seeding) and one repository per table
 ├── store/                     app_state.dart (ChangeNotifier) plus extensions:
 │                              settings_actions, category_actions, udhar_actions,
+│                              savings_actions,
 │                              data_actions
 ├── utils/                     format_currency, date_helpers, budget_calculator,
 │                              currency_catalog, export_data, color_hex, id,
@@ -287,8 +305,8 @@ lib/
 │                              budget_line, entry_row, category_tile, segmented,
 │                              amount_keypad, app_sheet, primary_button,
 │                              settings_row, section_title, empty_state
-└── screens/                   app_shell, home, add_entry, history, udhar, budgets,
-                               categories, category_editor_sheet, insights,
+└── screens/                   app_shell, home, add_entry, history, udhar, savings,
+                               budgets, categories, category_editor_sheet, insights,
                                settings, about
 ```
 
@@ -301,7 +319,7 @@ state-management package, no chart package, no analytics.
 The app needs the network for exactly one thing — *Check for updates* — and never
 on its own. Nothing is uploaded, and every screen works with the radio off.
 
-### Data model (SQLite `taka.db`, schema v7)
+### Data model (SQLite `taka.db`, schema v8)
 
 ```sql
 categories(id, name, name_bn, icon, color, kind, budget_minor,
@@ -310,6 +328,7 @@ transactions(id, type, amount_minor, category_id, note,
              occurred_at, created_at, updated_at, meal)
 udhar_entries(id, type, person, amount_minor, note, occurred_at,
               returned, returned_at, created_at, updated_at)
+savings(id, direction, amount_minor, note, occurred_at, created_at, updated_at)
 settings(key, value)
 ```
 
@@ -349,22 +368,24 @@ be unforgivable:
 
 `test/database_test.dart` builds a v2 database by hand, reopens it with the current
 code and asserts the old entry, its category and its budget all survived — now
-through five upgrades, v2 → v7.
+through six upgrades, v2 → v8.
 
 ### Tests
 
-105 tests, all offline (40 logic, insight and store rules, 25 database, 12 screen, 21 golden,
-plus the fast-food and carry-over rules):
+119 tests, all offline (16 format and helper rules, 10 period maths, 13 meal rules,
+13 carry-over and search, 10 savings pot, 6 insights, 14 database, 14 screen,
+23 golden):
 
 | File | Covers |
 |---|---|
 | `test/logic_test.dart` | money formatting, exact keypad→paisa conversion, date helpers, budget thresholds, labels |
-| `test/database_test.dart` | the real schema and SQL on SQLite: seeds and the category tree, CRUD, totals, per-day buckets, filters, category reassignment and group deletion, udhar settlement, settings, backup round-trip, CSV, and both migrations (v2 → v4, and the v4 duplicate merge) |
+| `test/database_test.dart` | the real schema and SQL on SQLite: seeds and the category tree, CRUD, totals, per-day buckets, filters, category reassignment and group deletion, udhar settlement, savings, settings, backup round-trip, CSV, and the migrations (v2 → v8, and the v4 duplicate merge) |
 | `test/period_stats_test.dart` | the day / week / month / year maths behind the breakdowns: empty days kept, income kept apart from spending, the month list starting where the history starts, a day's entries newest first |
 | `test/food_logic_test.dart` | the meal rule: which categories may take a meal, that a non-food entry never lands in a meal total even if an old row stored one, why noodles and egg exist twice, and that `today` really resets at midnight |
 | `test/insights_test.dart` | the Patterns maths: a meal day is missed only when nothing was logged for it, today counts only for meals already past, a non-food entry never counts, ranking, rhythm, and that 1.10.0 is newer than 1.9.0 |
+| `test/savings_test.dart` | the pot: money set aside leaves the pocket but never enters In/Out, taking it back reverses it exactly, removing a movement rewrites nothing, the toggle hides the pot and hands the money back, the optional goal is clearable, and মুদি counts as spending but never as a meal |
 | `test/carry_search_test.dart` | the real case — money in on 30 October, spent the same day, still there on 1 November; two months of leftovers both carrying; that a resume on the same day does not reload but a new day does; udhar moving money on hand and settling reversing it; and search: by note in any month, by English category name, by Bangla category name |
-| `test/screens_test.dart` | the whole app at 320 / 360 / 414 / 768 widths **and in landscape**, 1.3× text scale, tab switching, adding an entry end-to-end, the meal row disappearing for a face wash, the period breakdowns and their day sheet, dark-mode toggle |
+| `test/screens_test.dart` | the whole app at 320 / 360 / 414 / 768 widths **and in landscape**, 1.3× text scale, tab switching, adding an entry end-to-end, the meal row disappearing for a face wash, the period breakdowns and their day sheet, dark-mode toggle, and the savings pot switched on from Settings and moved through its own screen |
 | `test/golden_test.dart` | every screenshot in this README |
 
 ---
