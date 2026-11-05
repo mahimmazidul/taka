@@ -13,7 +13,7 @@ much of the month is left.
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-API%2021%2B-3DDC84?logo=android&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-77%20passing-0E9F6E)
-[![Download APK](https://img.shields.io/badge/download-v1.8.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
+[![Download APK](https://img.shields.io/badge/download-v1.9.0%20APK-0E9F6E?logo=android&logoColor=white)](https://github.com/mahimmazidul/taka/releases/latest)
 [![Build & Release](https://github.com/mahimmazidul/taka/actions/workflows/release.yml/badge.svg)](https://github.com/mahimmazidul/taka/actions/workflows/release.yml)
 
 ---
@@ -97,11 +97,13 @@ change — or to remove.
 
 **Two levels of categories, seeded for hall life.** A group holds items, and an
 item is what you log. Everything is renameable, recolourable and re-iconable, and
-you can add your own groups or park a new item at the top level.
+you can add your own groups or park a new item at the top level. An item added
+inside a food group is food — it gets the breakfast/lunch/dinner chips and counts
+in today's meals; a group itself never takes a meal tag.
 
 | Group | Items |
 |---|---|
-| মেইন কোর্স · Main course | ভাত, মাছ, মাংস, পোলাও, খিচুড়ি, মুরিঘণ্টা, সবজি, ডাল, ডিম |
+| মেইন কোর্স · Main course | ভাত, মাছ, মাংস, পোলাও, খিচুড়ি, মুরিঘণ্টা, সবজি, ভর্তা, ডাল, ডিম |
 | ড্রিংকস · Drinks | ড্রিংকো, স্পিড, মোজো, কোক / পেপসি, জুস, পানি, কফি |
 | বাইরের খাবার · Dining out | বার্গার, পিজ্জা, ফ্রাই, শর্মা, ফ্রায়েড চিকেন, বিরিয়ানি, স্ট্রিট ফুড, সাধারণ |
 | নাস্তা · Snacks | পরোটা, সমুচা, সিঙ্গারা, টোস্ট, বিস্কুট, চিপস, চা |
@@ -299,7 +301,7 @@ state-management package, no chart package, no analytics.
 The app needs the network for exactly one thing — *Check for updates* — and never
 on its own. Nothing is uploaded, and every screen works with the radio off.
 
-### Data model (SQLite `taka.db`, schema v6)
+### Data model (SQLite `taka.db`, schema v7)
 
 ```sql
 categories(id, name, name_bn, icon, color, kind, budget_minor,
@@ -347,11 +349,11 @@ be unforgivable:
 
 `test/database_test.dart` builds a v2 database by hand, reopens it with the current
 code and asserts the old entry, its category and its budget all survived — now
-through four upgrades, v2 → v6.
+through five upgrades, v2 → v7.
 
 ### Tests
 
-104 tests, all offline (38 logic, insight and store rules, 25 database, 12 screen, 21 golden,
+105 tests, all offline (40 logic, insight and store rules, 25 database, 12 screen, 21 golden,
 plus the fast-food and carry-over rules):
 
 | File | Covers |
@@ -399,6 +401,12 @@ licence regardless of the code's.
 - Icons: Material Symbols via `flutter/material`.
 
 ## Changelog
+
+- **v1.9.0** — ভর্তা joins the main course, and items you add yourself finally
+  count as meals. A category created under Main course (or Snacks, Drinks, Sweets,
+  Fruit, Dining out) used to be stored as *not food*: no meal chips on the Add
+  screen and no line in today's meals. The edible groups are flagged now, new items
+  inherit it, and schema v7 repairs items already added by hand.
 
 - **v1.8.0** — the project gets a licence. PolyForm Noncommercial 1.0.0: free to
   use, read, change and share for anything noncommercial; commercial use or reuse

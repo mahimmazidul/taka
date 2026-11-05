@@ -212,6 +212,19 @@ void main() {
     );
     expect(all.length, greaterThan(90), reason: 'new items were added');
 
+    // v6 → v7: the edible branches are flagged, so a new item added inside them
+    // inherits "food" instead of being born meal-less.
+    expect(
+      all.firstWhere((AppCategory c) => c.id == 'g_main').isFood,
+      isTrue,
+      reason: 'Main course is an edible branch',
+    );
+    expect(
+      all.firstWhere((AppCategory c) => c.id == 'g_hall').isFood,
+      isFalse,
+      reason: 'hall bills are not food',
+    );
+
     final TransactionEntry kept = (await TransactionRepository(
       database: upgraded,
     ).query(const TransactionQuery())).single;

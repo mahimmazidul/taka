@@ -43,6 +43,8 @@ void main() {
         'g_drinks',
         'g_snacks',
         'g_sweets',
+        'g_fruits',
+        'g_eatout',
       ];
       for (final AppCategory item in kDefaultCategories) {
         if (!foodGroups.contains(item.parentId)) continue;
@@ -51,6 +53,32 @@ void main() {
           isTrue,
           reason: '${item.id} sits in a food group but is not flagged',
         );
+      }
+    });
+
+    test('the editable groups are themselves flagged as food', () {
+      // This is what a new item inherits, and the reason "চানাচুর" added under
+      // Snacks used to be born non-food: no meal chips, no meal total.
+      const List<String> foodGroups = <String>[
+        'g_main',
+        'g_drinks',
+        'g_snacks',
+        'g_sweets',
+        'g_fruits',
+        'g_eatout',
+      ];
+      for (final String id in foodGroups) {
+        final AppCategory group = kDefaultCategories.firstWhere(
+          (AppCategory category) => category.id == id,
+        );
+        expect(group.isFood, isTrue, reason: '$id is edible but not flagged');
+      }
+
+      for (final String id in <String>['g_grooming', 'g_study', 'g_hall']) {
+        final AppCategory group = kDefaultCategories.firstWhere(
+          (AppCategory category) => category.id == id,
+        );
+        expect(group.isFood, isFalse, reason: '$id must not be edible');
       }
     });
 
@@ -70,11 +98,17 @@ void main() {
       }
     });
 
-    test('eating out is food, groups never are', () {
+    test('eating out is food, and a group never takes a meal', () {
       expect(seeded('eatout').isFood, isTrue);
+      // Groups may be flagged as edible *branches* (see the inheritance test),
+      // but none of them can carry a meal tag: entries point at items.
       for (final AppCategory category in kDefaultCategories) {
         if (!category.isGroup) continue;
-        expect(category.isFood, isFalse, reason: '${category.id} is a group');
+        expect(
+          state.acceptsMeal(category.id),
+          isFalse,
+          reason: '${category.id} is a container',
+        );
       }
     });
 
